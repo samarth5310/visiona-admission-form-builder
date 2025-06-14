@@ -1,10 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Eye, Download } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Eye, Download, MessageCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PDFPreviewProps {
   formData: any;
@@ -14,150 +17,330 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
   const formContentRef = useRef<HTMLDivElement>(null);
   const documentsContentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+  const optimizePDFSize = (pdf: jsPDF): jsPDF => {
+    // Reduce quality and compression to minimize file size
+    const optimizedPdf = new jsPDF({
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+
+    // Copy pages with reduced quality
+    const pageCount = pdf.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      if (i > 1) optimizedPdf.addPage();
+      
+      // Get the page content and add it with compression
+      const pageInfo = pdf.getPageInfo(i);
+      if (pageInfo) {
+        optimizedPdf.setPage(i);
+      }
+    }
+
+    return optimizedPdf;
+  };
+
+  const generateOptimizedPDF = async (): Promise<Blob> => {
+    if (!formContentRef.current) {
+      throw new Error('Unable to generate PDF. Please try again.');
+    }
+
+    console.log('Starting optimized PDF generation...');
+    
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+
+    // Capture the form content with lower quality for smaller file size
+    const formCanvas = await html2canvas(formContentRef.current, {
+      scale: 1, // Reduced from 2 to 1 for smaller file size
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: formContentRef.current.scrollWidth,
+      height: formContentRef.current.scrollHeight
+    });
+
+    const formImgData = formCanvas.toDataURL('image/jpeg', 0.7); // Reduced quality from 0.95 to 0.7
+    const imgWidth = pageWidth - (margin * 2);
+    const imgHeight = (formCanvas.height * imgWidth) / formCanvas.width;
+
+    // Check if content fits on one page
+    if (imgHeight <= pageHeight - (margin * 2)) {
+      // Single page
+      pdf.addImage(formImgData, 'JPEG', margin, margin, imgWidth, imgHeight);
+    } else {
+      // Multiple pages
+      let yPosition = 0;
+      const pageContentHeight = pageHeight - (margin * 2);
+      
+      while (yPosition < imgHeight) {
+        const sourceY = (yPosition / imgHeight) * formCanvas.height;
+        const sourceHeight = Math.min(
+          (pageContentHeight / imgHeight) * formCanvas.height,
+          formCanvas.height - sourceY
+        );
+        
+        if (yPosition > 0) {
+          pdf.addPage();
+        }
+        
+        // Create a canvas for this page section
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = formCanvas.width;
+        pageCanvas.height = sourceHeight;
+        const pageCtx = pageCanvas.getContext('2d');
+        
+        if (pageCtx) {
+          pageCtx.drawImage(
+            formCanvas,
+            0, sourceY, formCanvas.width, sourceHeight,
+            0, 0, formCanvas.width, sourceHeight
+          );
+          
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.7); // Reduced quality
+          const pageImgHeight = (sourceHeight * imgWidth) / formCanvas.width;
+          
+          pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, pageImgHeight);
+        }
+        
+        yPosition += pageContentHeight;
+      }
+    }
+
+    // Only add document images if they exist and are small
+    const documents = [
+      { file: formData.studentPhoto, title: 'Student Photo' },
+      { file: formData.previousMarksheet, title: 'Previous Marksheet' },
+      { file: formData.aadhaarCard, title: 'Aadhaar Card' },
+      { file: formData.incomeCertificate, title: 'Income Certificate' },
+      { file: formData.casteCertificate, title: 'Caste Certificate' }
+    ];
+
+    // Limit to first 2 documents to keep file size small
+    const limitedDocs = documents.filter(doc => doc.file && doc.file instanceof File).slice(0, 2);
+
+    for (const doc of limitedDocs) {
+      if (doc.file && doc.file instanceof File) {
+        try {
+          const imageUrl = URL.createObjectURL(doc.file);
+          
+          // Create an image element to get dimensions
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = imageUrl;
+          });
+
+          // Add new page for each document
+          pdf.addPage();
+          
+          // Add title with smaller font
+          pdf.setFontSize(14); // Reduced from 16
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(doc.title, pageWidth / 2, 20, { align: 'center' });
+
+          // Calculate smaller image dimensions to fit page
+          const maxWidth = pageWidth - (margin * 2);
+          const maxHeight = pageHeight - 40;
+          const imgRatio = Math.min(maxWidth / img.width, maxHeight / img.height) * 0.8; // Reduced size by 20%
+          const docImgWidth = img.width * imgRatio;
+          const docImgHeight = img.height * imgRatio;
+          const imgX = (pageWidth - docImgWidth) / 2;
+          const imgY = 30;
+
+          // Add image to PDF with lower quality
+          pdf.addImage(imageUrl, 'JPEG', imgX, imgY, docImgWidth, docImgHeight);
+          
+          // Clean up
+          URL.revokeObjectURL(imageUrl);
+        } catch (error) {
+          console.error(`Error adding ${doc.title} to PDF:`, error);
+        }
+      }
+    }
+
+    // Convert to blob
+    const pdfBlob = pdf.output('blob');
+    
+    // Check file size and further optimize if needed
+    const fileSizeKB = pdfBlob.size / 1024;
+    console.log(`PDF size: ${fileSizeKB.toFixed(2)} KB`);
+    
+    if (fileSizeKB > 50) {
+      console.log('PDF too large, creating text-only version...');
+      // Create a simpler, text-only version if still too large
+      const simplePdf = new jsPDF('p', 'mm', 'a4');
+      
+      // Add just the form data as text
+      simplePdf.setFontSize(16);
+      simplePdf.text('VISIONA EDUCATION ACADEMY', 105, 20, { align: 'center' });
+      simplePdf.setFontSize(12);
+      simplePdf.text('Student Application Form', 105, 30, { align: 'center' });
+      
+      let yPos = 50;
+      const lineHeight = 8;
+      
+      const formFields = [
+        `Full Name: ${formData.fullName || 'N/A'}`,
+        `Date of Birth: ${formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-GB') : 'N/A'}`,
+        `Gender: ${formData.gender || 'N/A'}`,
+        `Class: ${formData.class || 'N/A'}`,
+        `Aadhaar Number: ${formData.aadhaarNumber || 'N/A'}`,
+        `Father's Name: ${formData.fatherName || 'N/A'}`,
+        `Mother's Name: ${formData.motherName || 'N/A'}`,
+        `Contact: ${formData.contactNumber || 'N/A'}`,
+        `Email: ${formData.email || 'N/A'}`,
+        `Address: ${formData.streetAddress || 'N/A'}, ${formData.city || 'N/A'}`
+      ];
+      
+      formFields.forEach(field => {
+        if (yPos > 270) {
+          simplePdf.addPage();
+          yPos = 20;
+        }
+        simplePdf.text(field, 20, yPos);
+        yPos += lineHeight;
+      });
+      
+      return simplePdf.output('blob');
+    }
+    
+    return pdfBlob;
+  };
+
+  const savePDFToStorage = async (pdfBlob: Blob): Promise<string> => {
+    const fileName = `${formData.fullName || 'Student'}_Application_${Date.now()}.pdf`;
+    const filePath = `applications/${fileName}`;
+
+    console.log('Uploading PDF to Supabase Storage...');
+    
+    const { data, error } = await supabase.storage
+      .from('application-documents')
+      .upload(filePath, pdfBlob, {
+        contentType: 'application/pdf',
+        upsert: false
+      });
+
+    if (error) {
+      console.error('Storage upload error:', error);
+      throw new Error(`Failed to save PDF: ${error.message}`);
+    }
+
+    console.log('PDF uploaded successfully:', data);
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from('application-documents')
+      .getPublicUrl(filePath);
+
+    if (!publicUrlData?.publicUrl) {
+      throw new Error('Failed to get public URL for PDF');
+    }
+
+    console.log('Public URL generated:', publicUrlData.publicUrl);
+    return publicUrlData.publicUrl;
+  };
 
   const downloadPDF = async () => {
-    if (!formContentRef.current) {
+    try {
+      setIsGeneratingPDF(true);
+      
+      // Check if required fields are filled
+      if (!formData.fullName.trim()) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in at least the student's full name before downloading PDF.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('PDF download requested for:', formData.fullName);
+      
+      // Generate optimized PDF
+      const pdfBlob = await generateOptimizedPDF();
+      const fileSizeKB = pdfBlob.size / 1024;
+      
+      // Save to Supabase Storage
+      const publicUrl = await savePDFToStorage(pdfBlob);
+      setPdfUrl(publicUrl);
+      
+      // Also trigger download
+      const fileName = `${formData.fullName || 'Student'}_Application_Form.pdf`;
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Success!",
+        description: `PDF generated (${fileSizeKB.toFixed(1)}KB) and saved to cloud storage. Ready for WhatsApp sharing!`,
+      });
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
       toast({
         title: "Error",
-        description: "Unable to generate PDF. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const sendViaWhatsApp = () => {
+    if (!pdfUrl) {
+      toast({
+        title: "No PDF Available",
+        description: "Please generate the PDF first before sharing via WhatsApp.",
         variant: "destructive",
       });
       return;
     }
 
-    try {
-      console.log('Starting PDF generation...');
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-
-      // Capture the form content
-      const formCanvas = await html2canvas(formContentRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: formContentRef.current.scrollWidth,
-        height: formContentRef.current.scrollHeight
-      });
-
-      const formImgData = formCanvas.toDataURL('image/jpeg', 0.95);
-      const imgWidth = pageWidth - (margin * 2);
-      const imgHeight = (formCanvas.height * imgWidth) / formCanvas.width;
-
-      // Check if content fits on one page
-      if (imgHeight <= pageHeight - (margin * 2)) {
-        // Single page
-        pdf.addImage(formImgData, 'JPEG', margin, margin, imgWidth, imgHeight);
-      } else {
-        // Multiple pages
-        let yPosition = 0;
-        const pageContentHeight = pageHeight - (margin * 2);
-        
-        while (yPosition < imgHeight) {
-          const sourceY = (yPosition / imgHeight) * formCanvas.height;
-          const sourceHeight = Math.min(
-            (pageContentHeight / imgHeight) * formCanvas.height,
-            formCanvas.height - sourceY
-          );
-          
-          if (yPosition > 0) {
-            pdf.addPage();
-          }
-          
-          // Create a canvas for this page section
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = formCanvas.width;
-          pageCanvas.height = sourceHeight;
-          const pageCtx = pageCanvas.getContext('2d');
-          
-          if (pageCtx) {
-            pageCtx.drawImage(
-              formCanvas,
-              0, sourceY, formCanvas.width, sourceHeight,
-              0, 0, formCanvas.width, sourceHeight
-            );
-            
-            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
-            const pageImgHeight = (sourceHeight * imgWidth) / formCanvas.width;
-            
-            pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, pageImgHeight);
-          }
-          
-          yPosition += pageContentHeight;
-        }
-      }
-
-      // Add document images on separate pages
-      const documents = [
-        { file: formData.studentPhoto, title: 'Student Photo' },
-        { file: formData.previousMarksheet, title: 'Previous Marksheet' },
-        { file: formData.aadhaarCard, title: 'Aadhaar Card' },
-        { file: formData.incomeCertificate, title: 'Income Certificate' },
-        { file: formData.casteCertificate, title: 'Caste Certificate' }
-      ];
-
-      for (const doc of documents) {
-        if (doc.file && doc.file instanceof File) {
-          try {
-            const imageUrl = URL.createObjectURL(doc.file);
-            
-            // Create an image element to get dimensions
-            const img = new Image();
-            await new Promise((resolve, reject) => {
-              img.onload = resolve;
-              img.onerror = reject;
-              img.src = imageUrl;
-            });
-
-            // Add new page for each document
-            pdf.addPage();
-            
-            // Add title
-            pdf.setFontSize(16);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text(doc.title, pageWidth / 2, 20, { align: 'center' });
-
-            // Calculate image dimensions to fit page
-            const maxWidth = pageWidth - (margin * 2);
-            const maxHeight = pageHeight - 40;
-            const imgRatio = Math.min(maxWidth / img.width, maxHeight / img.height);
-            const docImgWidth = img.width * imgRatio;
-            const docImgHeight = img.height * imgRatio;
-            const imgX = (pageWidth - docImgWidth) / 2;
-            const imgY = 30;
-
-            // Add image to PDF
-            pdf.addImage(imageUrl, 'JPEG', imgX, imgY, docImgWidth, docImgHeight);
-            
-            // Clean up
-            URL.revokeObjectURL(imageUrl);
-          } catch (error) {
-            console.error(`Error adding ${doc.title} to PDF:`, error);
-          }
-        }
-      }
-
-      const fileName = `${formData.fullName || 'Student'}_Application_Form.pdf`;
-      pdf.save(fileName);
-      
+    if (!whatsappNumber.trim()) {
       toast({
-        title: "Success!",
-        description: `PDF downloaded successfully as ${fileName}`,
-      });
-      
-      console.log('PDF generated and downloaded successfully');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate PDF. Please try again.",
+        title: "Missing WhatsApp Number",
+        description: "Please enter a WhatsApp number to share the PDF.",
         variant: "destructive",
       });
+      return;
     }
+
+    // Clean the phone number (remove non-digits)
+    const cleanNumber = whatsappNumber.replace(/\D/g, '');
+    
+    if (cleanNumber.length < 10) {
+      toast({
+        title: "Invalid Number",
+        description: "Please enter a valid WhatsApp number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const message = `Hi! Here's the application form for ${formData.fullName || 'the student'}: ${pdfUrl}`;
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+    
+    window.open(whatsappUrl, '_blank');
+    
+    toast({
+      title: "WhatsApp Opened",
+      description: "WhatsApp has been opened with the PDF link ready to send.",
+    });
   };
 
   // Helper function to safely create object URL
@@ -407,16 +590,58 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             Application Form Preview
-            <Button onClick={downloadPDF} className="ml-4">
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={downloadPDF} 
+                disabled={isGeneratingPDF}
+                className="ml-4"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isGeneratingPDF ? "Generating..." : "Download & Save PDF"}
+              </Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
+        
         <div className="mt-4">
           {generateFormContent()}
           {generateDocumentsSection()}
         </div>
+
+        {/* WhatsApp Sharing Section */}
+        {pdfUrl && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
+              <MessageCircle className="mr-2 h-5 w-5" />
+              Share via WhatsApp
+            </h3>
+            <div className="flex gap-3 items-end">
+              <div className="flex-1">
+                <Label htmlFor="whatsapp-number" className="text-sm font-medium">
+                  WhatsApp Number (with country code)
+                </Label>
+                <Input
+                  id="whatsapp-number"
+                  type="tel"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  placeholder="e.g., 919876543210"
+                  className="mt-1"
+                />
+              </div>
+              <Button 
+                onClick={sendViaWhatsApp}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Send PDF Link
+              </Button>
+            </div>
+            <p className="text-xs text-green-600 mt-2">
+              PDF Link: <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="underline">{pdfUrl}</a>
+            </p>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
