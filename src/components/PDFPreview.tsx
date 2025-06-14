@@ -54,6 +54,19 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
     }
   };
 
+  // Helper function to safely create object URL
+  const createSafeObjectURL = (file: any) => {
+    if (file && file instanceof File && file.size > 0) {
+      try {
+        return URL.createObjectURL(file);
+      } catch (error) {
+        console.error('Error creating object URL:', error);
+        return null;
+      }
+    }
+    return null;
+  };
+
   const generatePDFContent = () => {
     return (
       <div ref={contentRef} className="max-w-4xl mx-auto p-8 bg-white text-black">
@@ -65,11 +78,11 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
         </div>
 
         {/* Student Photo */}
-        {formData.studentPhoto && formData.studentPhoto[0] && (
+        {formData.studentPhoto && formData.studentPhoto[0] && createSafeObjectURL(formData.studentPhoto[0]) && (
           <div className="flex justify-end mb-6">
             <div className="border-2 border-gray-300 p-2">
               <img 
-                src={URL.createObjectURL(formData.studentPhoto[0])} 
+                src={createSafeObjectURL(formData.studentPhoto[0])} 
                 alt="Student Photo"
                 className="w-32 h-40 object-cover"
               />
@@ -155,40 +168,40 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           <div>
             <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Uploaded Documents</h2>
             <div className="grid grid-cols-2 gap-4">
-              {formData.previousMarksheet && formData.previousMarksheet[0] && (
+              {formData.previousMarksheet && formData.previousMarksheet[0] && createSafeObjectURL(formData.previousMarksheet[0]) && (
                 <div className="text-center">
                   <img 
-                    src={URL.createObjectURL(formData.previousMarksheet[0])} 
+                    src={createSafeObjectURL(formData.previousMarksheet[0])} 
                     alt="Previous Marksheet"
                     className="w-full h-32 object-cover border"
                   />
                   <p className="text-xs mt-1">Previous Marksheet</p>
                 </div>
               )}
-              {formData.aadhaarCard && formData.aadhaarCard[0] && (
+              {formData.aadhaarCard && formData.aadhaarCard[0] && createSafeObjectURL(formData.aadhaarCard[0]) && (
                 <div className="text-center">
                   <img 
-                    src={URL.createObjectURL(formData.aadhaarCard[0])} 
+                    src={createSafeObjectURL(formData.aadhaarCard[0])} 
                     alt="Aadhaar Card"
                     className="w-full h-32 object-cover border"
                   />
                   <p className="text-xs mt-1">Aadhaar Card</p>
                 </div>
               )}
-              {formData.incomeCertificate && formData.incomeCertificate[0] && (
+              {formData.incomeCertificate && formData.incomeCertificate[0] && createSafeObjectURL(formData.incomeCertificate[0]) && (
                 <div className="text-center">
                   <img 
-                    src={URL.createObjectURL(formData.incomeCertificate[0])} 
+                    src={createSafeObjectURL(formData.incomeCertificate[0])} 
                     alt="Income Certificate"
                     className="w-full h-32 object-cover border"
                   />
                   <p className="text-xs mt-1">Income Certificate</p>
                 </div>
               )}
-              {formData.casteCertificate && formData.casteCertificate[0] && (
+              {formData.casteCertificate && formData.casteCertificate[0] && createSafeObjectURL(formData.casteCertificate[0]) && (
                 <div className="text-center">
                   <img 
-                    src={URL.createObjectURL(formData.casteCertificate[0])} 
+                    src={createSafeObjectURL(formData.casteCertificate[0])} 
                     alt="Caste Certificate"
                     className="w-full h-32 object-cover border"
                   />
