@@ -21,44 +21,21 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
-  const optimizePDFSize = (pdf: jsPDF): jsPDF => {
-    // Reduce quality and compression to minimize file size
-    const optimizedPdf = new jsPDF({
-      unit: 'mm',
-      format: 'a4',
-      compress: true
-    });
-
-    // Copy pages with reduced quality
-    const pageCount = pdf.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      if (i > 1) optimizedPdf.addPage();
-      
-      // Get the page content and add it with compression
-      const pageInfo = pdf.getPageInfo(i);
-      if (pageInfo) {
-        optimizedPdf.setPage(i);
-      }
-    }
-
-    return optimizedPdf;
-  };
-
-  const generateOptimizedPDF = async (): Promise<Blob> => {
+  const generatePDF = async (): Promise<Blob> => {
     if (!formContentRef.current) {
       throw new Error('Unable to generate PDF. Please try again.');
     }
 
-    console.log('Starting optimized PDF generation...');
+    console.log('Starting PDF generation...');
     
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 10;
 
-    // Capture the form content with lower quality for smaller file size
+    // Capture the form content
     const formCanvas = await html2canvas(formContentRef.current, {
-      scale: 1, // Reduced from 2 to 1 for smaller file size
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       logging: false,
@@ -67,7 +44,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       height: formContentRef.current.scrollHeight
     });
 
-    const formImgData = formCanvas.toDataURL('image/jpeg', 0.7); // Reduced quality from 0.95 to 0.7
+    const formImgData = formCanvas.toDataURL('image/jpeg', 0.95);
     const imgWidth = pageWidth - (margin * 2);
     const imgHeight = (formCanvas.height * imgWidth) / formCanvas.width;
 
@@ -104,7 +81,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
             0, 0, formCanvas.width, sourceHeight
           );
           
-          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.7); // Reduced quality
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
           const pageImgHeight = (sourceHeight * imgWidth) / formCanvas.width;
           
           pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, pageImgHeight);
@@ -114,7 +91,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       }
     }
 
-    // Only add document images if they exist and are small
+    // Add document images if they exist
     const documents = [
       { file: formData.studentPhoto, title: 'Student Photo' },
       { file: formData.previousMarksheet, title: 'Previous Marksheet' },
@@ -123,10 +100,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       { file: formData.casteCertificate, title: 'Caste Certificate' }
     ];
 
-    // Limit to first 2 documents to keep file size small
-    const limitedDocs = documents.filter(doc => doc.file && doc.file instanceof File).slice(0, 2);
-
-    for (const doc of limitedDocs) {
+    for (const doc of documents) {
       if (doc.file && doc.file instanceof File) {
         try {
           const imageUrl = URL.createObjectURL(doc.file);
@@ -142,21 +116,21 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           // Add new page for each document
           pdf.addPage();
           
-          // Add title with smaller font
-          pdf.setFontSize(14); // Reduced from 16
+          // Add title
+          pdf.setFontSize(16);
           pdf.setFont('helvetica', 'bold');
           pdf.text(doc.title, pageWidth / 2, 20, { align: 'center' });
 
-          // Calculate smaller image dimensions to fit page
+          // Calculate image dimensions to fit page
           const maxWidth = pageWidth - (margin * 2);
           const maxHeight = pageHeight - 40;
-          const imgRatio = Math.min(maxWidth / img.width, maxHeight / img.height) * 0.8; // Reduced size by 20%
+          const imgRatio = Math.min(maxWidth / img.width, maxHeight / img.height);
           const docImgWidth = img.width * imgRatio;
           const docImgHeight = img.height * imgRatio;
           const imgX = (pageWidth - docImgWidth) / 2;
           const imgY = 30;
 
-          // Add image to PDF with lower quality
+          // Add image to PDF
           pdf.addImage(imageUrl, 'JPEG', imgX, imgY, docImgWidth, docImgHeight);
           
           // Clean up
@@ -169,49 +143,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
     // Convert to blob
     const pdfBlob = pdf.output('blob');
-    
-    // Check file size and further optimize if needed
-    const fileSizeKB = pdfBlob.size / 1024;
-    console.log(`PDF size: ${fileSizeKB.toFixed(2)} KB`);
-    
-    if (fileSizeKB > 50) {
-      console.log('PDF too large, creating text-only version...');
-      // Create a simpler, text-only version if still too large
-      const simplePdf = new jsPDF('p', 'mm', 'a4');
-      
-      // Add just the form data as text
-      simplePdf.setFontSize(16);
-      simplePdf.text('VISIONA EDUCATION ACADEMY', 105, 20, { align: 'center' });
-      simplePdf.setFontSize(12);
-      simplePdf.text('Student Application Form', 105, 30, { align: 'center' });
-      
-      let yPos = 50;
-      const lineHeight = 8;
-      
-      const formFields = [
-        `Full Name: ${formData.fullName || 'N/A'}`,
-        `Date of Birth: ${formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-GB') : 'N/A'}`,
-        `Gender: ${formData.gender || 'N/A'}`,
-        `Class: ${formData.class || 'N/A'}`,
-        `Aadhaar Number: ${formData.aadhaarNumber || 'N/A'}`,
-        `Father's Name: ${formData.fatherName || 'N/A'}`,
-        `Mother's Name: ${formData.motherName || 'N/A'}`,
-        `Contact: ${formData.contactNumber || 'N/A'}`,
-        `Email: ${formData.email || 'N/A'}`,
-        `Address: ${formData.streetAddress || 'N/A'}, ${formData.city || 'N/A'}`
-      ];
-      
-      formFields.forEach(field => {
-        if (yPos > 270) {
-          simplePdf.addPage();
-          yPos = 20;
-        }
-        simplePdf.text(field, 20, yPos);
-        yPos += lineHeight;
-      });
-      
-      return simplePdf.output('blob');
-    }
+    console.log(`PDF size: ${(pdfBlob.size / 1024).toFixed(2)} KB`);
     
     return pdfBlob;
   };
@@ -265,8 +197,8 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
       console.log('PDF download requested for:', formData.fullName);
       
-      // Generate optimized PDF
-      const pdfBlob = await generateOptimizedPDF();
+      // Generate PDF
+      const pdfBlob = await generatePDF();
       const fileSizeKB = pdfBlob.size / 1024;
       
       // Save to Supabase Storage
