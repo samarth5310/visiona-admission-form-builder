@@ -1,23 +1,91 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Eye, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface PDFPreviewProps {
   formData: any;
 }
 
 const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const convertFileToDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const downloadPDF = async () => {
+    if (!contentRef.current) return;
+
+    try {
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      
+      // If content is longer than one page, add more pages
+      if (imgHeight * ratio > pdfHeight) {
+        let position = pdfHeight;
+        while (position < imgHeight * ratio) {
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', imgX, -position, imgWidth * ratio, imgHeight * ratio);
+          position += pdfHeight;
+        }
+      }
+
+      pdf.save(`${formData.fullName || 'Student'}_Application_Form.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
+
   const generatePDFContent = () => {
     return (
-      <div className="max-w-4xl mx-auto p-8 bg-white text-black">
+      <div ref={contentRef} className="max-w-4xl mx-auto p-8 bg-white text-black">
         {/* Header */}
         <div className="text-center border-b-2 border-blue-600 pb-6 mb-8">
           <h1 className="text-3xl font-bold text-blue-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
           <p className="text-lg text-gray-700">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
           <p className="text-sm text-gray-600">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
         </div>
+
+        {/* Student Photo */}
+        {formData.studentPhoto && formData.studentPhoto[0] && (
+          <div className="flex justify-end mb-6">
+            <div className="border-2 border-gray-300 p-2">
+              <img 
+                src={URL.createObjectURL(formData.studentPhoto[0])} 
+                alt="Student Photo"
+                className="w-32 h-40 object-cover"
+              />
+              <p className="text-xs text-center mt-1">Student Photo</p>
+            </div>
+          </div>
+        )}
 
         {/* Form Content */}
         <div className="space-y-6">
@@ -92,6 +160,53 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
             </div>
           </div>
 
+          {/* Document Images */}
+          <div>
+            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Uploaded Documents</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {formData.previousMarksheet && formData.previousMarksheet[0] && (
+                <div className="text-center">
+                  <img 
+                    src={URL.createObjectURL(formData.previousMarksheet[0])} 
+                    alt="Previous Marksheet"
+                    className="w-full h-32 object-cover border"
+                  />
+                  <p className="text-xs mt-1">Previous Marksheet</p>
+                </div>
+              )}
+              {formData.aadhaarCard && formData.aadhaarCard[0] && (
+                <div className="text-center">
+                  <img 
+                    src={URL.createObjectURL(formData.aadhaarCard[0])} 
+                    alt="Aadhaar Card"
+                    className="w-full h-32 object-cover border"
+                  />
+                  <p className="text-xs mt-1">Aadhaar Card</p>
+                </div>
+              )}
+              {formData.incomeCertificate && formData.incomeCertificate[0] && (
+                <div className="text-center">
+                  <img 
+                    src={URL.createObjectURL(formData.incomeCertificate[0])} 
+                    alt="Income Certificate"
+                    className="w-full h-32 object-cover border"
+                  />
+                  <p className="text-xs mt-1">Income Certificate</p>
+                </div>
+              )}
+              {formData.casteCertificate && formData.casteCertificate[0] && (
+                <div className="text-center">
+                  <img 
+                    src={URL.createObjectURL(formData.casteCertificate[0])} 
+                    alt="Caste Certificate"
+                    className="w-full h-32 object-cover border"
+                  />
+                  <p className="text-xs mt-1">Caste Certificate</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Declarations */}
           <div>
             <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Declarations</h2>
@@ -135,7 +250,16 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Application Form Preview</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            Application Form Preview
+            <Button 
+              onClick={downloadPDF}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF
+            </Button>
+          </DialogTitle>
         </DialogHeader>
         <div className="mt-4">
           {generatePDFContent()}

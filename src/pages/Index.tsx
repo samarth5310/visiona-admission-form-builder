@@ -26,7 +26,10 @@ const formSchema = z.object({
   gender: z.string().min(1, 'Gender is required'),
   currentSchool: z.string().min(1, 'Current school is required'),
   class: z.string().min(1, 'Class is required'),
-  aadhaarNumber: z.string().regex(/^\d{12}$/, 'Aadhaar number must be 12 digits'),
+  aadhaarNumber: z.string()
+    .min(12, 'Aadhaar number must be exactly 12 digits')
+    .max(12, 'Aadhaar number must be exactly 12 digits')
+    .regex(/^\d{12}$/, 'Aadhaar number must contain only digits'),
   fatherName: z.string().min(1, "Father's name is required"),
   motherName: z.string().min(1, "Mother's name is required"),
   fatherOccupation: z.string().min(1, "Father's occupation is required"),
