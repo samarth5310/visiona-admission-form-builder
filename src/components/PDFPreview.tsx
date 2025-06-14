@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -40,18 +41,17 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
       // Add document images on separate pages
       const documents = [
-        { files: formData.studentPhoto, title: 'Student Photo' },
-        { files: formData.previousMarksheet, title: 'Previous Marksheet' },
-        { files: formData.aadhaarCard, title: 'Aadhaar Card' },
-        { files: formData.incomeCertificate, title: 'Income Certificate' },
-        { files: formData.casteCertificate, title: 'Caste Certificate' }
+        { file: formData.studentPhoto, title: 'Student Photo' },
+        { file: formData.previousMarksheet, title: 'Previous Marksheet' },
+        { file: formData.aadhaarCard, title: 'Aadhaar Card' },
+        { file: formData.incomeCertificate, title: 'Income Certificate' },
+        { file: formData.casteCertificate, title: 'Caste Certificate' }
       ];
 
       for (const doc of documents) {
-        if (doc.files && doc.files[0]) {
+        if (doc.file) {
           try {
-            const file = doc.files[0];
-            const imageUrl = URL.createObjectURL(file);
+            const imageUrl = URL.createObjectURL(doc.file);
             
             // Create an image element to get dimensions
             const img = new Image();
@@ -143,9 +143,9 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
               {/* Student Photo Display Box */}
               <div className="flex-shrink-0">
                 <div className="w-24 h-24 border-2 border-gray-300 flex items-center justify-center bg-gray-100 overflow-hidden">
-                  {formData.studentPhoto && formData.studentPhoto[0] && createSafeObjectURL(formData.studentPhoto[0]) ? (
+                  {formData.studentPhoto && createSafeObjectURL(formData.studentPhoto) ? (
                     <img 
-                      src={createSafeObjectURL(formData.studentPhoto[0])} 
+                      src={createSafeObjectURL(formData.studentPhoto)} 
                       alt="Student"
                       className="w-full h-full object-cover"
                     />
@@ -207,7 +207,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
               <div><strong>Last Year Percentage:</strong> {formData.lastYearPercentage || 'N/A'}%</div>
               <div><strong>Category:</strong> {formData.category || 'N/A'}</div>
               <div><strong>Subjects Weak In:</strong> {formData.subjectsWeakIn || 'N/A'}</div>
-              <div><strong>Exams Preparing For:</strong> {formData.examsPreparingFor || 'N/A'}</div>
+              <div><strong>Exams Preparing For:</strong> {formData.examsPreparingFor?.join(', ') || 'N/A'}</div>
             </div>
           </div>
 
@@ -225,40 +225,40 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           <div>
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Uploaded Documents</h2>
             <div className="grid grid-cols-2 gap-4">
-              {formData.previousMarksheet && formData.previousMarksheet[0] && createSafeObjectURL(formData.previousMarksheet[0]) && (
+              {formData.previousMarksheet && createSafeObjectURL(formData.previousMarksheet) && (
                 <div className="text-center">
                   <img 
-                    src={createSafeObjectURL(formData.previousMarksheet[0])} 
+                    src={createSafeObjectURL(formData.previousMarksheet)} 
                     alt="Previous Marksheet"
                     className="w-full h-32 object-cover border"
                   />
                   <p className="text-xs mt-1">Previous Marksheet</p>
                 </div>
               )}
-              {formData.aadhaarCard && formData.aadhaarCard[0] && createSafeObjectURL(formData.aadhaarCard[0]) && (
+              {formData.aadhaarCard && createSafeObjectURL(formData.aadhaarCard) && (
                 <div className="text-center">
                   <img 
-                    src={createSafeObjectURL(formData.aadhaarCard[0])} 
+                    src={createSafeObjectURL(formData.aadhaarCard)} 
                     alt="Aadhaar Card"
                     className="w-full h-32 object-cover border"
                   />
                   <p className="text-xs mt-1">Aadhaar Card</p>
                 </div>
               )}
-              {formData.incomeCertificate && formData.incomeCertificate[0] && createSafeObjectURL(formData.incomeCertificate[0]) && (
+              {formData.incomeCertificate && createSafeObjectURL(formData.incomeCertificate) && (
                 <div className="text-center">
                   <img 
-                    src={createSafeObjectURL(formData.incomeCertificate[0])} 
+                    src={createSafeObjectURL(formData.incomeCertificate)} 
                     alt="Income Certificate"
                     className="w-full h-32 object-cover border"
                   />
                   <p className="text-xs mt-1">Income Certificate</p>
                 </div>
               )}
-              {formData.casteCertificate && formData.casteCertificate[0] && createSafeObjectURL(formData.casteCertificate[0]) && (
+              {formData.casteCertificate && createSafeObjectURL(formData.casteCertificate) && (
                 <div className="text-center">
                   <img 
-                    src={createSafeObjectURL(formData.casteCertificate[0])} 
+                    src={createSafeObjectURL(formData.casteCertificate)} 
                     alt="Caste Certificate"
                     className="w-full h-32 object-cover border"
                   />
@@ -298,10 +298,10 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
   const generateDocumentsSection = () => {
     const documents = [
-      { files: formData.previousMarksheet, title: 'Previous Marksheet', type: 'previous_marksheet' },
-      { files: formData.aadhaarCard, title: 'Aadhaar Card', type: 'aadhaar_card' },
-      { files: formData.incomeCertificate, title: 'Income Certificate', type: 'income_certificate' },
-      { files: formData.casteCertificate, title: 'Caste Certificate', type: 'caste_certificate' }
+      { file: formData.previousMarksheet, title: 'Previous Marksheet', type: 'previous_marksheet' },
+      { file: formData.aadhaarCard, title: 'Aadhaar Card', type: 'aadhaar_card' },
+      { file: formData.incomeCertificate, title: 'Income Certificate', type: 'income_certificate' },
+      { file: formData.casteCertificate, title: 'Caste Certificate', type: 'caste_certificate' }
     ];
 
     return (
@@ -309,11 +309,11 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
         <h2 className="text-2xl font-bold text-gray-700 mb-6 text-center">Uploaded Documents</h2>
         <div className="grid grid-cols-1 gap-8">
           {documents.map((doc) => (
-            doc.files && doc.files[0] && createSafeObjectURL(doc.files[0]) && (
+            doc.file && createSafeObjectURL(doc.file) && (
               <div key={doc.type} className="text-center p-4 border border-gray-300 rounded">
                 <h3 className="text-lg font-semibold mb-4">{doc.title}</h3>
                 <img 
-                  src={createSafeObjectURL(doc.files[0])} 
+                  src={createSafeObjectURL(doc.file)} 
                   alt={doc.title}
                   className="max-w-full h-auto mx-auto border"
                   style={{ maxHeight: '400px' }}

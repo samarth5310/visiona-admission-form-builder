@@ -55,7 +55,7 @@ const formSchema = z.object({
   lastYearPercentage: z.string().optional(),
   category: z.string().optional(),
   subjectsWeakIn: z.string().optional(),
-  examsPreparingFor: z.string().optional(),
+  examsPreparingFor: z.array(z.string()).optional(),
   paymentMode: z.string().optional(),
   transactionId: z.string().optional(),
   amountPaid: z.string().optional(),
@@ -63,11 +63,11 @@ const formSchema = z.object({
   declarationDate: z.string({
     required_error: "A declaration date is required.",
   }),
-  studentPhoto: z.array(z.any()).optional(),
-  previousMarksheet: z.array(z.any()).optional(),
-  aadhaarCard: z.array(z.any()).optional(),
-  incomeCertificate: z.array(z.any()).optional(),
-  casteCertificate: z.array(z.any()).optional(),
+  studentPhoto: z.instanceof(File).optional(),
+  previousMarksheet: z.instanceof(File).optional(),
+  aadhaarCard: z.instanceof(File).optional(),
+  incomeCertificate: z.instanceof(File).optional(),
+  casteCertificate: z.instanceof(File).optional(),
 })
 
 const Index = () => {
@@ -95,17 +95,12 @@ const Index = () => {
       lastYearPercentage: "",
       category: "",
       subjectsWeakIn: "",
-      examsPreparingFor: "",
+      examsPreparingFor: [],
       paymentMode: "",
       transactionId: "",
       amountPaid: "",
       place: "",
       declarationDate: new Date().toISOString().split('T')[0],
-      studentPhoto: [],
-      previousMarksheet: [],
-      aadhaarCard: [],
-      incomeCertificate: [],
-      casteCertificate: [],
     },
   })
 
@@ -134,6 +129,14 @@ const Index = () => {
     }
     return null;
   };
+
+  const examOptions = [
+    { id: "navodaya", label: "Navodaya" },
+    { id: "sainik", label: "Sainik" },
+    { id: "morarji", label: "Morarji" },
+    { id: "kittur", label: "Kittur" },
+    { id: "alvas", label: "Alvas" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -209,9 +212,9 @@ const Index = () => {
                 {/* Student Photo Display Box */}
                 <div className="flex-shrink-0">
                   <div className="w-24 h-24 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-gray-100 overflow-hidden">
-                    {form.watch('studentPhoto')?.[0] && createSafeObjectURL(form.watch('studentPhoto')[0]) ? (
+                    {form.watch('studentPhoto') && createSafeObjectURL(form.watch('studentPhoto')) ? (
                       <img 
-                        src={createSafeObjectURL(form.watch('studentPhoto')[0])} 
+                        src={createSafeObjectURL(form.watch('studentPhoto'))} 
                         alt="Student"
                         className="w-full h-full object-cover"
                       />
@@ -544,20 +547,30 @@ const Index = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700">Exams Preparing For</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="border-gray-300">
-                            <SelectValue placeholder="Select exams" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="navodaya">Navodaya</SelectItem>
-                          <SelectItem value="sainik">Sainik</SelectItem>
-                          <SelectItem value="morarji">Morarji</SelectItem>
-                          <SelectItem value="kittur">Kittur</SelectItem>
-                          <SelectItem value="alvas">Alvas</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormDescription>
+                        Select all exams you are preparing for
+                      </FormDescription>
+                      <div className="grid grid-cols-2 gap-2">
+                        {examOptions.map((exam) => (
+                          <div key={exam.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={exam.id}
+                              checked={field.value?.includes(exam.id)}
+                              onCheckedChange={(checked) => {
+                                const currentValue = field.value || [];
+                                if (checked) {
+                                  field.onChange([...currentValue, exam.id]);
+                                } else {
+                                  field.onChange(currentValue.filter((value) => value !== exam.id));
+                                }
+                              }}
+                            />
+                            <label htmlFor={exam.id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              {exam.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -626,8 +639,8 @@ const Index = () => {
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
-                            if (e.target.files) {
-                              field.onChange(Array.from(e.target.files));
+                            if (e.target.files && e.target.files[0]) {
+                              field.onChange(e.target.files[0]);
                             }
                           }}
                           className="border-gray-300"
@@ -648,8 +661,8 @@ const Index = () => {
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
-                            if (e.target.files) {
-                              field.onChange(Array.from(e.target.files));
+                            if (e.target.files && e.target.files[0]) {
+                              field.onChange(e.target.files[0]);
                             }
                           }}
                           className="border-gray-300"
@@ -670,8 +683,8 @@ const Index = () => {
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
-                            if (e.target.files) {
-                              field.onChange(Array.from(e.target.files));
+                            if (e.target.files && e.target.files[0]) {
+                              field.onChange(e.target.files[0]);
                             }
                           }}
                           className="border-gray-300"
@@ -692,8 +705,8 @@ const Index = () => {
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
-                            if (e.target.files) {
-                              field.onChange(Array.from(e.target.files));
+                            if (e.target.files && e.target.files[0]) {
+                              field.onChange(e.target.files[0]);
                             }
                           }}
                           className="border-gray-300"
@@ -714,8 +727,8 @@ const Index = () => {
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
-                            if (e.target.files) {
-                              field.onChange(Array.from(e.target.files));
+                            if (e.target.files && e.target.files[0]) {
+                              field.onChange(e.target.files[0]);
                             }
                           }}
                           className="border-gray-300"
