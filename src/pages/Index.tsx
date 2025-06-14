@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import PDFPreview from '@/components/PDFPreview';
-import { submitApplicationForm } from '@/services/formSubmissionService';
+import { submitApplicationForm, type FormSubmissionData } from '@/services/formSubmissionService';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -78,7 +79,45 @@ const Index = () => {
     try {
       console.log('Submitting form data:', data);
       
-      const result = await submitApplicationForm(data);
+      // Convert form data to FormSubmissionData format
+      const submissionData: FormSubmissionData = {
+        admissionNumber: data.admissionNumber,
+        admissionType: data.admissionType,
+        fullName: data.fullName,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+        currentSchool: data.currentSchool,
+        class: data.class,
+        aadhaarNumber: data.aadhaarNumber,
+        fatherName: data.fatherName,
+        motherName: data.motherName,
+        fatherOccupation: data.fatherOccupation,
+        motherOccupation: data.motherOccupation,
+        contactNumber: data.contactNumber,
+        email: data.email,
+        satsNumber: data.satsNumber,
+        streetAddress: data.streetAddress,
+        city: data.city,
+        state: data.state,
+        pinCode: data.pinCode,
+        landmark: data.landmark,
+        lastYearPercentage: data.lastYearPercentage,
+        subjectsWeakIn: data.subjectsWeakIn,
+        category: data.category,
+        examsPreparingFor: data.examsPreparingFor,
+        paymentMode: data.paymentMode,
+        transactionId: data.transactionId,
+        amountPaid: data.amountPaid,
+        place: data.place,
+        declarationDate: data.declarationDate,
+        studentPhoto: data.studentPhoto,
+        previousMarksheet: data.previousMarksheet,
+        aadhaarCard: data.aadhaarCard,
+        incomeCertificate: data.incomeCertificate,
+        casteCertificate: data.casteCertificate,
+      };
+      
+      const result = await submitApplicationForm(submissionData);
       
       if (result.success) {
         toast({
