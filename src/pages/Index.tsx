@@ -1,7 +1,8 @@
+
+import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
-
+import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -13,8 +14,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
@@ -22,91 +21,311 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Download } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import PDFPreview from '@/components/PDFPreview';
+
+const MAX_FILE_SIZE = 50 * 1024; // 50KB in bytes
 
 const formSchema = z.object({
-  firstName: z.string().min(2, {
-    message: "First name must be at least 2 characters.",
+  admissionNumber: z.string().optional(),
+  admissionType: z.string().optional(),
+  fullName: z.string().min(2, {
+    message: "Full Name must be at least 2 characters.",
   }),
-  lastName: z.string().min(2, {
-    message: "Last name must be at least 2 characters.",
+  dateOfBirth: z.string({
+    required_error: "A date of birth is required.",
   }),
-  dateOfBirth: z.date(),
-  gender: z.enum(["male", "female", "other"]),
+  gender: z.string().optional(),
+  class: z.string().optional(),
+  currentSchool: z.string().optional(),
+  aadhaarNumber: z.string().min(12, {
+    message: "Aadhaar number must be exactly 12 digits.",
+  }).max(12, {
+    message: "Aadhaar number must be exactly 12 digits.",
+  }).regex(/^\d{12}$/, {
+    message: "Aadhaar number must contain only 12 digits.",
+  }),
+  fatherName: z.string().optional(),
+  motherName: z.string().optional(),
+  fatherOccupation: z.string().optional(),
+  motherOccupation: z.string().optional(),
+  contactNumber: z.string().optional(),
   email: z.string().email({
-    message: "Please enter a valid email address.",
+    message: "Please enter a valid email.",
   }),
-  phone: z.string().regex(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/, {
-    message: "Please enter a valid phone number.",
+  satsNumber: z.string().optional(),
+  streetAddress: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  pinCode: z.string().optional(),
+  landmark: z.string().optional(),
+  lastYearPercentage: z.string().optional(),
+  category: z.string().optional(),
+  subjectsWeakIn: z.string().optional(),
+  examsPreparingFor: z.array(z.string()).optional(),
+  paymentMode: z.string().optional(),
+  transactionId: z.string().optional(),
+  amountPaid: z.string().optional(),
+  place: z.string().optional(),
+  declarationDate: z.string({
+    required_error: "A declaration date is required.",
   }),
-  address: z.string().min(5, {
-    message: "Address must be at least 5 characters.",
-  }),
-  city: z.string().min(2, {
-    message: "City must be at least 2 characters.",
-  }),
-  state: z.string().min(2, {
-    message: "State must be at least 2 characters.",
-  }),
-  zipCode: z.string().regex(/^\d{5}(?:-\d{4})?$/, {
-    message: "Please enter a valid ZIP code.",
-  }),
-  guardianName: z.string().min(2, {
-    message: "Guardian's name must be at least 2 characters.",
-  }),
-  guardianRelation: z.enum(["father", "mother", "guardian", "other"]),
-  guardianPhone: z.string().regex(/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/, {
-    message: "Please enter a valid phone number.",
-  }),
-  guardianEmail: z.string().email({
-    message: "Please enter a valid email address.",
-  }).optional(),
-  grade: z.enum(["kindergarten", "grade1", "grade2", "grade3", "grade4", "grade5", "grade6", "grade7", "grade8", "grade9", "grade10", "grade11", "grade12"]),
-  previousSchool: z.string().optional(),
-  medicalConditions: z.string().optional(),
-  emergencyContact: z.string().optional(),
-  agreement: z.boolean().refine((value) => value === true, {
-    message: "You must agree to the terms and conditions.",
-  }),
+  studentPhoto: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Student photo must be less than 50KB"),
+  previousMarksheet: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Previous marksheet must be less than 50KB"),
+  aadhaarCard: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Aadhaar card must be less than 50KB"),
+  incomeCertificate: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Income certificate must be less than 50KB"),
+  casteCertificate: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Caste certificate must be less than 50KB"),
 })
 
-export default function Index() {
+const Index = () => {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      dateOfBirth: new Date(),
-      gender: "male",
+      fullName: "",
+      dateOfBirth: new Date().toISOString().split('T')[0],
+      gender: "",
+      class: "",
+      currentSchool: "",
+      aadhaarNumber: "",
+      fatherName: "",
+      motherName: "",
+      fatherOccupation: "",
+      motherOccupation: "",
+      contactNumber: "",
       email: "",
-      phone: "",
-      address: "",
+      satsNumber: "",
+      streetAddress: "",
       city: "",
-      state: "",
-      zipCode: "",
-      guardianName: "",
-      guardianRelation: "father",
-      guardianPhone: "",
-      guardianEmail: "",
-      grade: "kindergarten",
-      previousSchool: "",
-      medicalConditions: "",
-      emergencyContact: "",
-      agreement: false,
+      state: "Karnataka",
+      pinCode: "",
+      landmark: "",
+      lastYearPercentage: "",
+      category: "",
+      subjectsWeakIn: "",
+      examsPreparingFor: [],
+      paymentMode: "",
+      transactionId: "",
+      amountPaid: "",
+      place: "",
+      declarationDate: new Date().toISOString().split('T')[0],
     },
   })
 
-  const { isSubmitting } = form.formState
+  // Helper function to validate file size
+  const validateFileSize = (file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: `File size must be less than 50KB. Current file is ${Math.round(file.size / 1024)}KB.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Form values:", values)
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      console.log('Starting form submission with values:', values);
+      
+      // Prepare the data for database insertion
+      const applicationData = {
+        admission_number: values.admissionNumber || '',
+        admission_type: values.admissionType || '',
+        full_name: values.fullName,
+        date_of_birth: values.dateOfBirth,
+        gender: values.gender || '',
+        class: values.class || '',
+        current_school: values.currentSchool || '',
+        aadhaar_number: values.aadhaarNumber,
+        father_name: values.fatherName || '',
+        mother_name: values.motherName || '',
+        father_occupation: values.fatherOccupation || '',
+        mother_occupation: values.motherOccupation || '',
+        contact_number: values.contactNumber || '',
+        email: values.email,
+        sats_number: values.satsNumber || '',
+        street_address: values.streetAddress || '',
+        city: values.city || '',
+        state: values.state || '',
+        pin_code: values.pinCode || '',
+        landmark: values.landmark || null,
+        last_year_percentage: parseFloat(values.lastYearPercentage || '0'),
+        category: values.category || '',
+        subjects_weak_in: values.subjectsWeakIn || null,
+        exams_preparing_for: values.examsPreparingFor || [],
+        payment_mode: values.paymentMode || '',
+        transaction_id: values.transactionId || '',
+        amount_paid: parseFloat(values.amountPaid || '0'),
+        place: values.place || '',
+        declaration_date: values.declarationDate,
+      };
+
+      console.log('Prepared application data:', applicationData);
+
+      // Insert application data
+      const { data: application, error: applicationError } = await supabase
+        .from('applications')
+        .insert([applicationData])
+        .select()
+        .single();
+
+      if (applicationError) {
+        console.error('Application insertion error:', applicationError);
+        throw new Error(`Failed to save application: ${applicationError.message}`);
+      }
+
+      console.log('Application inserted successfully:', application);
+
+      // Upload documents if they exist
+      const documents = [
+        { file: values.studentPhoto, type: 'student_photo' },
+        { file: values.previousMarksheet, type: 'previous_marksheet' },
+        { file: values.aadhaarCard, type: 'aadhaar_card' },
+        { file: values.incomeCertificate, type: 'income_certificate' },
+        { file: values.casteCertificate, type: 'caste_certificate' }
+      ];
+
+      let uploadedDocuments = 0;
+      for (const doc of documents) {
+        if (doc.file && doc.file instanceof File) {
+          try {
+            const fileName = `${application.id}/${doc.type}_${Date.now()}_${doc.file.name}`;
+            console.log(`Uploading ${doc.type} as ${fileName}`);
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('application-documents')
+              .upload(fileName, doc.file);
+
+            if (uploadError) {
+              console.error(`Upload error for ${doc.type}:`, uploadError);
+              throw new Error(`Failed to upload ${doc.type}: ${uploadError.message}`);
+            }
+
+            console.log(`Upload successful for ${doc.type}:`, uploadData);
+
+            // Insert document record
+            const { error: docError } = await supabase
+              .from('application_documents')
+              .insert({
+                application_id: application.id,
+                document_type: doc.type,
+                file_name: doc.file.name,
+                file_path: uploadData.path
+              });
+
+            if (docError) {
+              console.error(`Document record error for ${doc.type}:`, docError);
+              throw new Error(`Failed to save document record for ${doc.type}: ${docError.message}`);
+            }
+
+            uploadedDocuments++;
+            console.log(`Document record saved for ${doc.type}`);
+          } catch (error) {
+            console.error(`Error processing ${doc.type}:`, error);
+            throw error;
+          }
+        }
+      }
+
+      toast({
+        title: "Success!",
+        description: `Application submitted successfully! ${uploadedDocuments} documents uploaded.`,
+      });
+
+      // Reset form after successful submission
+      form.reset();
+
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to submit application. Please try again.",
+        variant: "destructive",
+      });
+    }
   }
 
+  const isSubmitting = form.formState.isSubmitting;
+
+  const downloadPDF = async () => {
+    try {
+      const formData = form.getValues();
+      
+      // Check if required fields are filled
+      if (!formData.fullName.trim()) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in at least the student's full name before downloading PDF.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('PDF download requested for:', formData.fullName);
+      
+      toast({
+        title: "PDF Download",
+        description: "Use the Preview PDF button to view and download your application form.",
+      });
+      
+    } catch (error) {
+      console.error('PDF download error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to prepare PDF download. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Helper function to safely create object URL
+  const createSafeObjectURL = (file: any) => {
+    if (file && file instanceof File && file.size > 0) {
+      try {
+        return URL.createObjectURL(file);
+      } catch (error) {
+        console.error('Error creating object URL:', error);
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const examOptions = [
+    { id: "navodaya", label: "Navodaya" },
+    { id: "sainik", label: "Sainik" },
+    { id: "morarji", label: "Morarji" },
+    { id: "kittur", label: "Kittur" },
+    { id: "alvas", label: "Alvas" },
+  ];
+
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+      <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
         {/* Header */}
-        <div className="text-center mb-8 p-6 rounded-xl card-elevated">
-          <div className="flex items-center justify-center gap-4 mb-4">
+        <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-lg p-3 sm:p-6 mx-2 sm:mx-0">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-4">
             <img 
               src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
               alt="Visiona Education Academy Logo" 
@@ -114,162 +333,143 @@ export default function Index() {
             />
             <div className="text-center">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
-              <p className="text-sm sm:text-base text-gray-600 font-medium">STUDENT ADMISSION FORM</p>
+              <p className="text-sm sm:text-base lg:text-lg text-gray-700">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
+              <p className="text-xs sm:text-sm text-gray-600">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
+              <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1">16th Cross Vidyagiri Bagalkot</p>
             </div>
           </div>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* Student Information */}
-            <div className="p-6 rounded-xl form-section">
-              <h2 className="text-lg font-semibold mb-6 text-primary border-b border-primary/20 pb-2">Student Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">First Name *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter first name" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Last Name *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter last name" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="dateOfBirth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Date of Birth *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="date" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="gender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Gender *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="select-highlight">
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Email Address *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Enter email address" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Phone Number *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="tel" 
-                          placeholder="Enter phone number" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
+        <div className="px-2 sm:px-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+              {/* General Information with Photo */}
+              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">General Information</h2>
+                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {/* Admission Number */}
+                    <FormField
+                      control={form.control}
+                      name="admissionNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 text-sm sm:text-base">Admission Number</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Enter admission number" 
+                              {...field} 
+                              className="border-gray-300 text-sm sm:text-base"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            {/* Address Information */}
-            <div className="p-6 rounded-xl form-section">
-              <h2 className="text-lg font-semibold mb-6 text-primary border-b border-primary/20 pb-2">Address Information</h2>
-              <div className="grid grid-cols-1 gap-6">
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Street Address *</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter complete address" 
-                          {...field} 
-                          className="textarea-highlight min-h-[80px]"
+                    {/* Admission Type */}
+                    <FormField
+                      control={form.control}
+                      name="admissionType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 text-sm sm:text-base">Admission Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
+                                <SelectValue placeholder="Select admission type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                              <SelectItem value="residential">Residential</SelectItem>
+                              <SelectItem value="local">Local</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Student Photo Upload Field */}
+                    <FormField
+                      control={form.control}
+                      name="studentPhoto"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel className="text-gray-700 text-sm sm:text-base">Student Photo</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const file = e.target.files[0];
+                                  if (validateFileSize(file)) {
+                                    field.onChange(file);
+                                  } else {
+                                    e.target.value = '';
+                                  }
+                                }
+                              }}
+                              className="border-gray-300 text-sm sm:text-base"
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs text-gray-500">
+                            Maximum file size: 50KB
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Student Photo Display Box */}
+                  <div className="flex-shrink-0 self-center lg:self-start">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-gray-100 overflow-hidden mx-auto lg:mx-0">
+                      {form.watch('studentPhoto') && createSafeObjectURL(form.watch('studentPhoto')) ? (
+                        <img 
+                          src={createSafeObjectURL(form.watch('studentPhoto'))} 
+                          alt="Student"
+                          className="w-full h-full object-cover"
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      ) : (
+                        <div className="text-gray-400 text-xs text-center p-1">
+                          Student Photo
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Information */}
+              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Student Information</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <FormField
                     control={form.control}
-                    name="city"
+                    name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">City *</FormLabel>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Full Name</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Enter city" 
-                            {...field} 
-                            className="input-highlight"
+                          <Input placeholder="Enter full name" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dateOfBirth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Date of Birth</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            className="border-gray-300 text-sm sm:text-base"
                           />
                         </FormControl>
                         <FormMessage />
@@ -278,16 +478,56 @@ export default function Index() {
                   />
                   <FormField
                     control={form.control}
-                    name="state"
+                    name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">State *</FormLabel>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Gender</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="class"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Class</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
+                              <SelectValue placeholder="Select class" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                            <SelectItem value="3rd">3rd Standard</SelectItem>
+                            <SelectItem value="4th">4th Standard</SelectItem>
+                            <SelectItem value="5th">5th Standard</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="currentSchool"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Current School</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Enter state" 
-                            {...field} 
-                            className="input-highlight"
-                          />
+                          <Input placeholder="Enter current school" {...field} className="border-gray-300 text-sm sm:text-base" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -295,15 +535,16 @@ export default function Index() {
                   />
                   <FormField
                     control={form.control}
-                    name="zipCode"
+                    name="aadhaarNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">ZIP Code *</FormLabel>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Aadhaar Number *</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="Enter ZIP code" 
+                            placeholder="Enter 12-digit Aadhaar number" 
                             {...field} 
-                            className="input-highlight"
+                            className="border-gray-300 text-sm sm:text-base"
+                            maxLength={12}
                           />
                         </FormControl>
                         <FormMessage />
@@ -312,229 +553,521 @@ export default function Index() {
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Guardian Information */}
-            <div className="p-6 rounded-xl form-section">
-              <h2 className="text-lg font-semibold mb-6 text-primary border-b border-primary/20 pb-2">Guardian Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="guardianName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Guardian's Full Name *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter guardian's name" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="guardianRelation"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Relationship *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+              {/* Parent/Guardian Information */}
+              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Parent/Guardian Information</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <FormField
+                    control={form.control}
+                    name="fatherName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Father's Name</FormLabel>
                         <FormControl>
-                          <SelectTrigger className="select-highlight">
-                            <SelectValue placeholder="Select relationship" />
-                          </SelectTrigger>
+                          <Input placeholder="Enter father's name" {...field} className="border-gray-300 text-sm sm:text-base" />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="father">Father</SelectItem>
-                          <SelectItem value="mother">Mother</SelectItem>
-                          <SelectItem value="guardian">Guardian</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="guardianPhone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Guardian's Phone *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="tel" 
-                          placeholder="Enter guardian's phone" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="guardianEmail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Guardian's Email</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="email" 
-                          placeholder="Enter guardian's email" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Academic Information */}
-            <div className="p-6 rounded-xl form-section">
-              <h2 className="text-lg font-semibold mb-6 text-primary border-b border-primary/20 pb-2">Academic Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="grade"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Grade/Class Applying For *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="motherName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Mother's Name</FormLabel>
                         <FormControl>
-                          <SelectTrigger className="select-highlight">
-                            <SelectValue placeholder="Select grade" />
-                          </SelectTrigger>
+                          <Input placeholder="Enter mother's name" {...field} className="border-gray-300 text-sm sm:text-base" />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="kindergarten">Kindergarten</SelectItem>
-                          <SelectItem value="grade1">Grade 1</SelectItem>
-                          <SelectItem value="grade2">Grade 2</SelectItem>
-                          <SelectItem value="grade3">Grade 3</SelectItem>
-                          <SelectItem value="grade4">Grade 4</SelectItem>
-                          <SelectItem value="grade5">Grade 5</SelectItem>
-                          <SelectItem value="grade6">Grade 6</SelectItem>
-                          <SelectItem value="grade7">Grade 7</SelectItem>
-                          <SelectItem value="grade8">Grade 8</SelectItem>
-                          <SelectItem value="grade9">Grade 9</SelectItem>
-                          <SelectItem value="grade10">Grade 10</SelectItem>
-                          <SelectItem value="grade11">Grade 11</SelectItem>
-                          <SelectItem value="grade12">Grade 12</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="previousSchool"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Previous School</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter previous school name" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="fatherOccupation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Father's Occupation</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter father's occupation" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="motherOccupation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Mother's Occupation</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter mother's occupation" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="contactNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Contact Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter contact number" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter email" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="satsNumber"
+                    render={({ field }) => (
+                      <FormItem className="sm:col-span-2">
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">SATS Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter SATS number" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Medical Information */}
-            <div className="p-6 rounded-xl form-section">
-              <h2 className="text-lg font-semibold mb-6 text-primary border-b border-primary/20 pb-2">Medical Information</h2>
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="medicalConditions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Medical Conditions/Allergies</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Please list any medical conditions, allergies, or special needs" 
-                          {...field} 
-                          className="textarea-highlight min-h-[100px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="emergencyContact"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Emergency Contact (if different from guardian)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Emergency contact name and phone number" 
-                          {...field} 
-                          className="input-highlight"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Address */}
+              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Address</h2>
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                  <FormField
+                    control={form.control}
+                    name="streetAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Street Address</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter street address" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 text-sm sm:text-base">City</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter city" {...field} className="border-gray-300 text-sm sm:text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 text-sm sm:text-base">State</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
+                                <SelectValue placeholder="Select state" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                              <SelectItem value="Karnataka">Karnataka</SelectItem>
+                              <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
+                              <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                              <SelectItem value="Kerala">Kerala</SelectItem>
+                              <SelectItem value="Telangana">Telangana</SelectItem>
+                              <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                              <SelectItem value="Goa">Goa</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="pinCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 text-sm sm:text-base">PIN Code</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter PIN code" {...field} className="border-gray-300 text-sm sm:text-base" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="landmark"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Landmark (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter landmark" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Agreement */}
-            <div className="p-6 rounded-xl form-section">
-              <FormField
-                control={form.control}
-                name="agreement"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className="mt-1"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm font-medium text-gray-700">
-                        I agree to the terms and conditions *
-                      </FormLabel>
-                      <p className="text-xs text-gray-600">
-                        I certify that all information provided is accurate and complete. I understand that any false information may result in the rejection of this application.
-                      </p>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
+              {/* Academic Information */}
+              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Academic Information</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lastYearPercentage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Last Year Percentage</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter percentage" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                            <SelectItem value="general">General</SelectItem>
+                            <SelectItem value="obc">OBC</SelectItem>
+                            <SelectItem value="sc">SC</SelectItem>
+                            <SelectItem value="st">ST</SelectItem>
+                            <SelectItem value="ews">EWS</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="subjectsWeakIn"
+                    render={({ field }) => (
+                      <FormItem className="sm:col-span-2">
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Subjects Weak In</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter subjects" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="examsPreparingFor"
+                    render={({ field }) => (
+                      <FormItem className="sm:col-span-2">
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Exams Preparing For</FormLabel>
+                        <FormDescription className="text-xs sm:text-sm">
+                          Select all exams you are preparing for
+                        </FormDescription>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+                          {examOptions.map((exam) => (
+                            <div key={exam.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={exam.id}
+                                checked={field.value?.includes(exam.id)}
+                                onCheckedChange={(checked) => {
+                                  const currentValue = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...currentValue, exam.id]);
+                                  } else {
+                                    field.onChange(currentValue.filter((value) => value !== exam.id));
+                                  }
+                                }}
+                              />
+                              <label htmlFor={exam.id} className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                {exam.label}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-center pt-6">
-              <Button 
-                type="submit" 
-                className="w-full sm:w-auto px-12 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "Submit Application"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              {/* Fee Payment Details */}
+              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Fee Payment Details</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  <FormField
+                    control={form.control}
+                    name="paymentMode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Payment Mode</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter payment mode" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="transactionId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Transaction ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter transaction ID" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="amountPaid"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Amount Paid</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter amount paid" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Upload Documents */}
+              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Upload Documents</h2>
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                  <FormField
+                    control={form.control}
+                    name="previousMarksheet"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Previous Marksheet</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                if (validateFileSize(file)) {
+                                  field.onChange(file);
+                                } else {
+                                  e.target.value = '';
+                                }
+                              }
+                            }}
+                            className="border-gray-300 text-sm sm:text-base"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Maximum file size: 50KB
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="aadhaarCard"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Aadhaar Card</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                if (validateFileSize(file)) {
+                                  field.onChange(file);
+                                } else {
+                                  e.target.value = '';
+                                }
+                              }
+                            }}
+                            className="border-gray-300 text-sm sm:text-base"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Maximum file size: 50KB
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="incomeCertificate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Income Certificate</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                if (validateFileSize(file)) {
+                                  field.onChange(file);
+                                } else {
+                                  e.target.value = '';
+                                }
+                              }
+                            }}
+                            className="border-gray-300 text-sm sm:text-base"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Maximum file size: 50KB
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="casteCertificate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Caste Certificate</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                if (validateFileSize(file)) {
+                                  field.onChange(file);
+                                } else {
+                                  e.target.value = '';
+                                }
+                              }
+                            }}
+                            className="border-gray-300 text-sm sm:text-base"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Maximum file size: 50KB
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Declarations */}
+              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Declarations</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <FormField
+                    control={form.control}
+                    name="place"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Place</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter place" {...field} className="border-gray-300 text-sm sm:text-base" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="declarationDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Declaration Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            className="border-gray-300 text-sm sm:text-base"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pb-6 sm:pb-8">
+                <PDFPreview formData={form.getValues()} />
+                <Button 
+                  type="button"
+                  onClick={downloadPDF}
+                  variant="outline" 
+                  size="lg" 
+                  className="bg-white text-gray-600 border-gray-600 hover:bg-gray-50 px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto"
+                >
+                  <Download className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  Download PDF
+                </Button>
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Application"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default Index;
