@@ -1,10 +1,10 @@
-
 import React, { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Eye, Download } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useToast } from '@/hooks/use-toast';
 
 interface PDFPreviewProps {
   formData: any;
@@ -13,16 +13,26 @@ interface PDFPreviewProps {
 const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
   const formContentRef = useRef<HTMLDivElement>(null);
   const documentsContentRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const downloadPDF = async () => {
-    if (!formContentRef.current) return;
+    if (!formContentRef.current) {
+      toast({
+        title: "Error",
+        description: "Unable to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
+      console.log('Starting PDF generation...');
+      
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
 
-      // First, capture and add the form content
+      // Capture the form content
       const formCanvas = await html2canvas(formContentRef.current, {
         scale: 1.5,
         useCORS: true,
@@ -49,7 +59,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       ];
 
       for (const doc of documents) {
-        if (doc.file) {
+        if (doc.file && doc.file instanceof File) {
           try {
             const imageUrl = URL.createObjectURL(doc.file);
             
@@ -89,10 +99,22 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
         }
       }
 
-      pdf.save(`${formData.fullName || 'Student'}_Application_Form.pdf`);
+      const fileName = `${formData.fullName || 'Student'}_Application_Form.pdf`;
+      pdf.save(fileName);
+      
+      toast({
+        title: "Success!",
+        description: `PDF downloaded successfully as ${fileName}`,
+      });
+      
+      console.log('PDF generated and downloaded successfully');
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -333,16 +355,20 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           type="button"
           variant="outline" 
           size="lg" 
-          className="bg-white text-gray-600 border-gray-600 hover:bg-gray-50 px-12 py-3 text-lg font-semibold mr-4"
+          className="bg-white text-gray-600 border-gray-600 hover:bg-gray-50 px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto"
         >
-          <Eye className="mr-2 h-5 w-5" />
+          <Eye className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
           Preview PDF
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
             Application Form Preview
+            <Button onClick={downloadPDF} className="ml-4">
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF
+            </Button>
           </DialogTitle>
         </DialogHeader>
         <div className="mt-4">

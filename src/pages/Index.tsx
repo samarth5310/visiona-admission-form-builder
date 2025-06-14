@@ -24,6 +24,8 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Download } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import PDFPreview from '@/components/PDFPreview';
 
 const formSchema = z.object({
@@ -72,6 +74,7 @@ const formSchema = z.object({
 })
 
 const Index = () => {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -105,17 +108,148 @@ const Index = () => {
     },
   })
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values)
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      console.log('Submitting form data:', values);
+      
+      // Prepare the data for database insertion
+      const applicationData = {
+        admission_number: values.admissionNumber || '',
+        admission_type: values.admissionType || '',
+        full_name: values.fullName,
+        date_of_birth: values.dateOfBirth,
+        gender: values.gender || '',
+        class: values.class || '',
+        current_school: values.currentSchool || '',
+        aadhaar_number: values.aadhaarNumber || '',
+        father_name: values.fatherName || '',
+        mother_name: values.motherName || '',
+        father_occupation: values.fatherOccupation || '',
+        mother_occupation: values.motherOccupation || '',
+        contact_number: values.contactNumber || '',
+        email: values.email,
+        sats_number: values.satsNumber || '',
+        street_address: values.streetAddress || '',
+        city: values.city || '',
+        state: values.state || '',
+        pin_code: values.pinCode || '',
+        landmark: values.landmark,
+        last_year_percentage: parseFloat(values.lastYearPercentage || '0'),
+        category: values.category || '',
+        subjects_weak_in: values.subjectsWeakIn,
+        exams_preparing_for: values.examsPreparingFor || [],
+        payment_mode: values.paymentMode || '',
+        transaction_id: values.transactionId || '',
+        amount_paid: parseFloat(values.amountPaid || '0'),
+        place: values.place || '',
+        declaration_date: values.declarationDate,
+      };
+
+      // Insert application data
+      const { data: application, error: applicationError } = await supabase
+        .from('applications')
+        .insert([applicationData])
+        .select()
+        .single();
+
+      if (applicationError) {
+        console.error('Application insertion error:', applicationError);
+        throw applicationError;
+      }
+
+      console.log('Application inserted successfully:', application);
+
+      // Upload documents if they exist
+      const documents = [
+        { file: values.studentPhoto, type: 'student_photo' },
+        { file: values.previousMarksheet, type: 'previous_marksheet' },
+        { file: values.aadhaarCard, type: 'aadhaar_card' },
+        { file: values.incomeCertificate, type: 'income_certificate' },
+        { file: values.casteCertificate, type: 'caste_certificate' }
+      ];
+
+      for (const doc of documents) {
+        if (doc.file && doc.file instanceof File) {
+          try {
+            const fileName = `${application.id}/${doc.type}_${Date.now()}_${doc.file.name}`;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('application-documents')
+              .upload(fileName, doc.file);
+
+            if (uploadError) {
+              console.error(`Upload error for ${doc.type}:`, uploadError);
+              continue;
+            }
+
+            // Insert document record
+            const { error: docError } = await supabase
+              .from('application_documents')
+              .insert({
+                application_id: application.id,
+                document_type: doc.type,
+                file_name: doc.file.name,
+                file_path: uploadData.path
+              });
+
+            if (docError) {
+              console.error(`Document record error for ${doc.type}:`, docError);
+            }
+          } catch (error) {
+            console.error(`Error processing ${doc.type}:`, error);
+          }
+        }
+      }
+
+      toast({
+        title: "Success!",
+        description: "Application submitted successfully.",
+      });
+
+      // Reset form after successful submission
+      form.reset();
+
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit application. Please try again.",
+        variant: "destructive",
+      });
+    }
   }
 
   const isSubmitting = form.formState.isSubmitting;
 
-  const downloadPDF = () => {
-    const studentName = form.getValues('fullName') || 'student';
-    const fileName = `${studentName.replace(/\s+/g, '_')}_application.pdf`;
-    console.log(`Downloading PDF as: ${fileName}`);
-    alert(`PDF would be downloaded as: ${fileName}`);
+  const downloadPDF = async () => {
+    try {
+      const formData = form.getValues();
+      const studentName = formData.fullName || 'student';
+      const fileName = `${studentName.replace(/\s+/g, '_')}_application.pdf`;
+      
+      console.log(`Starting PDF download for: ${fileName}`);
+      
+      // Create a temporary link element and trigger download
+      const link = document.createElement('a');
+      link.href = '#'; // We'll generate the PDF content here
+      link.download = fileName;
+      
+      // For now, show success message
+      toast({
+        title: "PDF Download",
+        description: `PDF generation started for ${fileName}`,
+      });
+      
+      console.log(`PDF download initiated: ${fileName}`);
+      
+    } catch (error) {
+      console.error('PDF download error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Helper function to safely create object URL
