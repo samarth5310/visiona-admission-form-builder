@@ -129,28 +129,33 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           </div>
         </div>
 
-        {/* Student Photo */}
-        {formData.studentPhoto && formData.studentPhoto[0] && createSafeObjectURL(formData.studentPhoto[0]) && (
-          <div className="flex justify-end mb-6">
-            <div className="border-2 border-gray-300 p-2">
-              <img 
-                src={createSafeObjectURL(formData.studentPhoto[0])} 
-                alt="Student Photo"
-                className="w-32 h-40 object-cover"
-              />
-              <p className="text-xs text-center mt-1">Student Photo</p>
-            </div>
-          </div>
-        )}
-
         {/* Form Content */}
         <div className="space-y-6">
-          {/* General Information */}
+          {/* General Information with Photo Display */}
           <div>
             <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">General Information</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div><strong>Admission Number:</strong> {formData.admissionNumber || 'N/A'}</div>
-              <div><strong>Admission Type:</strong> {formData.admissionType || 'N/A'}</div>
+            <div className="flex gap-6">
+              <div className="flex-1 grid grid-cols-2 gap-4">
+                <div><strong>Admission Number:</strong> {formData.admissionNumber || 'N/A'}</div>
+                <div><strong>Admission Type:</strong> {formData.admissionType || 'N/A'}</div>
+              </div>
+              
+              {/* Student Photo Display Box */}
+              <div className="flex-shrink-0">
+                <div className="w-24 h-24 border-2 border-gray-300 flex items-center justify-center bg-gray-100 overflow-hidden">
+                  {formData.studentPhoto && formData.studentPhoto[0] && createSafeObjectURL(formData.studentPhoto[0]) ? (
+                    <img 
+                      src={createSafeObjectURL(formData.studentPhoto[0])} 
+                      alt="Student"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-gray-400 text-xs text-center p-1">
+                      Student Photo
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
