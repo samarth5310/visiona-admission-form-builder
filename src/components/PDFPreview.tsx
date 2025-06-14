@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,13 +17,15 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
     try {
       const canvas = await html2canvas(contentRef.current, {
-        scale: 2,
+        scale: 1.5, // Reduced from 2 to 1.5 for smaller file size
         useCORS: true,
         allowTaint: true,
         logging: false,
+        backgroundColor: '#ffffff'
       });
 
-      const imgData = canvas.toDataURL('image/png');
+      // Use JPEG with quality compression instead of PNG
+      const imgData = canvas.toDataURL('image/jpeg', 0.8); // 0.8 quality for good balance of size/quality
       const pdf = new jsPDF('p', 'mm', 'a4');
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -35,14 +36,15 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
       const imgY = 0;
 
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      // Use JPEG format in PDF as well for better compression
+      pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       
       // If content is longer than one page, add more pages
       if (imgHeight * ratio > pdfHeight) {
         let position = pdfHeight;
         while (position < imgHeight * ratio) {
           pdf.addPage();
-          pdf.addImage(imgData, 'PNG', imgX, -position, imgWidth * ratio, imgHeight * ratio);
+          pdf.addImage(imgData, 'JPEG', imgX, -position, imgWidth * ratio, imgHeight * ratio);
           position += pdfHeight;
         }
       }
