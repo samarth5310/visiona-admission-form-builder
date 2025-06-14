@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -328,7 +329,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
               alt="Visiona Education Academy Logo" 
-              className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain"
             />
             <div className="text-center">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
