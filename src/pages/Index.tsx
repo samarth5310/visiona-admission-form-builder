@@ -161,7 +161,7 @@ const Index = () => {
 
         <div className="px-2 sm:px-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
               {/* General Information with Photo Display */}
               <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">General Information</h2>
@@ -205,6 +205,30 @@ const Index = () => {
                               <SelectItem value="transfer">Transfer</SelectItem>
                             </SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Student Photo Upload Field */}
+                    <FormField
+                      control={form.control}
+                      name="studentPhoto"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel className="text-gray-700 text-sm sm:text-base">Student Photo</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  field.onChange(e.target.files[0]);
+                                }
+                              }}
+                              className="border-gray-300 text-sm sm:text-base"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -630,28 +654,6 @@ const Index = () => {
               <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Upload Documents</h2>
                 <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                  <FormField
-                    control={form.control}
-                    name="studentPhoto"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Student Photo</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                field.onChange(e.target.files[0]);
-                              }
-                            }}
-                            className="border-gray-300 text-sm sm:text-base"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                   <FormField
                     control={form.control}
                     name="previousMarksheet"
