@@ -9,7 +9,143 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      application_documents: {
+        Row: {
+          application_id: string
+          created_at: string
+          document_type: string
+          file_name: string
+          file_path: string
+          id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          document_type: string
+          file_name: string
+          file_path: string
+          id?: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applications: {
+        Row: {
+          aadhaar_number: string
+          admission_number: string
+          admission_type: string
+          amount_paid: number
+          category: string
+          city: string
+          class: string
+          contact_number: string
+          created_at: string
+          current_school: string
+          date_of_birth: string
+          declaration_date: string
+          email: string
+          exams_preparing_for: string[]
+          father_name: string
+          father_occupation: string
+          full_name: string
+          gender: string
+          id: string
+          landmark: string | null
+          last_year_percentage: number
+          mother_name: string
+          mother_occupation: string
+          payment_mode: string
+          pin_code: string
+          place: string
+          sats_number: string
+          state: string
+          street_address: string
+          subjects_weak_in: string | null
+          transaction_id: string
+        }
+        Insert: {
+          aadhaar_number: string
+          admission_number: string
+          admission_type: string
+          amount_paid: number
+          category: string
+          city: string
+          class: string
+          contact_number: string
+          created_at?: string
+          current_school: string
+          date_of_birth: string
+          declaration_date: string
+          email: string
+          exams_preparing_for: string[]
+          father_name: string
+          father_occupation: string
+          full_name: string
+          gender: string
+          id?: string
+          landmark?: string | null
+          last_year_percentage: number
+          mother_name: string
+          mother_occupation: string
+          payment_mode: string
+          pin_code: string
+          place: string
+          sats_number: string
+          state: string
+          street_address: string
+          subjects_weak_in?: string | null
+          transaction_id: string
+        }
+        Update: {
+          aadhaar_number?: string
+          admission_number?: string
+          admission_type?: string
+          amount_paid?: number
+          category?: string
+          city?: string
+          class?: string
+          contact_number?: string
+          created_at?: string
+          current_school?: string
+          date_of_birth?: string
+          declaration_date?: string
+          email?: string
+          exams_preparing_for?: string[]
+          father_name?: string
+          father_occupation?: string
+          full_name?: string
+          gender?: string
+          id?: string
+          landmark?: string | null
+          last_year_percentage?: number
+          mother_name?: string
+          mother_occupation?: string
+          payment_mode?: string
+          pin_code?: string
+          place?: string
+          sats_number?: string
+          state?: string
+          street_address?: string
+          subjects_weak_in?: string | null
+          transaction_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

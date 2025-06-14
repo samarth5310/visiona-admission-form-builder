@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,42 +11,82 @@ interface PDFPreviewProps {
 }
 
 const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
+  const formContentRef = useRef<HTMLDivElement>(null);
+  const documentsContentRef = useRef<HTMLDivElement>(null);
 
   const downloadPDF = async () => {
-    if (!contentRef.current) return;
+    if (!formContentRef.current) return;
 
     try {
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 1.5, // Reduced from 2 to 1.5 for smaller file size
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // First, capture and add the form content
+      const formCanvas = await html2canvas(formContentRef.current, {
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
         logging: false,
         backgroundColor: '#ffffff'
       });
 
-      // Use JPEG with quality compression instead of PNG
-      const imgData = canvas.toDataURL('image/jpeg', 0.8); // 0.8 quality for good balance of size/quality
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
+      const formImgData = formCanvas.toDataURL('image/jpeg', 0.8);
+      const formImgWidth = formCanvas.width;
+      const formImgHeight = formCanvas.height;
+      const formRatio = Math.min(pageWidth / formImgWidth, pageHeight / formImgHeight);
+      const formImgX = (pageWidth - formImgWidth * formRatio) / 2;
 
-      // Use JPEG format in PDF as well for better compression
-      pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      
-      // If content is longer than one page, add more pages
-      if (imgHeight * ratio > pdfHeight) {
-        let position = pdfHeight;
-        while (position < imgHeight * ratio) {
-          pdf.addPage();
-          pdf.addImage(imgData, 'JPEG', imgX, -position, imgWidth * ratio, imgHeight * ratio);
-          position += pdfHeight;
+      pdf.addImage(formImgData, 'JPEG', formImgX, 0, formImgWidth * formRatio, formImgHeight * formRatio);
+
+      // Add document images on separate pages
+      const documents = [
+        { files: formData.studentPhoto, title: 'Student Photo' },
+        { files: formData.previousMarksheet, title: 'Previous Marksheet' },
+        { files: formData.aadhaarCard, title: 'Aadhaar Card' },
+        { files: formData.incomeCertificate, title: 'Income Certificate' },
+        { files: formData.casteCertificate, title: 'Caste Certificate' }
+      ];
+
+      for (const doc of documents) {
+        if (doc.files && doc.files[0]) {
+          try {
+            const file = doc.files[0];
+            const imageUrl = URL.createObjectURL(file);
+            
+            // Create an image element to get dimensions
+            const img = new Image();
+            await new Promise((resolve, reject) => {
+              img.onload = resolve;
+              img.onerror = reject;
+              img.src = imageUrl;
+            });
+
+            // Add new page for each document
+            pdf.addPage();
+            
+            // Add title
+            pdf.setFontSize(16);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(doc.title, pageWidth / 2, 20, { align: 'center' });
+
+            // Calculate image dimensions to fit page
+            const maxWidth = pageWidth - 20;
+            const maxHeight = pageHeight - 40;
+            const imgRatio = Math.min(maxWidth / img.width, maxHeight / img.height);
+            const imgWidth = img.width * imgRatio;
+            const imgHeight = img.height * imgRatio;
+            const imgX = (pageWidth - imgWidth) / 2;
+            const imgY = 30;
+
+            // Add image to PDF
+            pdf.addImage(imageUrl, 'JPEG', imgX, imgY, imgWidth, imgHeight);
+            
+            // Clean up
+            URL.revokeObjectURL(imageUrl);
+          } catch (error) {
+            console.error(`Error adding ${doc.title} to PDF:`, error);
+          }
         }
       }
 
@@ -69,9 +110,9 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
     return null;
   };
 
-  const generatePDFContent = () => {
+  const generateFormContent = () => {
     return (
-      <div ref={contentRef} className="max-w-4xl mx-auto p-8 bg-white text-black">
+      <div ref={formContentRef} className="max-w-4xl mx-auto p-8 bg-white text-black">
         {/* Header */}
         <div className="text-center border-b-2 border-blue-600 pb-6 mb-8">
           <h1 className="text-3xl font-bold text-blue-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
@@ -241,6 +282,36 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
     );
   };
 
+  const generateDocumentsSection = () => {
+    const documents = [
+      { files: formData.previousMarksheet, title: 'Previous Marksheet', type: 'previous_marksheet' },
+      { files: formData.aadhaarCard, title: 'Aadhaar Card', type: 'aadhaar_card' },
+      { files: formData.incomeCertificate, title: 'Income Certificate', type: 'income_certificate' },
+      { files: formData.casteCertificate, title: 'Caste Certificate', type: 'caste_certificate' }
+    ];
+
+    return (
+      <div ref={documentsContentRef} className="space-y-8 mt-8">
+        <h2 className="text-2xl font-bold text-blue-700 mb-6 text-center">Uploaded Documents</h2>
+        <div className="grid grid-cols-1 gap-8">
+          {documents.map((doc) => (
+            doc.files && doc.files[0] && createSafeObjectURL(doc.files[0]) && (
+              <div key={doc.type} className="text-center p-4 border border-gray-300 rounded">
+                <h3 className="text-lg font-semibold mb-4">{doc.title}</h3>
+                <img 
+                  src={createSafeObjectURL(doc.files[0])} 
+                  alt={doc.title}
+                  className="max-w-full h-auto mx-auto border"
+                  style={{ maxHeight: '400px' }}
+                />
+              </div>
+            )
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -268,7 +339,8 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           </DialogTitle>
         </DialogHeader>
         <div className="mt-4">
-          {generatePDFContent()}
+          {generateFormContent()}
+          {generateDocumentsSection()}
         </div>
       </DialogContent>
     </Dialog>

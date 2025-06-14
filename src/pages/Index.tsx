@@ -16,6 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import PDFPreview from '@/components/PDFPreview';
+import { submitApplicationForm } from '@/services/formSubmissionService';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   admissionNumber: z.string().min(1, 'Admission number is required'),
@@ -61,6 +63,8 @@ type FormData = z.infer<typeof formSchema>;
 
 const Index = () => {
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -69,9 +73,37 @@ const Index = () => {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log('Form submitted:', data);
-    alert('Form submitted successfully!');
+  const onSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    try {
+      console.log('Submitting form data:', data);
+      
+      const result = await submitApplicationForm(data);
+      
+      if (result.success) {
+        toast({
+          title: "Application Submitted Successfully!",
+          description: `Your application has been saved with ID: ${result.applicationId}`,
+        });
+        form.reset();
+        setSelectedExams([]);
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: result.error || "Failed to submit application. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast({
+        title: "Submission Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleExamChange = (exam: string, checked: boolean) => {
@@ -794,9 +826,10 @@ const Index = () => {
               <Button 
                 type="submit" 
                 size="lg" 
+                disabled={isSubmitting}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-12 py-3 text-lg font-semibold"
               >
-                Submit Application
+                {isSubmitting ? 'Submitting...' : 'Submit Application'}
               </Button>
             </div>
 
