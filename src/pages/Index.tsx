@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -40,7 +39,13 @@ const formSchema = z.object({
   gender: z.string().optional(),
   class: z.string().optional(),
   currentSchool: z.string().optional(),
-  aadhaarNumber: z.string().optional(),
+  aadhaarNumber: z.string().min(12, {
+    message: "Aadhaar number must be exactly 12 digits.",
+  }).max(12, {
+    message: "Aadhaar number must be exactly 12 digits.",
+  }).regex(/^\d{12}$/, {
+    message: "Aadhaar number must contain only 12 digits.",
+  }),
   fatherName: z.string().optional(),
   motherName: z.string().optional(),
   fatherOccupation: z.string().optional(),
@@ -93,7 +98,7 @@ const Index = () => {
       satsNumber: "",
       streetAddress: "",
       city: "",
-      state: "",
+      state: "Karnataka",
       pinCode: "",
       landmark: "",
       lastYearPercentage: "",
@@ -121,7 +126,7 @@ const Index = () => {
         gender: values.gender || '',
         class: values.class || '',
         current_school: values.currentSchool || '',
-        aadhaar_number: values.aadhaarNumber || '',
+        aadhaar_number: values.aadhaarNumber,
         father_name: values.fatherName || '',
         mother_name: values.motherName || '',
         father_occupation: values.fatherOccupation || '',
@@ -340,14 +345,13 @@ const Index = () => {
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Admission Type</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="border-gray-300 text-sm sm:text-base">
+                              <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
                                 <SelectValue placeholder="Select admission type" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="new">New Admission</SelectItem>
-                              <SelectItem value="renewal">Renewal</SelectItem>
-                              <SelectItem value="transfer">Transfer</SelectItem>
+                            <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                              <SelectItem value="residential">Residential</SelectItem>
+                              <SelectItem value="local">Local</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -441,11 +445,11 @@ const Index = () => {
                         <FormLabel className="text-gray-700 text-sm sm:text-base">Gender</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="border-gray-300 text-sm sm:text-base">
+                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
                               <SelectValue placeholder="Select gender" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
                             <SelectItem value="male">Male</SelectItem>
                             <SelectItem value="female">Female</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
@@ -461,9 +465,18 @@ const Index = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-gray-700 text-sm sm:text-base">Class</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter class" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
+                              <SelectValue placeholder="Select class" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                            <SelectItem value="3rd">3rd Standard</SelectItem>
+                            <SelectItem value="4th">4th Standard</SelectItem>
+                            <SelectItem value="5th">5th Standard</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -486,9 +499,14 @@ const Index = () => {
                     name="aadhaarNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Aadhaar Number</FormLabel>
+                        <FormLabel className="text-gray-700 text-sm sm:text-base">Aadhaar Number *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter Aadhaar number" {...field} className="border-gray-300 text-sm sm:text-base" />
+                          <Input 
+                            placeholder="Enter 12-digit Aadhaar number" 
+                            {...field} 
+                            className="border-gray-300 text-sm sm:text-base"
+                            maxLength={12}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -632,9 +650,22 @@ const Index = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">State</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter state" {...field} className="border-gray-300 text-sm sm:text-base" />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
+                                <SelectValue placeholder="Select state" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                              <SelectItem value="Karnataka">Karnataka</SelectItem>
+                              <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
+                              <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                              <SelectItem value="Kerala">Kerala</SelectItem>
+                              <SelectItem value="Telangana">Telangana</SelectItem>
+                              <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                              <SelectItem value="Goa">Goa</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -692,9 +723,20 @@ const Index = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-gray-700 text-sm sm:text-base">Category</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter category" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                            <SelectItem value="general">General</SelectItem>
+                            <SelectItem value="obc">OBC</SelectItem>
+                            <SelectItem value="sc">SC</SelectItem>
+                            <SelectItem value="st">ST</SelectItem>
+                            <SelectItem value="ews">EWS</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
