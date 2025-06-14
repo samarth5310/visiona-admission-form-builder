@@ -207,7 +207,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
               <div><strong>Last Year Percentage:</strong> {formData.lastYearPercentage || 'N/A'}%</div>
               <div><strong>Category:</strong> {formData.category || 'N/A'}</div>
               <div><strong>Subjects Weak In:</strong> {formData.subjectsWeakIn || 'N/A'}</div>
-              <div><strong>Exams Preparing For:</strong> {formData.examsPreparingFor?.join(', ') || 'N/A'}</div>
+              <div><strong>Exams Preparing For:</strong> {formData.examsPreparingFor || 'N/A'}</div>
             </div>
           </div>
 
