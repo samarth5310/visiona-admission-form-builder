@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -159,9 +160,19 @@ const Index = () => {
         {/* Header */}
         <Card className="mb-8 border-2 border-blue-200">
           <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
-            <CardTitle className="text-3xl font-bold">VISIONA EDUCATION ACADEMY</CardTitle>
-            <p className="text-lg">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
-            <p className="text-sm">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
+            <div className="flex items-center justify-center gap-6 mb-4">
+              <img 
+                src="/lovable-uploads/60b569e4-862b-4ff6-8f40-7aea15908296.png" 
+                alt="Visiona Education Academy Logo" 
+                className="w-20 h-20 object-contain"
+              />
+              <div className="text-left">
+                <CardTitle className="text-3xl font-bold">VISIONA EDUCATION ACADEMY</CardTitle>
+                <p className="text-lg">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
+                <p className="text-sm">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
+                <p className="text-sm mt-2 font-medium">16th Cross Vidyagiri Bagalkot</p>
+              </div>
+            </div>
           </CardHeader>
         </Card>
 
@@ -880,3 +891,4 @@ const Index = () => {
 };
 
 export default Index;
+

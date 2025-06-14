@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -115,9 +114,19 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       <div ref={formContentRef} className="max-w-4xl mx-auto p-8 bg-white text-black">
         {/* Header */}
         <div className="text-center border-b-2 border-blue-600 pb-6 mb-8">
-          <h1 className="text-3xl font-bold text-blue-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
-          <p className="text-lg text-gray-700">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
-          <p className="text-sm text-gray-600">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
+          <div className="flex items-center justify-center gap-6 mb-4">
+            <img 
+              src="/lovable-uploads/60b569e4-862b-4ff6-8f40-7aea15908296.png" 
+              alt="Visiona Education Academy Logo" 
+              className="w-16 h-16 object-contain"
+            />
+            <div className="text-center">
+              <h1 className="text-3xl font-bold text-blue-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
+              <p className="text-lg text-gray-700">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
+              <p className="text-sm text-gray-600">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
+              <p className="text-sm text-gray-600 font-medium mt-1">16th Cross Vidyagiri Bagalkot</p>
+            </div>
+          </div>
         </div>
 
         {/* Student Photo */}
