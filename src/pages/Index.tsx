@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +15,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import PDFPreview from '@/components/PDFPreview';
 
 const formSchema = z.object({
   admissionNumber: z.string().min(1, 'Admission number is required'),
@@ -786,7 +786,8 @@ const Index = () => {
             </Card>
 
             {/* Submit Button */}
-            <div className="flex justify-center pb-8">
+            <div className="flex justify-center gap-4 pb-8">
+              <PDFPreview formData={form.getValues()} />
               <Button 
                 type="submit" 
                 size="lg" 
