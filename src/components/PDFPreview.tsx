@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Eye, Download } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -113,15 +113,15 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
     return (
       <div ref={formContentRef} className="max-w-4xl mx-auto p-8 bg-white text-black">
         {/* Header */}
-        <div className="text-center border-b-2 border-blue-600 pb-6 mb-8">
+        <div className="text-center border-b-2 border-gray-600 pb-6 mb-8">
           <div className="flex items-center justify-center gap-6 mb-4">
             <img 
-              src="/lovable-uploads/60b569e4-862b-4ff6-8f40-7aea15908296.png" 
+              src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
               alt="Visiona Education Academy Logo" 
               className="w-16 h-16 object-contain"
             />
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-blue-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
+              <h1 className="text-3xl font-bold text-gray-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
               <p className="text-lg text-gray-700">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
               <p className="text-sm text-gray-600">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
               <p className="text-sm text-gray-600 font-medium mt-1">16th Cross Vidyagiri Bagalkot</p>
@@ -147,7 +147,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
         <div className="space-y-6">
           {/* General Information */}
           <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">General Information</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">General Information</h2>
             <div className="grid grid-cols-2 gap-4">
               <div><strong>Admission Number:</strong> {formData.admissionNumber || 'N/A'}</div>
               <div><strong>Admission Type:</strong> {formData.admissionType || 'N/A'}</div>
@@ -156,7 +156,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           {/* Student Information */}
           <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Student Information</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Student Information</h2>
             <div className="grid grid-cols-2 gap-4">
               <div><strong>Full Name:</strong> {formData.fullName || 'N/A'}</div>
               <div><strong>Date of Birth:</strong> {formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-GB') : 'N/A'}</div>
@@ -169,7 +169,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           {/* Parent Information */}
           <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Parent/Guardian Information</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Parent/Guardian Information</h2>
             <div className="grid grid-cols-2 gap-4">
               <div><strong>Father's Name:</strong> {formData.fatherName || 'N/A'}</div>
               <div><strong>Mother's Name:</strong> {formData.motherName || 'N/A'}</div>
@@ -183,7 +183,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           {/* Address */}
           <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Address</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Address</h2>
             <div className="grid grid-cols-1 gap-2">
               <div><strong>Street Address:</strong> {formData.streetAddress || 'N/A'}</div>
               <div className="grid grid-cols-3 gap-4">
@@ -197,7 +197,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           {/* Academic Information */}
           <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Academic Information</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Academic Information</h2>
             <div className="grid grid-cols-2 gap-4">
               <div><strong>Last Year Percentage:</strong> {formData.lastYearPercentage || 'N/A'}%</div>
               <div><strong>Category:</strong> {formData.category || 'N/A'}</div>
@@ -208,7 +208,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           {/* Fee Payment Details */}
           <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Fee Payment Details</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Fee Payment Details</h2>
             <div className="grid grid-cols-3 gap-4">
               <div><strong>Payment Mode:</strong> {formData.paymentMode || 'N/A'}</div>
               <div><strong>Transaction ID:</strong> {formData.transactionId || 'N/A'}</div>
@@ -218,7 +218,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           {/* Document Images */}
           <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Uploaded Documents</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Uploaded Documents</h2>
             <div className="grid grid-cols-2 gap-4">
               {formData.previousMarksheet && formData.previousMarksheet[0] && createSafeObjectURL(formData.previousMarksheet[0]) && (
                 <div className="text-center">
@@ -265,7 +265,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           {/* Declarations */}
           <div>
-            <h2 className="text-xl font-semibold text-blue-700 mb-4 border-b border-gray-300 pb-2">Declarations</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Declarations</h2>
             <div className="space-y-4 text-sm">
               <div>
                 <p className="font-medium">ಎಲ್ಲಾ ನಿಗದಿಪಡಿಸಿದ ಶುಲ್ಕಗಳನ್ನು ಮುಂಗಡವಾಗಿ ಪಾವತಿಸಬೇಕು</p>
@@ -301,7 +301,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
     return (
       <div ref={documentsContentRef} className="space-y-8 mt-8">
-        <h2 className="text-2xl font-bold text-blue-700 mb-6 text-center">Uploaded Documents</h2>
+        <h2 className="text-2xl font-bold text-gray-700 mb-6 text-center">Uploaded Documents</h2>
         <div className="grid grid-cols-1 gap-8">
           {documents.map((doc) => (
             doc.files && doc.files[0] && createSafeObjectURL(doc.files[0]) && (
@@ -328,7 +328,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           type="button"
           variant="outline" 
           size="lg" 
-          className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50 px-12 py-3 text-lg font-semibold mr-4"
+          className="bg-white text-gray-600 border-gray-600 hover:bg-gray-50 px-12 py-3 text-lg font-semibold mr-4"
         >
           <Eye className="mr-2 h-5 w-5" />
           Preview PDF
@@ -336,15 +336,8 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
+          <DialogTitle>
             Application Form Preview
-            <Button 
-              onClick={downloadPDF}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF
-            </Button>
           </DialogTitle>
         </DialogHeader>
         <div className="mt-4">
