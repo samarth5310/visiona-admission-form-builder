@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -156,6 +157,7 @@ const Index = () => {
 
   const downloadPDF = async () => {
     const formData = form.getValues();
+    const studentName = formData.fullName || 'Student';
     
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -234,11 +236,11 @@ const Index = () => {
       const imgX = (pageWidth - imgWidth * ratio) / 2;
 
       pdf.addImage(imgData, 'JPEG', imgX, 0, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`${formData.fullName || 'Student'}_Application_Form.pdf`);
+      pdf.save(`${studentName}_Application_Form.pdf`);
       
       toast({
         title: "PDF Downloaded",
-        description: "Your application form has been downloaded successfully.",
+        description: `Application form for ${studentName} has been downloaded successfully.`,
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -969,6 +971,7 @@ const Index = () => {
 
               {/* Submit Button */}
               <div className="flex justify-center gap-4 pb-8">
+                <PDFPreview formData={form.getValues()} />
                 <Button 
                   type="button"
                   onClick={downloadPDF}
