@@ -110,7 +110,7 @@ const Index = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      console.log('Submitting form data:', values);
+      console.log('Starting form submission with values:', values);
       
       // Prepare the data for database insertion
       const applicationData = {
@@ -133,10 +133,10 @@ const Index = () => {
         city: values.city || '',
         state: values.state || '',
         pin_code: values.pinCode || '',
-        landmark: values.landmark,
+        landmark: values.landmark || null,
         last_year_percentage: parseFloat(values.lastYearPercentage || '0'),
         category: values.category || '',
-        subjects_weak_in: values.subjectsWeakIn,
+        subjects_weak_in: values.subjectsWeakIn || null,
         exams_preparing_for: values.examsPreparingFor || [],
         payment_mode: values.paymentMode || '',
         transaction_id: values.transactionId || '',
@@ -144,6 +144,8 @@ const Index = () => {
         place: values.place || '',
         declaration_date: values.declarationDate,
       };
+
+      console.log('Prepared application data:', applicationData);
 
       // Insert application data
       const { data: application, error: applicationError } = await supabase
@@ -154,7 +156,7 @@ const Index = () => {
 
       if (applicationError) {
         console.error('Application insertion error:', applicationError);
-        throw applicationError;
+        throw new Error(`Failed to save application: ${applicationError.message}`);
       }
 
       console.log('Application inserted successfully:', application);
@@ -168,10 +170,12 @@ const Index = () => {
         { file: values.casteCertificate, type: 'caste_certificate' }
       ];
 
+      let uploadedDocuments = 0;
       for (const doc of documents) {
         if (doc.file && doc.file instanceof File) {
           try {
             const fileName = `${application.id}/${doc.type}_${Date.now()}_${doc.file.name}`;
+            console.log(`Uploading ${doc.type} as ${fileName}`);
             
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('application-documents')
@@ -179,8 +183,10 @@ const Index = () => {
 
             if (uploadError) {
               console.error(`Upload error for ${doc.type}:`, uploadError);
-              continue;
+              throw new Error(`Failed to upload ${doc.type}: ${uploadError.message}`);
             }
+
+            console.log(`Upload successful for ${doc.type}:`, uploadData);
 
             // Insert document record
             const { error: docError } = await supabase
@@ -194,16 +200,21 @@ const Index = () => {
 
             if (docError) {
               console.error(`Document record error for ${doc.type}:`, docError);
+              throw new Error(`Failed to save document record for ${doc.type}: ${docError.message}`);
             }
+
+            uploadedDocuments++;
+            console.log(`Document record saved for ${doc.type}`);
           } catch (error) {
             console.error(`Error processing ${doc.type}:`, error);
+            throw error;
           }
         }
       }
 
       toast({
         title: "Success!",
-        description: "Application submitted successfully.",
+        description: `Application submitted successfully! ${uploadedDocuments} documents uploaded.`,
       });
 
       // Reset form after successful submission
@@ -213,7 +224,7 @@ const Index = () => {
       console.error('Submission error:', error);
       toast({
         title: "Error",
-        description: "Failed to submit application. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to submit application. Please try again.",
         variant: "destructive",
       });
     }
@@ -224,29 +235,29 @@ const Index = () => {
   const downloadPDF = async () => {
     try {
       const formData = form.getValues();
-      const studentName = formData.fullName || 'student';
-      const fileName = `${studentName.replace(/\s+/g, '_')}_application.pdf`;
       
-      console.log(`Starting PDF download for: ${fileName}`);
+      // Check if required fields are filled
+      if (!formData.fullName.trim()) {
+        toast({
+          title: "Missing Information",
+          description: "Please fill in at least the student's full name before downloading PDF.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('PDF download requested for:', formData.fullName);
       
-      // Create a temporary link element and trigger download
-      const link = document.createElement('a');
-      link.href = '#'; // We'll generate the PDF content here
-      link.download = fileName;
-      
-      // For now, show success message
       toast({
         title: "PDF Download",
-        description: `PDF generation started for ${fileName}`,
+        description: "Use the Preview PDF button to view and download your application form.",
       });
-      
-      console.log(`PDF download initiated: ${fileName}`);
       
     } catch (error) {
       console.error('PDF download error:', error);
       toast({
         title: "Error",
-        description: "Failed to download PDF. Please try again.",
+        description: "Failed to prepare PDF download. Please try again.",
         variant: "destructive",
       });
     }
@@ -296,7 +307,7 @@ const Index = () => {
         <div className="px-2 sm:px-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-              {/* General Information with Photo Display */}
+              {/* General Information with Photo */}
               <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">General Information</h2>
                 <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">

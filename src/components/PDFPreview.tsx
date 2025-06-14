@@ -31,23 +31,65 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
 
       // Capture the form content
       const formCanvas = await html2canvas(formContentRef.current, {
-        scale: 1.5,
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: formContentRef.current.scrollWidth,
+        height: formContentRef.current.scrollHeight
       });
 
-      const formImgData = formCanvas.toDataURL('image/jpeg', 0.8);
-      const formImgWidth = formCanvas.width;
-      const formImgHeight = formCanvas.height;
-      const formRatio = Math.min(pageWidth / formImgWidth, pageHeight / formImgHeight);
-      const formImgX = (pageWidth - formImgWidth * formRatio) / 2;
+      const formImgData = formCanvas.toDataURL('image/jpeg', 0.95);
+      const imgWidth = pageWidth - (margin * 2);
+      const imgHeight = (formCanvas.height * imgWidth) / formCanvas.width;
 
-      pdf.addImage(formImgData, 'JPEG', formImgX, 0, formImgWidth * formRatio, formImgHeight * formRatio);
+      // Check if content fits on one page
+      if (imgHeight <= pageHeight - (margin * 2)) {
+        // Single page
+        pdf.addImage(formImgData, 'JPEG', margin, margin, imgWidth, imgHeight);
+      } else {
+        // Multiple pages
+        let yPosition = 0;
+        const pageContentHeight = pageHeight - (margin * 2);
+        
+        while (yPosition < imgHeight) {
+          const sourceY = (yPosition / imgHeight) * formCanvas.height;
+          const sourceHeight = Math.min(
+            (pageContentHeight / imgHeight) * formCanvas.height,
+            formCanvas.height - sourceY
+          );
+          
+          if (yPosition > 0) {
+            pdf.addPage();
+          }
+          
+          // Create a canvas for this page section
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = formCanvas.width;
+          pageCanvas.height = sourceHeight;
+          const pageCtx = pageCanvas.getContext('2d');
+          
+          if (pageCtx) {
+            pageCtx.drawImage(
+              formCanvas,
+              0, sourceY, formCanvas.width, sourceHeight,
+              0, 0, formCanvas.width, sourceHeight
+            );
+            
+            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+            const pageImgHeight = (sourceHeight * imgWidth) / formCanvas.width;
+            
+            pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, pageImgHeight);
+          }
+          
+          yPosition += pageContentHeight;
+        }
+      }
 
       // Add document images on separate pages
       const documents = [
@@ -80,16 +122,16 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
             pdf.text(doc.title, pageWidth / 2, 20, { align: 'center' });
 
             // Calculate image dimensions to fit page
-            const maxWidth = pageWidth - 20;
+            const maxWidth = pageWidth - (margin * 2);
             const maxHeight = pageHeight - 40;
             const imgRatio = Math.min(maxWidth / img.width, maxHeight / img.height);
-            const imgWidth = img.width * imgRatio;
-            const imgHeight = img.height * imgRatio;
-            const imgX = (pageWidth - imgWidth) / 2;
+            const docImgWidth = img.width * imgRatio;
+            const docImgHeight = img.height * imgRatio;
+            const imgX = (pageWidth - docImgWidth) / 2;
             const imgY = 30;
 
             // Add image to PDF
-            pdf.addImage(imageUrl, 'JPEG', imgX, imgY, imgWidth, imgHeight);
+            pdf.addImage(imageUrl, 'JPEG', imgX, imgY, docImgWidth, docImgHeight);
             
             // Clean up
             URL.revokeObjectURL(imageUrl);
