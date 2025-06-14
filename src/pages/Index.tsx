@@ -27,6 +27,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PDFPreview from '@/components/PDFPreview';
 
+const MAX_FILE_SIZE = 50 * 1024; // 50KB in bytes
+
 const formSchema = z.object({
   admissionNumber: z.string().optional(),
   admissionType: z.string().optional(),
@@ -71,11 +73,26 @@ const formSchema = z.object({
   declarationDate: z.string({
     required_error: "A declaration date is required.",
   }),
-  studentPhoto: z.instanceof(File).optional(),
-  previousMarksheet: z.instanceof(File).optional(),
-  aadhaarCard: z.instanceof(File).optional(),
-  incomeCertificate: z.instanceof(File).optional(),
-  casteCertificate: z.instanceof(File).optional(),
+  studentPhoto: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Student photo must be less than 50KB"),
+  previousMarksheet: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Previous marksheet must be less than 50KB"),
+  aadhaarCard: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Aadhaar card must be less than 50KB"),
+  incomeCertificate: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Income certificate must be less than 50KB"),
+  casteCertificate: z.instanceof(File).optional().refine((file) => {
+    if (!file) return true;
+    return file.size <= MAX_FILE_SIZE;
+  }, "Caste certificate must be less than 50KB"),
 })
 
 const Index = () => {
@@ -112,6 +129,19 @@ const Index = () => {
       declarationDate: new Date().toISOString().split('T')[0],
     },
   })
+
+  // Helper function to validate file size
+  const validateFileSize = (file: File) => {
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: `File size must be less than 50KB. Current file is ${Math.round(file.size / 1024)}KB.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -372,12 +402,20 @@ const Index = () => {
                               accept="image/*"
                               onChange={(e) => {
                                 if (e.target.files && e.target.files[0]) {
-                                  field.onChange(e.target.files[0]);
+                                  const file = e.target.files[0];
+                                  if (validateFileSize(file)) {
+                                    field.onChange(file);
+                                  } else {
+                                    e.target.value = '';
+                                  }
                                 }
                               }}
                               className="border-gray-300 text-sm sm:text-base"
                             />
                           </FormControl>
+                          <FormDescription className="text-xs text-gray-500">
+                            Maximum file size: 50KB
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -853,12 +891,20 @@ const Index = () => {
                             accept="image/*"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
-                                field.onChange(e.target.files[0]);
+                                const file = e.target.files[0];
+                                if (validateFileSize(file)) {
+                                  field.onChange(file);
+                                } else {
+                                  e.target.value = '';
+                                }
                               }
                             }}
                             className="border-gray-300 text-sm sm:text-base"
                           />
                         </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Maximum file size: 50KB
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -875,12 +921,20 @@ const Index = () => {
                             accept="image/*"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
-                                field.onChange(e.target.files[0]);
+                                const file = e.target.files[0];
+                                if (validateFileSize(file)) {
+                                  field.onChange(file);
+                                } else {
+                                  e.target.value = '';
+                                }
                               }
                             }}
                             className="border-gray-300 text-sm sm:text-base"
                           />
                         </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Maximum file size: 50KB
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -897,12 +951,20 @@ const Index = () => {
                             accept="image/*"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
-                                field.onChange(e.target.files[0]);
+                                const file = e.target.files[0];
+                                if (validateFileSize(file)) {
+                                  field.onChange(file);
+                                } else {
+                                  e.target.value = '';
+                                }
                               }
                             }}
                             className="border-gray-300 text-sm sm:text-base"
                           />
                         </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Maximum file size: 50KB
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -919,12 +981,20 @@ const Index = () => {
                             accept="image/*"
                             onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
-                                field.onChange(e.target.files[0]);
+                                const file = e.target.files[0];
+                                if (validateFileSize(file)) {
+                                  field.onChange(file);
+                                } else {
+                                  e.target.value = '';
+                                }
                               }
                             }}
                             className="border-gray-300 text-sm sm:text-base"
                           />
                         </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Maximum file size: 50KB
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
