@@ -31,7 +31,7 @@ const formSchema = z.object({
   fullName: z.string().min(2, {
     message: "Full Name must be at least 2 characters.",
   }),
-  dateOfBirth: z.date({
+  dateOfBirth: z.string({
     required_error: "A date of birth is required.",
   }),
   gender: z.string().optional(),
@@ -55,13 +55,13 @@ const formSchema = z.object({
   lastYearPercentage: z.string().optional(),
   category: z.string().optional(),
   subjectsWeakIn: z.string().optional(),
-  examsPreparingFor: z.array(z.string()).optional(),
+  examsPreparingFor: z.string().optional(),
   paymentMode: z.string().optional(),
   transactionId: z.string().optional(),
   amountPaid: z.string().optional(),
   place: z.string().optional(),
-  declarationDate: z.date({
-    required_error: "A date of birth is required.",
+  declarationDate: z.string({
+    required_error: "A declaration date is required.",
   }),
   studentPhoto: z.array(z.any()).optional(),
   previousMarksheet: z.array(z.any()).optional(),
@@ -75,7 +75,7 @@ const Index = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: "",
-      dateOfBirth: new Date(),
+      dateOfBirth: new Date().toISOString().split('T')[0],
       gender: "",
       class: "",
       currentSchool: "",
@@ -95,12 +95,12 @@ const Index = () => {
       lastYearPercentage: "",
       category: "",
       subjectsWeakIn: "",
-      examsPreparingFor: [],
+      examsPreparingFor: "",
       paymentMode: "",
       transactionId: "",
       amountPaid: "",
       place: "",
-      declarationDate: new Date(),
+      declarationDate: new Date().toISOString().split('T')[0],
       studentPhoto: [],
       previousMarksheet: [],
       aadhaarCard: [],
@@ -116,7 +116,10 @@ const Index = () => {
   const isSubmitting = form.formState.isSubmitting;
 
   const downloadPDF = () => {
-    alert('downloaded')
+    const studentName = form.getValues('fullName') || 'student';
+    const fileName = `${studentName.replace(/\s+/g, '_')}_application.pdf`;
+    console.log(`Downloading PDF as: ${fileName}`);
+    alert(`PDF would be downloaded as: ${fileName}`);
   };
 
   // Helper function to safely create object URL
@@ -541,11 +544,7 @@ const Index = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700">Exams Preparing For</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange([...field.value || [], value])}
-                        defaultValue={field.value}
-                        multiple
-                      >
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="border-gray-300">
                             <SelectValue placeholder="Select exams" />
