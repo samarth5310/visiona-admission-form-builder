@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, TrendingUp, Users, CreditCard, Clock, IndianRupee } from 'lucide-react';
+import { TrendingUp, Users, CreditCard, Clock, IndianRupee } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,14 +20,6 @@ interface RecentPayment {
   payment_method: string;
 }
 
-interface OverduePayment {
-  id: string;
-  student_name: string;
-  pending_amount: number;
-  due_date: string;
-  class: string;
-}
-
 const FeesDashboard = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     totalStudents: 0,
@@ -36,7 +28,6 @@ const FeesDashboard = () => {
     collectionRate: 0
   });
   const [recentPayments, setRecentPayments] = useState<RecentPayment[]>([]);
-  const [overduePayments, setOverduePayments] = useState<OverduePayment[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -59,8 +50,7 @@ const FeesDashboard = () => {
           student_fees (
             total_fees,
             paid_amount,
-            pending_amount,
-            due_date
+            pending_amount
           )
         `);
 
@@ -122,35 +112,6 @@ const FeesDashboard = () => {
       }));
 
       setRecentPayments(formattedPayments);
-
-      // Fetch overdue payments
-      const today = new Date().toISOString().split('T')[0];
-      const { data: overdueData, error: overdueError } = await supabase
-        .from('student_fees')
-        .select(`
-          id,
-          pending_amount,
-          due_date,
-          applications (
-            full_name,
-            class
-          )
-        `)
-        .lt('due_date', today)
-        .gt('pending_amount', 0)
-        .limit(10);
-
-      if (overdueError) throw overdueError;
-
-      const formattedOverdue: OverduePayment[] = overdueData.map(fee => ({
-        id: fee.id,
-        student_name: fee.applications?.full_name || 'Unknown',
-        pending_amount: fee.pending_amount,
-        due_date: fee.due_date,
-        class: fee.applications?.class || 'N/A'
-      }));
-
-      setOverduePayments(formattedOverdue);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -269,7 +230,7 @@ const FeesDashboard = () => {
       </div>
 
       {/* Recent Payments and Overdue Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Recent Payments */}
         <Card>
           <CardHeader>
@@ -292,42 +253,6 @@ const FeesDashboard = () => {
                     <div className="text-right">
                       <p className="font-bold text-green-600">{formatCurrency(payment.payment_amount)}</p>
                       {getMethodBadge(payment.payment_method)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Overdue Payments */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              Overdue Payments
-              {overduePayments.length > 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {overduePayments.length}
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {overduePayments.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No overdue payments</p>
-            ) : (
-              <div className="space-y-3">
-                {overduePayments.map((payment) => (
-                  <div key={payment.id} className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm">{payment.student_name}</p>
-                      <p className="text-xs text-gray-600">Class: {payment.class}</p>
-                      <p className="text-xs text-red-600">Due: {formatDate(payment.due_date)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-red-600">{formatCurrency(payment.pending_amount)}</p>
-                      <Badge variant="destructive">Overdue</Badge>
                     </div>
                   </div>
                 ))}
