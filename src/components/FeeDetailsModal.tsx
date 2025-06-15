@@ -36,17 +36,17 @@ interface FeeDetailsModalProps {
 const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModalProps) => {
   const [feeStructure, setFeeStructure] = useState({
     // Academic Fees
-    admission_fee: 0,
-    tuition_fee: 0,
-    administrative_fee: 0,
-    exam_fee: 0,
-    registration_fee: 0,
+    admission_fee: '',
+    tuition_fee: '',
+    administrative_fee: '',
+    exam_fee: '',
+    registration_fee: '',
     // Additional Fees
-    books_materials: 0,
-    lab_fee: 0,
-    sports_fee: 0,
-    library_fee: 0,
-    other_fees: 0,
+    books_materials: '',
+    lab_fee: '',
+    sports_fee: '',
+    library_fee: '',
+    other_fees: '',
     due_date: ''
   });
   const [showPaymentForm, setShowPaymentForm] = useState(false);
@@ -76,31 +76,31 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
         // For existing records, distribute total fees across different categories
         const totalFees = data.total_fees || 0;
         setFeeStructure({
-          admission_fee: Math.round(totalFees * 0.2) || 0,
-          tuition_fee: Math.round(totalFees * 0.4) || 0,
-          administrative_fee: Math.round(totalFees * 0.1) || 0,
-          exam_fee: Math.round(totalFees * 0.05) || 0,
-          registration_fee: Math.round(totalFees * 0.05) || 0,
-          books_materials: Math.round(totalFees * 0.1) || 0,
-          lab_fee: Math.round(totalFees * 0.05) || 0,
-          sports_fee: Math.round(totalFees * 0.02) || 0,
-          library_fee: Math.round(totalFees * 0.02) || 0,
-          other_fees: Math.round(totalFees * 0.01) || 0,
+          admission_fee: String(Math.round(totalFees * 0.2) || 0),
+          tuition_fee: String(Math.round(totalFees * 0.4) || 0),
+          administrative_fee: String(Math.round(totalFees * 0.1) || 0),
+          exam_fee: String(Math.round(totalFees * 0.05) || 0),
+          registration_fee: String(Math.round(totalFees * 0.05) || 0),
+          books_materials: String(Math.round(totalFees * 0.1) || 0),
+          lab_fee: String(Math.round(totalFees * 0.05) || 0),
+          sports_fee: String(Math.round(totalFees * 0.02) || 0),
+          library_fee: String(Math.round(totalFees * 0.02) || 0),
+          other_fees: String(Math.round(totalFees * 0.01) || 0),
           due_date: data.due_date || ''
         });
       } else {
         // Reset to default values for new records
         setFeeStructure({
-          admission_fee: 0,
-          tuition_fee: 0,
-          administrative_fee: 0,
-          exam_fee: 0,
-          registration_fee: 0,
-          books_materials: 0,
-          lab_fee: 0,
-          sports_fee: 0,
-          library_fee: 0,
-          other_fees: 0,
+          admission_fee: '0',
+          tuition_fee: '0',
+          administrative_fee: '0',
+          exam_fee: '0',
+          registration_fee: '0',
+          books_materials: '0',
+          lab_fee: '0',
+          sports_fee: '0',
+          library_fee: '0',
+          other_fees: '0',
           due_date: ''
         });
       }
@@ -115,15 +115,15 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
   };
 
   const calculateAcademicSubtotal = () => {
-    return feeStructure.admission_fee + feeStructure.tuition_fee + 
-           feeStructure.administrative_fee + feeStructure.exam_fee + 
-           feeStructure.registration_fee;
+    return Number(feeStructure.admission_fee) + Number(feeStructure.tuition_fee) + 
+           Number(feeStructure.administrative_fee) + Number(feeStructure.exam_fee) + 
+           Number(feeStructure.registration_fee);
   };
 
   const calculateAdditionalSubtotal = () => {
-    return feeStructure.books_materials + feeStructure.lab_fee + 
-           feeStructure.sports_fee + feeStructure.library_fee + 
-           feeStructure.other_fees;
+    return Number(feeStructure.books_materials) + Number(feeStructure.lab_fee) + 
+           Number(feeStructure.sports_fee) + Number(feeStructure.library_fee) + 
+           Number(feeStructure.other_fees);
   };
 
   const calculateGrandTotal = () => {
@@ -418,10 +418,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="admission_fee"
                         type="number"
-                        value={feeStructure.admission_fee.toString()}
+                        value={feeStructure.admission_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          admission_fee: Number(e.target.value) || 0
+                          admission_fee: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -434,10 +434,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="tuition_fee"
                         type="number"
-                        value={feeStructure.tuition_fee.toString()}
+                        value={feeStructure.tuition_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          tuition_fee: Number(e.target.value) || 0
+                          tuition_fee: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -450,10 +450,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="administrative_fee"
                         type="number"
-                        value={feeStructure.administrative_fee.toString()}
+                        value={feeStructure.administrative_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          administrative_fee: Number(e.target.value) || 0
+                          administrative_fee: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -466,10 +466,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="exam_fee"
                         type="number"
-                        value={feeStructure.exam_fee.toString()}
+                        value={feeStructure.exam_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          exam_fee: Number(e.target.value) || 0
+                          exam_fee: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -482,10 +482,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="registration_fee"
                         type="number"
-                        value={feeStructure.registration_fee.toString()}
+                        value={feeStructure.registration_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          registration_fee: Number(e.target.value) || 0
+                          registration_fee: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -514,10 +514,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="books_materials"
                         type="number"
-                        value={feeStructure.books_materials.toString()}
+                        value={feeStructure.books_materials}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          books_materials: Number(e.target.value) || 0
+                          books_materials: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -530,10 +530,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="lab_fee"
                         type="number"
-                        value={feeStructure.lab_fee.toString()}
+                        value={feeStructure.lab_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          lab_fee: Number(e.target.value) || 0
+                          lab_fee: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -546,10 +546,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="sports_fee"
                         type="number"
-                        value={feeStructure.sports_fee.toString()}
+                        value={feeStructure.sports_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          sports_fee: Number(e.target.value) || 0
+                          sports_fee: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -562,10 +562,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="library_fee"
                         type="number"
-                        value={feeStructure.library_fee.toString()}
+                        value={feeStructure.library_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          library_fee: Number(e.target.value) || 0
+                          library_fee: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -578,10 +578,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="other_fees"
                         type="number"
-                        value={feeStructure.other_fees.toString()}
+                        value={feeStructure.other_fees}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          other_fees: Number(e.target.value) || 0
+                          other_fees: e.target.value
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
