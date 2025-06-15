@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +42,7 @@ interface PaymentHistoryProps {
     paid_amount: number;
     pending_amount: number;
     payment_status: string;
+    paid_date: string | null;
     fee_id?: string;
   };
   onUpdate: () => void;

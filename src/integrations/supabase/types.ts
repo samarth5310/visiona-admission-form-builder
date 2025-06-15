@@ -194,10 +194,10 @@ export type Database = {
         Row: {
           application_id: string
           created_at: string
-          due_date: string | null
           fee_category: string
           id: string
           paid_amount: number
+          paid_date: string | null
           payment_status: string
           pending_amount: number
           total_fees: number
@@ -206,10 +206,10 @@ export type Database = {
         Insert: {
           application_id: string
           created_at?: string
-          due_date?: string | null
           fee_category?: string
           id?: string
           paid_amount?: number
+          paid_date?: string | null
           payment_status?: string
           pending_amount?: number
           total_fees?: number
@@ -218,10 +218,10 @@ export type Database = {
         Update: {
           application_id?: string
           created_at?: string
-          due_date?: string | null
           fee_category?: string
           id?: string
           paid_amount?: number
+          paid_date?: string | null
           payment_status?: string
           pending_amount?: number
           total_fees?: number

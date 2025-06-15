@@ -15,6 +15,7 @@ interface Student {
   paid_amount: number;
   pending_amount: number;
   payment_status: string;
+  paid_date: string | null;
   fee_id?: string;
 }
 
@@ -87,19 +88,24 @@ const ReceiptGenerator = ({ student, disabled }: ReceiptGeneratorProps) => {
       doc.text(`Pending Balance: ${formatCurrency(Math.max(0, student.total_fees - student.paid_amount))}`, 20, 130);
       doc.text(`Payment Status: ${student.payment_status.toUpperCase()}`, 20, 140);
       
+      // Add paid date if available
+      if (student.paid_date) {
+        doc.text(`Paid Date: ${new Date(student.paid_date).toLocaleDateString('en-IN')}`, 20, 150);
+      }
+      
       // Payment summary box
       doc.setDrawColor(0, 0, 0);
-      doc.rect(20, 160, 170, 30);
+      doc.rect(20, 170, 170, 30);
       doc.setFont('helvetica', 'bold');
-      doc.text('PAYMENT SUMMARY', 25, 170);
+      doc.text('PAYMENT SUMMARY', 25, 180);
       doc.setFont('helvetica', 'normal');
-      doc.text(`Amount Received: ${formatCurrency(student.paid_amount)}`, 25, 180);
-      doc.text(`Date: ${currentDate}`, 25, 185);
+      doc.text(`Amount Received: ${formatCurrency(student.paid_amount)}`, 25, 190);
+      doc.text(`Date: ${currentDate}`, 25, 195);
       
       // Footer
       doc.setFontSize(8);
-      doc.text('This is a computer generated receipt.', 105, 220, { align: 'center' });
-      doc.text('For any queries, please contact the administration.', 105, 225, { align: 'center' });
+      doc.text('This is a computer generated receipt.', 105, 230, { align: 'center' });
+      doc.text('For any queries, please contact the administration.', 105, 235, { align: 'center' });
       
       // Generate filename
       const sanitizedName = student.full_name.replace(/[^a-zA-Z0-9]/g, '');

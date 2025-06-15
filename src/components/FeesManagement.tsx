@@ -22,6 +22,7 @@ interface StudentWithFees {
   paid_amount: number;
   pending_amount: number;
   payment_status: string;
+  paid_date: string | null;
   fee_id?: string;
 }
 
@@ -55,7 +56,8 @@ const FeesManagement = () => {
             total_fees,
             paid_amount,
             pending_amount,
-            payment_status
+            payment_status,
+            paid_date
           )
         `)
         .order('created_at', { ascending: false });
@@ -85,6 +87,7 @@ const FeesManagement = () => {
           paid_amount: studentFees?.paid_amount || 0,
           pending_amount: studentFees?.pending_amount || 0,
           payment_status: studentFees?.payment_status || 'not_set',
+          paid_date: studentFees?.paid_date || null,
           fee_id: studentFees?.id
         };
       });
@@ -293,6 +296,13 @@ const FeesManagement = () => {
                             <span className="text-gray-600">Applied:</span>
                             <span className="font-medium">{formatDate(student.created_at)}</span>
                           </div>
+                          
+                          {student.paid_date && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Paid Date:</span>
+                              <span className="font-medium text-green-600">{formatDate(student.paid_date)}</span>
+                            </div>
+                          )}
                           
                           <div className="border-t pt-2 mt-2">
                             <div className="flex justify-between">
