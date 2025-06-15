@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +23,8 @@ const Landing = () => {
       smallBatchDesc: "Personalized attention with limited students per batch ensuring quality education.",
       provenResults: "Proven Results",
       provenResultsDesc: "Track record of successful admissions in prestigious schools and institutions.",
+      stateWideReach: "State-wide Reach",
+      stateWideReachDesc: "Students from 25+ towns across Karnataka trust us for their success.",
       visitAcademy: "Visit Our Academy",
       address: "Address",
       contact: "Contact",
@@ -42,6 +45,8 @@ const Landing = () => {
       smallBatchDesc: "ಗುಣಮಟ್ಟದ ಶಿಕ್ಷಣವನ್ನು ಖಚಿತಪಡಿಸುವ ಬ್ಯಾಚ್‌ಗೆ ಸೀಮಿತ ವಿದ್ಯಾರ್ಥಿಗಳೊಂದಿಗೆ ವೈಯಕ್ತಿಕ ಗಮನ.",
       provenResults: "ಸಾಬೀತಾದ ಫಲಿತಾಂಶಗಳು",
       provenResultsDesc: "ಪ್ರತಿಷ್ಠಿತ ಶಾಲೆಗಳು ಮತ್ತು ಸಂಸ್ಥೆಗಳಲ್ಲಿ ಯಶಸ್ವಿ ಪ್ರವೇಶಗಳ ದಾಖಲೆ.",
+      stateWideReach: "ರಾಜ್ಯವ್ಯಾಪಿ ಪಹುಂಚ",
+      stateWideReachDesc: "ಕರ್ನಾಟಕದಾದ್ಯಂತ 25+ ಪಟ್ಟಣಗಳ ವಿದ್ಯಾರ್ಥಿಗಳು ತಮ್ಮ ಯಶಸ್ಸಿಗಾಗಿ ನಮ್ಮನ್ನು ನಂಬಿದ್ದಾರೆ.",
       visitAcademy: "ನಮ್ಮ ಅಕಾಡೆಮಿಗೆ ಭೇಟಿ ನೀಡಿ",
       address: "ವಿಳಾಸ",
       contact: "ಸಂಪರ್ಕ",
@@ -158,7 +163,7 @@ const Landing = () => {
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16 px-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16 px-2">
             <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300">
               <div className="bg-blue-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
@@ -187,6 +192,25 @@ const Landing = () => {
               <p className="text-sm sm:text-base text-gray-600">
                 {t.provenResultsDesc}
               </p>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10">
+                <img 
+                  src="https://images.unsplash.com/photo-1615729947596-a598e5de0ab3?w=400&h=300&fit=crop&crop=faces"
+                  alt="Karnataka landscape"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="relative z-10">
+                <div className="bg-purple-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">{t.stateWideReach}</h3>
+                <p className="text-sm sm:text-base text-gray-600">
+                  {t.stateWideReachDesc}
+                </p>
+              </div>
             </div>
           </div>
 
