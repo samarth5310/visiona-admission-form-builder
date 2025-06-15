@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import FeesManagement from '@/components/FeesManagement';
+import StudentsSection from '@/components/StudentsSection';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -94,6 +95,8 @@ const Index = () => {
   });
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   const [uploading, setUploading] = useState(false);
+  const [students, setStudents] = useState<Array<{id: string, full_name: string}>>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -424,6 +427,37 @@ const Index = () => {
     { id: "alvas", label: "Alvas" },
   ];
 
+  // Fetch students from database
+  const fetchStudents = async () => {
+    try {
+      setLoadingStudents(true);
+      const { data, error } = await supabase
+        .from('applications')
+        .select('id, full_name')
+        .order('full_name');
+
+      if (error) throw error;
+
+      setStudents(data || []);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch students. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingStudents(false);
+    }
+  };
+
+  // Fetch students when documents section is opened
+  useEffect(() => {
+    if (activeSection === 'documents') {
+      fetchStudents();
+    }
+  }, [activeSection]);
+
   const renderUploadDocuments = () => {
     return (
       <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
@@ -437,12 +471,29 @@ const Index = () => {
             {/* Student Selection */}
             <div className="bg-gray-50 p-4 rounded-lg border">
               <h3 className="text-lg font-semibold text-gray-700 mb-3">Select Student</h3>
-              <Input 
-                placeholder="Enter Application ID or Student Name"
-                value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
-                className="border-gray-300"
-              />
+              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                <SelectTrigger className="border-gray-300 bg-white">
+                  <SelectValue placeholder={loadingStudents ? "Loading students..." : "Choose a student"} />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                  {loadingStudents ? (
+                    <SelectItem value="loading" disabled>Loading students...</SelectItem>
+                  ) : students.length === 0 ? (
+                    <SelectItem value="no-students" disabled>No students found</SelectItem>
+                  ) : (
+                    students.map((student) => (
+                      <SelectItem key={student.id} value={student.id}>
+                        {student.full_name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              {selectedStudent && (
+                <p className="text-sm text-green-600 mt-2">
+                  ✓ Selected: {students.find(s => s.id === selectedStudent)?.full_name}
+                </p>
+              )}
             </div>
 
             {/* Document Upload Sections */}
@@ -462,6 +513,7 @@ const Index = () => {
                       }
                     }}
                     className="border-gray-300"
+                    disabled={!selectedStudent}
                   />
                   {documents.previousMarksheet && (
                     <p className="text-sm text-green-600 mt-1">✓ {documents.previousMarksheet.name}</p>
@@ -480,6 +532,7 @@ const Index = () => {
                       }
                     }}
                     className="border-gray-300"
+                    disabled={!selectedStudent}
                   />
                   {documents.aadhaarCard && (
                     <p className="text-sm text-green-600 mt-1">✓ {documents.aadhaarCard.name}</p>
@@ -498,6 +551,7 @@ const Index = () => {
                       }
                     }}
                     className="border-gray-300"
+                    disabled={!selectedStudent}
                   />
                   {documents.incomeCertificate && (
                     <p className="text-sm text-green-600 mt-1">✓ {documents.incomeCertificate.name}</p>
@@ -516,6 +570,7 @@ const Index = () => {
                       }
                     }}
                     className="border-gray-300"
+                    disabled={!selectedStudent}
                   />
                   {documents.casteCertificate && (
                     <p className="text-sm text-green-600 mt-1">✓ {documents.casteCertificate.name}</p>
@@ -536,7 +591,11 @@ const Index = () => {
                     }
                   }}
                   className="border-gray-300"
+                  disabled={!selectedStudent}
                 />
+                {!selectedStudent && (
+                  <p className="text-sm text-gray-500 mt-1">Please select a student first</p>
+                )}
                 {documents.otherDocuments.length > 0 && (
                   <div className="mt-3 space-y-2">
                     <p className="text-sm font-medium text-gray-700">Other Documents Added:</p>
@@ -567,6 +626,9 @@ const Index = () => {
                   <Upload className="mr-2 h-4 w-4" />
                   {uploading ? "Uploading..." : "Upload Documents"}
                 </Button>
+                {!selectedStudent && (
+                  <p className="text-sm text-gray-500 mt-2">Please select a student to enable document upload</p>
+                )}
               </div>
             </div>
           </div>
