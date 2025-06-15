@@ -492,7 +492,7 @@ const Index = () => {
                     handleFileUpload('incomeCertificate', e.target.files[0]);
                   }
                 }} className="border-gray-300" disabled={!selectedStudent} />
-                  {documents.incomeCertificate && <p className="text-sm text-green-600 mt-1">✓ {documents.incomeCertificate.name}</p>}
+                  {documents.incomeCertificate && <p className="text-sm text-green-600 mt-1 bg-indigo-400">✓ {documents.incomeCertificate.name}</p>}
                 </div>
 
                 {/* Caste Certificate */}
