@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, Trophy, MapPin, Phone, Mail } from 'lucide-react';
+import { BookOpen, Users, Trophy, MapPin, Phone, Mail, AlertCircle } from 'lucide-react';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -25,6 +25,18 @@ const Landing = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/95 to-indigo-100/95"></div>
       
       <div className="relative z-10">
+        {/* Moving Alert Banner */}
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 overflow-hidden">
+          <div className="animate-marquee whitespace-nowrap flex items-center">
+            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+            <span className="font-bold text-lg mr-4">ALERT:</span>
+            <span className="text-sm sm:text-base">
+              नवोदय परीक्षा-2026 | Navodaya Exam 2026 Registration | Online Application Last Date: 29 July 2025 | 
+              Exam Date: 13 December 2025 | Contact: 7349420496 | Register at VISIONA EDUCATION ACADEMY
+            </span>
+          </div>
+        </div>
+
         {/* Header */}
         <header className="bg-white/90 backdrop-blur-sm shadow-sm">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-6">
@@ -151,6 +163,20 @@ const Landing = () => {
           </div>
         </footer>
       </div>
+
+      <style jsx>{`
+        @keyframes marquee {
+          0% {
+            transform: translateX(100%);
+          }
+          100% {
+            transform: translateX(-100%);
+          }
+        }
+        .animate-marquee {
+          animation: marquee 20s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };
