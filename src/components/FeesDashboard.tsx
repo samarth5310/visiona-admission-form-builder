@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Users, CreditCard, Clock, IndianRupee } from 'lucide-react';
+import { TrendingUp, Users, CreditCard, IndianRupee } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -54,7 +55,12 @@ const FeesDashboard = () => {
           )
         `);
 
-      if (studentsError) throw studentsError;
+      if (studentsError) {
+        console.error('Error fetching students:', studentsError);
+        throw studentsError;
+      }
+
+      console.log('Students data fetched:', studentsData);
 
       // Calculate metrics
       const totalStudents = studentsData.length;
@@ -83,6 +89,13 @@ const FeesDashboard = () => {
         collectionRate
       });
 
+      console.log('Calculated metrics:', {
+        totalStudents,
+        totalFeesCollected,
+        pendingAmount,
+        collectionRate
+      });
+
       // Fetch recent payments
       const { data: paymentsData, error: paymentsError } = await supabase
         .from('fee_payments')
@@ -101,7 +114,12 @@ const FeesDashboard = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (paymentsError) throw paymentsError;
+      if (paymentsError) {
+        console.error('Error fetching payments:', paymentsError);
+        throw paymentsError;
+      }
+
+      console.log('Payments data fetched:', paymentsData);
 
       const formattedPayments: RecentPayment[] = paymentsData.map(payment => ({
         id: payment.id,
@@ -207,7 +225,7 @@ const FeesDashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <IndianRupee className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
@@ -229,9 +247,8 @@ const FeesDashboard = () => {
         </Card>
       </div>
 
-      {/* Recent Payments and Overdue Alerts */}
+      {/* Recent Payments */}
       <div className="grid grid-cols-1 gap-6">
-        {/* Recent Payments */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
