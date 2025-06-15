@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, RefreshCw, Users, CreditCard } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import FeeDetailsModal from './FeeDetailsModal';
 
 interface StudentWithFees {
   id: string;
@@ -28,6 +29,8 @@ const FeesManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [selectedStudent, setSelectedStudent] = useState<StudentWithFees | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const { toast } = useToast();
 
   const fetchStudents = async () => {
@@ -103,6 +106,20 @@ const FeesManagement = () => {
 
     setFilteredStudents(filtered);
   }, [searchTerm, statusFilter, students]);
+
+  const handleManageFees = (student: StudentWithFees) => {
+    setSelectedStudent(student);
+    setShowModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowModal(false);
+    setSelectedStudent(null);
+  };
+
+  const handleModalUpdate = () => {
+    fetchStudents();
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -273,12 +290,7 @@ const FeesManagement = () => {
                         <Button 
                           className="w-full mt-3" 
                           variant="outline"
-                          onClick={() => {
-                            toast({
-                              title: "Coming Soon",
-                              description: "Fee management functionality will be implemented next.",
-                            });
-                          }}
+                          onClick={() => handleManageFees(student)}
                         >
                           Manage Fees
                         </Button>
@@ -290,6 +302,14 @@ const FeesManagement = () => {
             )}
           </div>
         </div>
+
+        {/* Fee Details Modal */}
+        <FeeDetailsModal
+          student={selectedStudent}
+          isOpen={showModal}
+          onClose={handleModalClose}
+          onUpdate={handleModalUpdate}
+        />
       </div>
     </div>
   );
