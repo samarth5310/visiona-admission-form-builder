@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +18,7 @@ const Landing = () => {
       subtitle: "Excellence in Competitive Exam Preparation",
       heroTitle: "Nurturing Future Leaders",
       heroSubtitle: "Specialized coaching for 3rd-5th standard competitive exams including Navodaya, Sainik, Morarji, Kittur, RMS, and Alvas entrance tests.",
+      registerNow: "Register Now",
       expertCoaching: "Expert Coaching",
       expertCoachingDesc: "Comprehensive preparation with experienced faculty and proven teaching methodologies.",
       smallBatch: "Small Batch Size",
@@ -39,6 +41,7 @@ const Landing = () => {
       subtitle: "ಸ್ಪರ್ಧಾತ್ಮಕ ಪರೀಕ್ಷಾ ತಯಾರಿಯಲ್ಲಿ ಶ್ರೇಷ್ಠತೆ",
       heroTitle: "ಭವಿಷ್ಯದ ನಾಯಕರನ್ನು ಬೆಳೆಸುವುದು",
       heroSubtitle: "ನವೋದಯ, ಸೈನಿಕ್, ಮೊರಾರ್ಜಿ, ಕಿತ್ತೂರು, RMS, ಮತ್ತು ಅಲ್ವಾಸ್ ಪ್ರವೇಶ ಪರೀಕ್ಷೆಗಳು ಸೇರಿದಂತೆ 3-5 ನೇ ತರಗತಿ ಸ್ಪರ್ಧಾತ್ಮಕ ಪರೀಕ್ಷೆಗಳಿಗೆ ವಿಶೇಷ ತರಬೇತಿ.",
+      registerNow: "ಈಗ ನೋಂದಾಯಿಸಿ",
       expertCoaching: "ಪರಿಣಿತ ತರಬೇತಿ",
       expertCoachingDesc: "ಅನುಭವಿ ಅಧ್ಯಾಪಕರು ಮತ್ತು ಸಾಬೀತಾದ ಬೋಧನಾ ವಿಧಾನಗಳೊಂದಿಗೆ ಸಮಗ್ರ ತಯಾರಿ.",
       smallBatch: "ಸಣ್ಣ ಬ್ಯಾಚ್ ಗಾತ್ರ",
@@ -60,6 +63,10 @@ const Landing = () => {
 
   const handleMapClick = () => {
     window.open('https://maps.app.goo.gl/FGqFsReGQ2KLdiKPA', '_blank');
+  };
+
+  const handleRegistrationClick = () => {
+    window.open('https://docs.google.com/forms/d/e/1FAIpQLSdhepGfefCEKyaiHkGzuxMKMpWsoTIFnGdfoafgFlrYTOD_Ig/viewform', '_blank');
   };
 
   const toggleLanguage = () => {
@@ -151,6 +158,27 @@ const Landing = () => {
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
                 {t.heroSubtitle}
               </p>
+              
+              {/* QR Code Section */}
+              <div className="flex flex-col items-center mb-6 sm:mb-8">
+                <div 
+                  onClick={handleRegistrationClick}
+                  className="cursor-pointer transform hover:scale-105 transition-transform duration-300 bg-white p-4 rounded-lg shadow-lg mb-4"
+                >
+                  <img 
+                    src="/lovable-uploads/9af6ccc3-2f27-40dd-826b-c66169cb2d27.png" 
+                    alt="Registration QR Code" 
+                    className="w-32 h-32 sm:w-40 sm:h-40 mx-auto"
+                  />
+                </div>
+                <Button 
+                  onClick={handleRegistrationClick}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold text-lg shadow-lg transform hover:scale-105 transition-all duration-300"
+                >
+                  {t.registerNow}
+                </Button>
+              </div>
+
               <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-xs sm:text-sm font-medium text-blue-700 px-2">
                 <span className="bg-blue-100 px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm">Navodaya</span>
                 <span className="bg-blue-100 px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm">Sainik</span>
@@ -270,3 +298,4 @@ const Landing = () => {
 };
 
 export default Landing;
+
