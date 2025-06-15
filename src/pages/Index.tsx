@@ -2,53 +2,38 @@ import React, { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import FeesManagement from '@/components/FeesManagement';
 import StudentsSection from '@/components/StudentsSection';
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Download, Upload } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PDFPreview from '@/components/PDFPreview';
-
 const MAX_FILE_SIZE = 50 * 1024; // 50KB in bytes
 
 const formSchema = z.object({
   admissionNumber: z.string().optional(),
   admissionType: z.string().optional(),
   fullName: z.string().min(2, {
-    message: "Full Name must be at least 2 characters.",
+    message: "Full Name must be at least 2 characters."
   }),
   dateOfBirth: z.string({
-    required_error: "A date of birth is required.",
+    required_error: "A date of birth is required."
   }),
   gender: z.string().optional(),
   class: z.string().optional(),
   currentSchool: z.string().optional(),
   aadhaarNumber: z.string().min(12, {
-    message: "Aadhaar number must be exactly 12 digits.",
+    message: "Aadhaar number must be exactly 12 digits."
   }).max(12, {
-    message: "Aadhaar number must be exactly 12 digits.",
+    message: "Aadhaar number must be exactly 12 digits."
   }).regex(/^\d{12}$/, {
-    message: "Aadhaar number must contain only 12 digits.",
+    message: "Aadhaar number must contain only 12 digits."
   }),
   fatherName: z.string().optional(),
   motherName: z.string().optional(),
@@ -56,7 +41,7 @@ const formSchema = z.object({
   motherOccupation: z.string().optional(),
   contactNumber: z.string().optional(),
   email: z.string().email({
-    message: "Please enter a valid email.",
+    message: "Please enter a valid email."
   }),
   satsNumber: z.string().optional(),
   streetAddress: z.string().optional(),
@@ -73,18 +58,19 @@ const formSchema = z.object({
   amountPaid: z.string().optional(),
   place: z.string().optional(),
   declarationDate: z.string({
-    required_error: "A declaration date is required.",
+    required_error: "A declaration date is required."
   }),
-  studentPhoto: z.instanceof(File).optional().refine((file) => {
+  studentPhoto: z.instanceof(File).optional().refine(file => {
     if (!file) return true;
     return file.size <= MAX_FILE_SIZE;
-  }, "Student photo must be less than 50KB"),
-})
-
+  }, "Student photo must be less than 50KB")
+});
 const Index = () => {
   const [activeSection, setActiveSection] = useState('admission');
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
+
   // Document upload states moved to component level
   const [documents, setDocuments] = useState({
     previousMarksheet: null as File | null,
@@ -95,9 +81,11 @@ const Index = () => {
   });
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   const [uploading, setUploading] = useState(false);
-  const [students, setStudents] = useState<Array<{id: string, full_name: string}>>([]);
+  const [students, setStudents] = useState<Array<{
+    id: string;
+    full_name: string;
+  }>>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -127,9 +115,9 @@ const Index = () => {
       transactionId: "",
       amountPaid: "",
       place: "",
-      declarationDate: new Date().toISOString().split('T')[0],
-    },
-  })
+      declarationDate: new Date().toISOString().split('T')[0]
+    }
+  });
 
   // Helper function to validate file size
   const validateFileSize = (file: File) => {
@@ -137,7 +125,7 @@ const Index = () => {
       toast({
         title: "File Too Large",
         description: `File size must be less than 50KB. Current file is ${Math.round(file.size / 1024)}KB.`,
-        variant: "destructive",
+        variant: "destructive"
       });
       return false;
     }
@@ -160,55 +148,55 @@ const Index = () => {
       }
     }
   };
-
   const removeOtherDocument = (index: number) => {
     setDocuments(prev => ({
       ...prev,
       otherDocuments: prev.otherDocuments.filter((_, i) => i !== index)
     }));
   };
-
   const uploadDocuments = async () => {
     if (!selectedStudent) {
       toast({
         title: "Error",
         description: "Please select a student first.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setUploading(true);
     try {
       let uploadedCount = 0;
 
       // Upload each document type
-      const documentTypes = [
-        { file: documents.previousMarksheet, type: 'previous_marksheet' },
-        { file: documents.aadhaarCard, type: 'aadhaar_card' },
-        { file: documents.incomeCertificate, type: 'income_certificate' },
-        { file: documents.casteCertificate, type: 'caste_certificate' }
-      ];
-
+      const documentTypes = [{
+        file: documents.previousMarksheet,
+        type: 'previous_marksheet'
+      }, {
+        file: documents.aadhaarCard,
+        type: 'aadhaar_card'
+      }, {
+        file: documents.incomeCertificate,
+        type: 'income_certificate'
+      }, {
+        file: documents.casteCertificate,
+        type: 'caste_certificate'
+      }];
       for (const doc of documentTypes) {
         if (doc.file) {
           const fileName = `${selectedStudent}/${doc.type}_${Date.now()}_${doc.file.name}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('application-documents')
-            .upload(fileName, doc.file);
-
+          const {
+            data: uploadData,
+            error: uploadError
+          } = await supabase.storage.from('application-documents').upload(fileName, doc.file);
           if (uploadError) throw uploadError;
-
-          const { error: docError } = await supabase
-            .from('application_documents')
-            .insert({
-              application_id: selectedStudent,
-              document_type: doc.type,
-              file_name: doc.file.name,
-              file_path: uploadData.path
-            });
-
+          const {
+            error: docError
+          } = await supabase.from('application_documents').insert({
+            application_id: selectedStudent,
+            document_type: doc.type,
+            file_name: doc.file.name,
+            file_path: uploadData.path
+          });
           if (docError) throw docError;
           uploadedCount++;
         }
@@ -217,29 +205,25 @@ const Index = () => {
       // Upload other documents
       for (const file of documents.otherDocuments) {
         const fileName = `${selectedStudent}/other_document_${Date.now()}_${file.name}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('application-documents')
-          .upload(fileName, file);
-
+        const {
+          data: uploadData,
+          error: uploadError
+        } = await supabase.storage.from('application-documents').upload(fileName, file);
         if (uploadError) throw uploadError;
-
-        const { error: docError } = await supabase
-          .from('application_documents')
-          .insert({
-            application_id: selectedStudent,
-            document_type: 'other_document',
-            file_name: file.name,
-            file_path: uploadData.path
-          });
-
+        const {
+          error: docError
+        } = await supabase.from('application_documents').insert({
+          application_id: selectedStudent,
+          document_type: 'other_document',
+          file_name: file.name,
+          file_path: uploadData.path
+        });
         if (docError) throw docError;
         uploadedCount++;
       }
-
       toast({
         title: "Success!",
-        description: `${uploadedCount} documents uploaded successfully!`,
+        description: `${uploadedCount} documents uploaded successfully!`
       });
 
       // Reset form
@@ -250,23 +234,21 @@ const Index = () => {
         casteCertificate: null,
         otherDocuments: []
       });
-
     } catch (error) {
       console.error('Upload error:', error);
       toast({
         title: "Error",
         description: "Failed to upload documents. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setUploading(false);
     }
   };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       console.log('Starting form submission with values:', values);
-      
+
       // Prepare the data for database insertion
       const applicationData = {
         admission_number: values.admissionNumber || '',
@@ -297,23 +279,19 @@ const Index = () => {
         transaction_id: values.transactionId || '',
         amount_paid: parseFloat(values.amountPaid || '0'),
         place: values.place || '',
-        declaration_date: values.declarationDate,
+        declaration_date: values.declarationDate
       };
-
       console.log('Prepared application data:', applicationData);
 
       // Insert application data
-      const { data: application, error: applicationError } = await supabase
-        .from('applications')
-        .insert([applicationData])
-        .select()
-        .single();
-
+      const {
+        data: application,
+        error: applicationError
+      } = await supabase.from('applications').insert([applicationData]).select().single();
       if (applicationError) {
         console.error('Application insertion error:', applicationError);
         throw new Error(`Failed to save application: ${applicationError.message}`);
       }
-
       console.log('Application inserted successfully:', application);
 
       // Upload student photo if it exists
@@ -321,87 +299,76 @@ const Index = () => {
         try {
           const fileName = `${application.id}/student_photo_${Date.now()}_${values.studentPhoto.name}`;
           console.log(`Uploading student photo as ${fileName}`);
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('application-documents')
-            .upload(fileName, values.studentPhoto);
-
+          const {
+            data: uploadData,
+            error: uploadError
+          } = await supabase.storage.from('application-documents').upload(fileName, values.studentPhoto);
           if (uploadError) {
             console.error(`Upload error for student photo:`, uploadError);
             throw new Error(`Failed to upload student photo: ${uploadError.message}`);
           }
-
           console.log(`Upload successful for student photo:`, uploadData);
 
           // Insert document record
-          const { error: docError } = await supabase
-            .from('application_documents')
-            .insert({
-              application_id: application.id,
-              document_type: 'student_photo',
-              file_name: values.studentPhoto.name,
-              file_path: uploadData.path
-            });
-
+          const {
+            error: docError
+          } = await supabase.from('application_documents').insert({
+            application_id: application.id,
+            document_type: 'student_photo',
+            file_name: values.studentPhoto.name,
+            file_path: uploadData.path
+          });
           if (docError) {
             console.error(`Document record error for student photo:`, docError);
             throw new Error(`Failed to save document record for student photo: ${docError.message}`);
           }
-
           console.log(`Document record saved for student photo`);
         } catch (error) {
           console.error(`Error processing student photo:`, error);
           throw error;
         }
       }
-
       toast({
         title: "Success!",
-        description: `Application submitted successfully!`,
+        description: `Application submitted successfully!`
       });
 
       // Reset form after successful submission
       form.reset();
-
     } catch (error) {
       console.error('Submission error:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to submit application. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
-  }
-
+  };
   const isSubmitting = form.formState.isSubmitting;
-
   const downloadPDF = async () => {
     try {
       const formData = form.getValues();
-      
+
       // Check if required fields are filled
       if (!formData.fullName.trim()) {
         toast({
           title: "Missing Information",
           description: "Please fill in at least the student's full name before downloading PDF.",
-          variant: "destructive",
+          variant: "destructive"
         });
         return;
       }
-
       console.log('PDF download requested for:', formData.fullName);
-      
       toast({
         title: "PDF Download",
-        description: "Use the Preview PDF button to view and download your application form.",
+        description: "Use the Preview PDF button to view and download your application form."
       });
-      
     } catch (error) {
       console.error('PDF download error:', error);
       toast({
         title: "Error",
         description: "Failed to prepare PDF download. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -418,33 +385,39 @@ const Index = () => {
     }
     return null;
   };
-
-  const examOptions = [
-    { id: "navodaya", label: "Navodaya" },
-    { id: "sainik", label: "Sainik" },
-    { id: "morarji", label: "Morarji" },
-    { id: "kittur", label: "Kittur" },
-    { id: "alvas", label: "Alvas" },
-  ];
+  const examOptions = [{
+    id: "navodaya",
+    label: "Navodaya"
+  }, {
+    id: "sainik",
+    label: "Sainik"
+  }, {
+    id: "morarji",
+    label: "Morarji"
+  }, {
+    id: "kittur",
+    label: "Kittur"
+  }, {
+    id: "alvas",
+    label: "Alvas"
+  }];
 
   // Fetch students from database
   const fetchStudents = async () => {
     try {
       setLoadingStudents(true);
-      const { data, error } = await supabase
-        .from('applications')
-        .select('id, full_name')
-        .order('full_name');
-
+      const {
+        data,
+        error
+      } = await supabase.from('applications').select('id, full_name').order('full_name');
       if (error) throw error;
-
       setStudents(data || []);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
         title: "Error",
         description: "Failed to fetch students. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoadingStudents(false);
@@ -457,10 +430,8 @@ const Index = () => {
       fetchStudents();
     }
   }, [activeSection]);
-
   const renderUploadDocuments = () => {
-    return (
-      <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+    return <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
         <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
           <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-lg p-3 sm:p-6 mx-2 sm:mx-0">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">UPLOAD DOCUMENTS</h1>
@@ -476,24 +447,14 @@ const Index = () => {
                   <SelectValue placeholder={loadingStudents ? "Loading students..." : "Choose a student"} />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
-                  {loadingStudents ? (
-                    <SelectItem value="loading" disabled>Loading students...</SelectItem>
-                  ) : students.length === 0 ? (
-                    <SelectItem value="no-students" disabled>No students found</SelectItem>
-                  ) : (
-                    students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
+                  {loadingStudents ? <SelectItem value="loading" disabled>Loading students...</SelectItem> : students.length === 0 ? <SelectItem value="no-students" disabled>No students found</SelectItem> : students.map(student => <SelectItem key={student.id} value={student.id}>
                         {student.full_name}
-                      </SelectItem>
-                    ))
-                  )}
+                      </SelectItem>)}
                 </SelectContent>
               </Select>
-              {selectedStudent && (
-                <p className="text-sm text-green-600 mt-2">
+              {selectedStudent && <p className="text-sm text-green-600 mt-2">
                   ✓ Selected: {students.find(s => s.id === selectedStudent)?.full_name}
-                </p>
-              )}
+                </p>}
             </div>
 
             {/* Document Upload Sections */}
@@ -504,142 +465,83 @@ const Index = () => {
                 {/* Previous Marksheet */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Previous Marksheet</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload('previousMarksheet', e.target.files[0]);
-                      }
-                    }}
-                    className="border-gray-300"
-                    disabled={!selectedStudent}
-                  />
-                  {documents.previousMarksheet && (
-                    <p className="text-sm text-green-600 mt-1">✓ {documents.previousMarksheet.name}</p>
-                  )}
+                  <Input type="file" accept="image/*" onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload('previousMarksheet', e.target.files[0]);
+                  }
+                }} className="border-gray-300" disabled={!selectedStudent} />
+                  {documents.previousMarksheet && <p className="text-sm text-green-600 mt-1">✓ {documents.previousMarksheet.name}</p>}
                 </div>
 
                 {/* Aadhaar Card */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Card</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload('aadhaarCard', e.target.files[0]);
-                      }
-                    }}
-                    className="border-gray-300"
-                    disabled={!selectedStudent}
-                  />
-                  {documents.aadhaarCard && (
-                    <p className="text-sm text-green-600 mt-1">✓ {documents.aadhaarCard.name}</p>
-                  )}
+                  <Input type="file" accept="image/*" onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload('aadhaarCard', e.target.files[0]);
+                  }
+                }} className="border-gray-300" disabled={!selectedStudent} />
+                  {documents.aadhaarCard && <p className="text-sm text-green-600 mt-1">✓ {documents.aadhaarCard.name}</p>}
                 </div>
 
                 {/* Income Certificate */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Income Certificate</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload('incomeCertificate', e.target.files[0]);
-                      }
-                    }}
-                    className="border-gray-300"
-                    disabled={!selectedStudent}
-                  />
-                  {documents.incomeCertificate && (
-                    <p className="text-sm text-green-600 mt-1">✓ {documents.incomeCertificate.name}</p>
-                  )}
+                  <Input type="file" accept="image/*" onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload('incomeCertificate', e.target.files[0]);
+                  }
+                }} className="border-gray-300" disabled={!selectedStudent} />
+                  {documents.incomeCertificate && <p className="text-sm text-green-600 mt-1">✓ {documents.incomeCertificate.name}</p>}
                 </div>
 
                 {/* Caste Certificate */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Caste Certificate</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload('casteCertificate', e.target.files[0]);
-                      }
-                    }}
-                    className="border-gray-300"
-                    disabled={!selectedStudent}
-                  />
-                  {documents.casteCertificate && (
-                    <p className="text-sm text-green-600 mt-1">✓ {documents.casteCertificate.name}</p>
-                  )}
+                  <Input type="file" accept="image/*" onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload('casteCertificate', e.target.files[0]);
+                  }
+                }} className="border-gray-300" disabled={!selectedStudent} />
+                  {documents.casteCertificate && <p className="text-sm text-green-600 mt-1">✓ {documents.casteCertificate.name}</p>}
                 </div>
               </div>
 
               {/* Other Documents */}
               <div className="mt-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Other Documents</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileUpload('other', e.target.files[0]);
-                      e.target.value = ''; // Reset input to allow same file again
-                    }
-                  }}
-                  className="border-gray-300"
-                  disabled={!selectedStudent}
-                />
-                {!selectedStudent && (
-                  <p className="text-sm text-gray-500 mt-1">Please select a student first</p>
-                )}
-                {documents.otherDocuments.length > 0 && (
-                  <div className="mt-3 space-y-2">
+                <Input type="file" accept="image/*" onChange={e => {
+                if (e.target.files && e.target.files[0]) {
+                  handleFileUpload('other', e.target.files[0]);
+                  e.target.value = ''; // Reset input to allow same file again
+                }
+              }} className="border-gray-300" disabled={!selectedStudent} />
+                {!selectedStudent && <p className="text-sm text-gray-500 mt-1">Please select a student first</p>}
+                {documents.otherDocuments.length > 0 && <div className="mt-3 space-y-2">
                     <p className="text-sm font-medium text-gray-700">Other Documents Added:</p>
-                    {documents.otherDocuments.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
+                    {documents.otherDocuments.map((file, index) => <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
                         <span className="text-sm text-gray-600">{file.name}</span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeOtherDocument(index)}
-                          className="text-red-600 hover:text-red-700"
-                        >
+                        <Button type="button" variant="outline" size="sm" onClick={() => removeOtherDocument(index)} className="text-red-600 hover:text-red-700">
                           Remove
                         </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </div>
 
               <div className="mt-6">
-                <Button
-                  onClick={uploadDocuments}
-                  disabled={uploading || !selectedStudent}
-                  className="bg-gray-600 hover:bg-gray-700 text-white"
-                >
+                <Button onClick={uploadDocuments} disabled={uploading || !selectedStudent} className="bg-gray-600 hover:bg-gray-700 text-white">
                   <Upload className="mr-2 h-4 w-4" />
                   {uploading ? "Uploading..." : "Upload Documents"}
                 </Button>
-                {!selectedStudent && (
-                  <p className="text-sm text-gray-500 mt-2">Please select a student to enable document upload</p>
-                )}
+                {!selectedStudent && <p className="text-sm text-gray-500 mt-2">Please select a student to enable document upload</p>}
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   };
-
   const renderFeesManagement = () => {
-    return (
-      <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+    return <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
         <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
           <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-lg p-3 sm:p-6 mx-2 sm:mx-0">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">FEES MANAGEMENT</h1>
@@ -649,22 +551,15 @@ const Index = () => {
             <p className="text-center text-gray-600">Fees Management system will be implemented here.</p>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   };
-
   const renderAdmissionForm = () => {
-    return (
-      <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+    return <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
         <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
           {/* Header */}
-          <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-lg p-3 sm:p-6 mx-2 sm:mx-0">
+          <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 rounded-lg p-3 sm:p-6 mx-2 sm:mx-0 bg-green-300">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-4">
-              <img 
-                src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-                alt="Visiona Education Academy Logo" 
-                className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain"
-              />
+              <img src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" alt="Visiona Education Academy Logo" className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain" />
               <div className="text-center">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
                 <p className="text-sm sm:text-base lg:text-lg text-gray-700">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
@@ -683,30 +578,20 @@ const Index = () => {
                   <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {/* Admission Number */}
-                      <FormField
-                        control={form.control}
-                        name="admissionNumber"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={form.control} name="admissionNumber" render={({
+                      field
+                    }) => <FormItem>
                             <FormLabel className="text-gray-700 text-sm sm:text-base">Admission Number</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="Enter admission number" 
-                                {...field} 
-                                className="border-gray-300 text-sm sm:text-base"
-                              />
+                              <Input placeholder="Enter admission number" {...field} className="border-gray-300 text-sm sm:text-base" />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
 
                       {/* Admission Type */}
-                      <FormField
-                        control={form.control}
-                        name="admissionType"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={form.control} name="admissionType" render={({
+                      field
+                    }) => <FormItem>
                             <FormLabel className="text-gray-700 text-sm sm:text-base">Admission Type</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
@@ -720,57 +605,38 @@ const Index = () => {
                               </SelectContent>
                             </Select>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
 
                       {/* Student Photo Upload Field */}
-                      <FormField
-                        control={form.control}
-                        name="studentPhoto"
-                        render={({ field }) => (
-                          <FormItem className="sm:col-span-2">
+                      <FormField control={form.control} name="studentPhoto" render={({
+                      field
+                    }) => <FormItem className="sm:col-span-2">
                             <FormLabel className="text-gray-700 text-sm sm:text-base">Student Photo</FormLabel>
                             <FormControl>
-                              <Input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    const file = e.target.files[0];
-                                    if (validateFileSize(file)) {
-                                      field.onChange(file);
-                                    } else {
-                                      e.target.value = '';
-                                    }
-                                  }
-                                }}
-                                className="border-gray-300 text-sm sm:text-base"
-                              />
+                              <Input type="file" accept="image/*" onChange={e => {
+                          if (e.target.files && e.target.files[0]) {
+                            const file = e.target.files[0];
+                            if (validateFileSize(file)) {
+                              field.onChange(file);
+                            } else {
+                              e.target.value = '';
+                            }
+                          }
+                        }} className="border-gray-300 text-sm sm:text-base" />
                             </FormControl>
                             <FormDescription className="text-xs text-gray-500">
                               Maximum file size: 50KB
                             </FormDescription>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                     </div>
 
                     {/* Student Photo Display Box */}
                     <div className="flex-shrink-0 self-center lg:self-start">
                       <div className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-gray-100 overflow-hidden mx-auto lg:mx-0">
-                        {form.watch('studentPhoto') && createSafeObjectURL(form.watch('studentPhoto')) ? (
-                          <img 
-                            src={createSafeObjectURL(form.watch('studentPhoto'))} 
-                            alt="Student"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="text-gray-400 text-xs text-center p-1">
+                        {form.watch('studentPhoto') && createSafeObjectURL(form.watch('studentPhoto')) ? <img src={createSafeObjectURL(form.watch('studentPhoto'))} alt="Student" className="w-full h-full object-cover" /> : <div className="text-gray-400 text-xs text-center p-1">
                             Student Photo
-                          </div>
-                        )}
+                          </div>}
                       </div>
                     </div>
                   </div>
@@ -780,41 +646,27 @@ const Index = () => {
                 <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Student Information</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <FormField
-                      control={form.control}
-                      name="fullName"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="fullName" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Full Name</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter full name" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="dateOfBirth"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="dateOfBirth" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Date of Birth</FormLabel>
                           <FormControl>
-                            <Input
-                              type="date"
-                              {...field}
-                              className="border-gray-300 text-sm sm:text-base"
-                            />
+                            <Input type="date" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="gender"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="gender" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Gender</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
@@ -829,14 +681,10 @@ const Index = () => {
                             </SelectContent>
                           </Select>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="class"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="class" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Class</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
@@ -851,40 +699,25 @@ const Index = () => {
                             </SelectContent>
                           </Select>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="currentSchool"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="currentSchool" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Current School</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter current school" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="aadhaarNumber"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="aadhaarNumber" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Aadhaar Number *</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder="Enter 12-digit Aadhaar number" 
-                              {...field} 
-                              className="border-gray-300 text-sm sm:text-base"
-                              maxLength={12}
-                            />
+                            <Input placeholder="Enter 12-digit Aadhaar number" {...field} className="border-gray-300 text-sm sm:text-base" maxLength={12} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
 
@@ -892,97 +725,69 @@ const Index = () => {
                 <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Parent/Guardian Information</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <FormField
-                      control={form.control}
-                      name="fatherName"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="fatherName" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Father's Name</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter father's name" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="motherName"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="motherName" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Mother's Name</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter mother's name" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="fatherOccupation"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="fatherOccupation" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Father's Occupation</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter father's occupation" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="motherOccupation"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="motherOccupation" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Mother's Occupation</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter mother's occupation" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="contactNumber"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="contactNumber" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Contact Number</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter contact number" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="email" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Email</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter email" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="satsNumber"
-                      render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
+                        </FormItem>} />
+                    <FormField control={form.control} name="satsNumber" render={({
+                    field
+                  }) => <FormItem className="sm:col-span-2">
                           <FormLabel className="text-gray-700 text-sm sm:text-base">SATS Number</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter SATS number" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
 
@@ -990,38 +795,28 @@ const Index = () => {
                 <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Address</h2>
                   <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                    <FormField
-                      control={form.control}
-                      name="streetAddress"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="streetAddress" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Street Address</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter street address" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                      <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={form.control} name="city" render={({
+                      field
+                    }) => <FormItem>
                             <FormLabel className="text-gray-700 text-sm sm:text-base">City</FormLabel>
                             <FormControl>
                               <Input placeholder="Enter city" {...field} className="border-gray-300 text-sm sm:text-base" />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                          <FormItem>
+                          </FormItem>} />
+                      <FormField control={form.control} name="state" render={({
+                      field
+                    }) => <FormItem>
                             <FormLabel className="text-gray-700 text-sm sm:text-base">State</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
@@ -1040,36 +835,26 @@ const Index = () => {
                               </SelectContent>
                             </Select>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="pinCode"
-                        render={({ field }) => (
-                          <FormItem>
+                          </FormItem>} />
+                      <FormField control={form.control} name="pinCode" render={({
+                      field
+                    }) => <FormItem>
                             <FormLabel className="text-gray-700 text-sm sm:text-base">PIN Code</FormLabel>
                             <FormControl>
                               <Input placeholder="Enter PIN code" {...field} className="border-gray-300 text-sm sm:text-base" />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                     </div>
-                    <FormField
-                      control={form.control}
-                      name="landmark"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="landmark" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Landmark (Optional)</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter landmark" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
 
@@ -1077,24 +862,18 @@ const Index = () => {
                 <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Academic Information</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <FormField
-                      control={form.control}
-                      name="lastYearPercentage"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="lastYearPercentage" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Last Year Percentage</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter percentage" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="category" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Category</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
@@ -1111,56 +890,40 @@ const Index = () => {
                             </SelectContent>
                           </Select>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="subjectsWeakIn"
-                      render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
+                        </FormItem>} />
+                    <FormField control={form.control} name="subjectsWeakIn" render={({
+                    field
+                  }) => <FormItem className="sm:col-span-2">
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Subjects Weak In</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter subjects" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="examsPreparingFor"
-                      render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
+                        </FormItem>} />
+                    <FormField control={form.control} name="examsPreparingFor" render={({
+                    field
+                  }) => <FormItem className="sm:col-span-2">
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Exams Preparing For</FormLabel>
                           <FormDescription className="text-xs sm:text-sm">
                             Select all exams you are preparing for
                           </FormDescription>
                           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-                            {examOptions.map((exam) => (
-                              <div key={exam.id} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={exam.id}
-                                  checked={field.value?.includes(exam.id)}
-                                  onCheckedChange={(checked) => {
-                                    const currentValue = field.value || [];
-                                    if (checked) {
-                                      field.onChange([...currentValue, exam.id]);
-                                    } else {
-                                      field.onChange(currentValue.filter((value) => value !== exam.id));
-                                    }
-                                  }}
-                                />
+                            {examOptions.map(exam => <div key={exam.id} className="flex items-center space-x-2">
+                                <Checkbox id={exam.id} checked={field.value?.includes(exam.id)} onCheckedChange={checked => {
+                          const currentValue = field.value || [];
+                          if (checked) {
+                            field.onChange([...currentValue, exam.id]);
+                          } else {
+                            field.onChange(currentValue.filter(value => value !== exam.id));
+                          }
+                        }} />
                                 <label htmlFor={exam.id} className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                   {exam.label}
                                 </label>
-                              </div>
-                            ))}
+                              </div>)}
                           </div>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
 
@@ -1168,45 +931,33 @@ const Index = () => {
                 <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Fee Payment Details</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                    <FormField
-                      control={form.control}
-                      name="paymentMode"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="paymentMode" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Payment Mode</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter payment mode" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="transactionId"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="transactionId" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Transaction ID</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter transaction ID" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="amountPaid"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="amountPaid" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Amount Paid</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter amount paid" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
 
@@ -1214,58 +965,35 @@ const Index = () => {
                 <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
                   <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Declarations</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <FormField
-                      control={form.control}
-                      name="place"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="place" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Place</FormLabel>
                           <FormControl>
                             <Input placeholder="Enter place" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="declarationDate"
-                      render={({ field }) => (
-                        <FormItem>
+                        </FormItem>} />
+                    <FormField control={form.control} name="declarationDate" render={({
+                    field
+                  }) => <FormItem>
                           <FormLabel className="text-gray-700 text-sm sm:text-base">Declaration Date</FormLabel>
                           <FormControl>
-                            <Input
-                              type="date"
-                              {...field}
-                              className="border-gray-300 text-sm sm:text-base"
-                            />
+                            <Input type="date" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
 
                 {/* Submit Button */}
                 <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pb-6 sm:pb-8">
                   <PDFPreview formData={form.getValues()} />
-                  <Button 
-                    type="button"
-                    onClick={downloadPDF}
-                    variant="outline" 
-                    size="lg" 
-                    className="bg-white text-gray-600 border-gray-600 hover:bg-gray-50 px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto"
-                  >
+                  <Button type="button" onClick={downloadPDF} variant="outline" size="lg" className="bg-white text-gray-600 border-gray-600 hover:bg-gray-50 px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto">
                     <Download className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     Download PDF
                   </Button>
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto"
-                    disabled={isSubmitting}
-                  >
+                  <Button type="submit" size="lg" className="bg-gray-600 hover:bg-gray-700 text-white px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto" disabled={isSubmitting}>
                     {isSubmitting ? "Submitting..." : "Submit Application"}
                   </Button>
                 </div>
@@ -1273,12 +1001,10 @@ const Index = () => {
             </Form>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   };
-
   const renderContent = () => {
-    switch(activeSection) {
+    switch (activeSection) {
       case 'admission':
         return renderAdmissionForm();
       case 'students':
@@ -1291,13 +1017,9 @@ const Index = () => {
         return renderAdmissionForm();
     }
   };
-
-  return (
-    <>
+  return <>
       <Navigation activeSection={activeSection} onSectionChange={setActiveSection} />
       {renderContent()}
-    </>
-  );
+    </>;
 };
-
 export default Index;
