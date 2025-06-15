@@ -1,774 +1,499 @@
-
-import React from 'react';
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Download } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import PDFPreview from '@/components/PDFPreview';
-
-const MAX_FILE_SIZE = 50 * 1024; // 50KB in bytes
-
-const formSchema = z.object({
-  admissionNumber: z.string().optional(),
-  admissionType: z.string().optional(),
-  fullName: z.string().min(2, {
-    message: "Full Name must be at least 2 characters.",
-  }),
-  dateOfBirth: z.string({
-    required_error: "A date of birth is required.",
-  }),
-  gender: z.string().optional(),
-  class: z.string().optional(),
-  currentSchool: z.string().optional(),
-  aadhaarNumber: z.string().min(12, {
-    message: "Aadhaar number must be exactly 12 digits.",
-  }).max(12, {
-    message: "Aadhaar number must be exactly 12 digits.",
-  }).regex(/^\d{12}$/, {
-    message: "Aadhaar number must contain only 12 digits.",
-  }),
-  fatherName: z.string().optional(),
-  motherName: z.string().optional(),
-  fatherOccupation: z.string().optional(),
-  motherOccupation: z.string().optional(),
-  contactNumber: z.string().optional(),
-  email: z.string().email({
-    message: "Please enter a valid email.",
-  }),
-  satsNumber: z.string().optional(),
-  streetAddress: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  pinCode: z.string().optional(),
-  landmark: z.string().optional(),
-  lastYearPercentage: z.string().optional(),
-  category: z.string().optional(),
-  subjectsWeakIn: z.string().optional(),
-  examsPreparingFor: z.array(z.string()).optional(),
-  paymentMode: z.string().optional(),
-  transactionId: z.string().optional(),
-  amountPaid: z.string().optional(),
-  place: z.string().optional(),
-  declarationDate: z.string({
-    required_error: "A declaration date is required.",
-  }),
-  studentPhoto: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Student photo must be less than 50KB"),
-  previousMarksheet: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Previous marksheet must be less than 50KB"),
-  aadhaarCard: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Aadhaar card must be less than 50KB"),
-  incomeCertificate: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Income certificate must be less than 50KB"),
-  casteCertificate: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Caste certificate must be less than 50KB"),
-})
+import { supabase } from "@/integrations/supabase/client";
+import { Calendar, MapPin, User, GraduationCap, CreditCard, FileText, Phone, Mail } from "lucide-react";
+import Navigation from "@/components/Navigation";
+import FeesManagement from "@/components/FeesManagement";
 
 const Index = () => {
+  const [activeSection, setActiveSection] = useState('admission');
   const { toast } = useToast();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      fullName: "",
-      dateOfBirth: new Date().toISOString().split('T')[0],
-      gender: "",
-      class: "",
-      currentSchool: "",
-      aadhaarNumber: "",
-      fatherName: "",
-      motherName: "",
-      fatherOccupation: "",
-      motherOccupation: "",
-      contactNumber: "",
-      email: "",
-      satsNumber: "",
-      streetAddress: "",
-      city: "",
-      state: "Karnataka",
-      pinCode: "",
-      landmark: "",
-      lastYearPercentage: "",
-      category: "",
-      subjectsWeakIn: "",
-      examsPreparingFor: [],
-      paymentMode: "",
-      transactionId: "",
-      amountPaid: "",
-      place: "",
-      declarationDate: new Date().toISOString().split('T')[0],
-    },
-  })
+  
+  const [formData, setFormData] = useState({
+    fullName: "",
+    fatherName: "",
+    motherName: "",
+    fatherOccupation: "",
+    motherOccupation: "",
+    contactNumber: "",
+    email: "",
+    satsNumber: "",
+    aadhaarNumber: "",
+    dateOfBirth: "",
+    gender: "",
+    currentSchool: "",
+    class: "",
+    lastYearPercentage: "",
+    streetAddress: "",
+    city: "",
+    state: "",
+    pinCode: "",
+    landmark: "",
+    category: "",
+    examsPreparingFor: [] as string[],
+    subjectsWeakIn: "",
+    paymentMode: "",
+    amountPaid: "",
+    transactionId: "",
+    place: "",
+    declarationDate: ""
+  });
 
-  // Helper function to validate file size
-  const validateFileSize = (file: File) => {
-    if (file.size > MAX_FILE_SIZE) {
-      toast({
-        title: "File Too Large",
-        description: `File size must be less than 50KB. Current file is ${Math.round(file.size / 1024)}KB.`,
-        variant: "destructive",
-      });
-      return false;
-    }
-    return true;
+  const handleInputChange = (field: string, value: string | string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleExamChange = (exam: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      examsPreparingFor: checked 
+        ? [...prev.examsPreparingFor, exam]
+        : prev.examsPreparingFor.filter(e => e !== exam)
+    }));
+  };
+
+  const generateAdmissionNumber = () => {
+    const year = new Date().getFullYear();
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    return `VIS${year}${random}`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
-      console.log('Starting form submission with values:', values);
+      const admissionNumber = generateAdmissionNumber();
       
-      // Prepare the data for database insertion
-      const applicationData = {
-        admission_number: values.admissionNumber || '',
-        admission_type: values.admissionType || '',
-        full_name: values.fullName,
-        date_of_birth: values.dateOfBirth,
-        gender: values.gender || '',
-        class: values.class || '',
-        current_school: values.currentSchool || '',
-        aadhaar_number: values.aadhaarNumber,
-        father_name: values.fatherName || '',
-        mother_name: values.motherName || '',
-        father_occupation: values.fatherOccupation || '',
-        mother_occupation: values.motherOccupation || '',
-        contact_number: values.contactNumber || '',
-        email: values.email,
-        sats_number: values.satsNumber || '',
-        street_address: values.streetAddress || '',
-        city: values.city || '',
-        state: values.state || '',
-        pin_code: values.pinCode || '',
-        landmark: values.landmark || null,
-        last_year_percentage: parseFloat(values.lastYearPercentage || '0'),
-        category: values.category || '',
-        subjects_weak_in: values.subjectsWeakIn || null,
-        exams_preparing_for: values.examsPreparingFor || [],
-        payment_mode: values.paymentMode || '',
-        transaction_id: values.transactionId || '',
-        amount_paid: parseFloat(values.amountPaid || '0'),
-        place: values.place || '',
-        declaration_date: values.declarationDate,
-      };
-
-      console.log('Prepared application data:', applicationData);
-
-      // Insert application data
-      const { data: application, error: applicationError } = await supabase
+      const { data, error } = await supabase
         .from('applications')
-        .insert([applicationData])
+        .insert({
+          admission_number: admissionNumber,
+          admission_type: 'New Admission',
+          full_name: formData.fullName,
+          father_name: formData.fatherName,
+          mother_name: formData.motherName,
+          father_occupation: formData.fatherOccupation,
+          mother_occupation: formData.motherOccupation,
+          contact_number: formData.contactNumber,
+          email: formData.email,
+          sats_number: formData.satsNumber,
+          aadhaar_number: formData.aadhaarNumber,
+          date_of_birth: formData.dateOfBirth,
+          gender: formData.gender,
+          current_school: formData.currentSchool,
+          class: formData.class,
+          last_year_percentage: parseFloat(formData.lastYearPercentage),
+          street_address: formData.streetAddress,
+          city: formData.city,
+          state: formData.state,
+          pin_code: formData.pinCode,
+          landmark: formData.landmark,
+          category: formData.category,
+          exams_preparing_for: formData.examsPreparingFor,
+          subjects_weak_in: formData.subjectsWeakIn,
+          payment_mode: formData.paymentMode,
+          amount_paid: parseFloat(formData.amountPaid),
+          transaction_id: formData.transactionId,
+          place: formData.place,
+          declaration_date: formData.declarationDate
+        })
         .select()
         .single();
 
-      if (applicationError) {
-        console.error('Application insertion error:', applicationError);
-        throw new Error(`Failed to save application: ${applicationError.message}`);
-      }
-
-      console.log('Application inserted successfully:', application);
-
-      // Upload documents if they exist
-      const documents = [
-        { file: values.studentPhoto, type: 'student_photo' },
-        { file: values.previousMarksheet, type: 'previous_marksheet' },
-        { file: values.aadhaarCard, type: 'aadhaar_card' },
-        { file: values.incomeCertificate, type: 'income_certificate' },
-        { file: values.casteCertificate, type: 'caste_certificate' }
-      ];
-
-      let uploadedDocuments = 0;
-      for (const doc of documents) {
-        if (doc.file && doc.file instanceof File) {
-          try {
-            const fileName = `${application.id}/${doc.type}_${Date.now()}_${doc.file.name}`;
-            console.log(`Uploading ${doc.type} as ${fileName}`);
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('application-documents')
-              .upload(fileName, doc.file);
-
-            if (uploadError) {
-              console.error(`Upload error for ${doc.type}:`, uploadError);
-              throw new Error(`Failed to upload ${doc.type}: ${uploadError.message}`);
-            }
-
-            console.log(`Upload successful for ${doc.type}:`, uploadData);
-
-            // Insert document record
-            const { error: docError } = await supabase
-              .from('application_documents')
-              .insert({
-                application_id: application.id,
-                document_type: doc.type,
-                file_name: doc.file.name,
-                file_path: uploadData.path
-              });
-
-            if (docError) {
-              console.error(`Document record error for ${doc.type}:`, docError);
-              throw new Error(`Failed to save document record for ${doc.type}: ${docError.message}`);
-            }
-
-            uploadedDocuments++;
-            console.log(`Document record saved for ${doc.type}`);
-          } catch (error) {
-            console.error(`Error processing ${doc.type}:`, error);
-            throw error;
-          }
-        }
-      }
+      if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: `Application submitted successfully! ${uploadedDocuments} documents uploaded.`,
+        title: "Application Submitted Successfully!",
+        description: `Your admission number is: ${admissionNumber}`,
       });
 
-      // Reset form after successful submission
-      form.reset();
+      // Reset form
+      setFormData({
+        fullName: "",
+        fatherName: "",
+        motherName: "",
+        fatherOccupation: "",
+        motherOccupation: "",
+        contactNumber: "",
+        email: "",
+        satsNumber: "",
+        aadhaarNumber: "",
+        dateOfBirth: "",
+        gender: "",
+        currentSchool: "",
+        class: "",
+        lastYearPercentage: "",
+        streetAddress: "",
+        city: "",
+        state: "",
+        pinCode: "",
+        landmark: "",
+        category: "",
+        examsPreparingFor: [],
+        subjectsWeakIn: "",
+        paymentMode: "",
+        amountPaid: "",
+        transactionId: "",
+        place: "",
+        declarationDate: ""
+      });
 
     } catch (error) {
-      console.error('Submission error:', error);
+      console.error('Error submitting application:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to submit application. Please try again.",
-        variant: "destructive",
-      });
-    }
-  }
-
-  const isSubmitting = form.formState.isSubmitting;
-
-  const downloadPDF = async () => {
-    try {
-      const formData = form.getValues();
-      
-      // Check if required fields are filled
-      if (!formData.fullName.trim()) {
-        toast({
-          title: "Missing Information",
-          description: "Please fill in at least the student's full name before downloading PDF.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('PDF download requested for:', formData.fullName);
-      
-      toast({
-        title: "PDF Download",
-        description: "Use the Preview PDF button to view and download your application form.",
-      });
-      
-    } catch (error) {
-      console.error('PDF download error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to prepare PDF download. Please try again.",
+        description: "Failed to submit application. Please try again.",
         variant: "destructive",
       });
     }
   };
-
-  // Helper function to safely create object URL
-  const createSafeObjectURL = (file: any) => {
-    if (file && file instanceof File && file.size > 0) {
-      try {
-        return URL.createObjectURL(file);
-      } catch (error) {
-        console.error('Error creating object URL:', error);
-        return null;
-      }
-    }
-    return null;
-  };
-
-  const examOptions = [
-    { id: "navodaya", label: "Navodaya" },
-    { id: "sainik", label: "Sainik" },
-    { id: "morarji", label: "Morarji" },
-    { id: "kittur", label: "Kittur" },
-    { id: "alvas", label: "Alvas" },
-  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
-      <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-4">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-lg p-3 sm:p-6 mx-2 sm:mx-0">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-4">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
             <img 
-              src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-              alt="Visiona Education Academy Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain"
+              src="/lovable-uploads/60b569e4-862b-4ff6-8f40-7aea15908296.png" 
+              alt="Visiona Academy Logo" 
+              className="h-24 w-auto mr-4"
             />
-            <div className="text-center">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
-              <p className="text-sm sm:text-base lg:text-lg text-gray-700">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
-              <p className="text-xs sm:text-sm text-gray-600">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
-              <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1">16th Cross Vidyagiri Bagalkot</p>
+            <div>
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">VISIONA ACADEMY</h1>
+              <p className="text-lg text-gray-600">Excellence in Education</p>
             </div>
           </div>
         </div>
 
-        <div className="px-2 sm:px-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
-              {/* General Information with Photo */}
-              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">General Information</h2>
-                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    {/* Admission Number */}
-                    <FormField
-                      control={form.control}
-                      name="admissionNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">Admission Number</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter admission number" 
-                              {...field} 
-                              className="border-gray-300 text-sm sm:text-base"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+        {/* Navigation */}
+        <Navigation activeSection={activeSection} onSectionChange={setActiveSection} />
 
-                    {/* Admission Type */}
-                    <FormField
-                      control={form.control}
-                      name="admissionType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">Admission Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
-                                <SelectValue placeholder="Select admission type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
-                              <SelectItem value="residential">Residential</SelectItem>
-                              <SelectItem value="local">Local</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+        {/* Content */}
+        {activeSection === 'admission' ? (
+          <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+              <CardTitle className="text-2xl font-bold text-center">Student Admission Form</CardTitle>
+              <CardDescription className="text-center text-purple-100">
+                Please fill in all the required information accurately
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <Tabs defaultValue="personal" className="w-full">
+                  <TabsList className="grid w-full grid-cols-5 mb-8">
+                    <TabsTrigger value="personal" className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Personal
+                    </TabsTrigger>
+                    <TabsTrigger value="academic" className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4" />
+                      Academic
+                    </TabsTrigger>
+                    <TabsTrigger value="address" className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      Address
+                    </TabsTrigger>
+                    <TabsTrigger value="preferences" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Preferences
+                    </TabsTrigger>
+                    <TabsTrigger value="payment" className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4" />
+                      Payment
+                    </TabsTrigger>
+                  </TabsList>
 
-                    {/* Student Photo Upload Field */}
-                    <FormField
-                      control={form.control}
-                      name="studentPhoto"
-                      render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">Student Photo</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const file = e.target.files[0];
-                                  if (validateFileSize(file)) {
-                                    field.onChange(file);
-                                  } else {
-                                    e.target.value = '';
-                                  }
-                                }
-                              }}
-                              className="border-gray-300 text-sm sm:text-base"
-                            />
-                          </FormControl>
-                          <FormDescription className="text-xs text-gray-500">
-                            Maximum file size: 50KB
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Student Photo Display Box */}
-                  <div className="flex-shrink-0 self-center lg:self-start">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-gray-100 overflow-hidden mx-auto lg:mx-0">
-                      {form.watch('studentPhoto') && createSafeObjectURL(form.watch('studentPhoto')) ? (
-                        <img 
-                          src={createSafeObjectURL(form.watch('studentPhoto'))} 
-                          alt="Student"
-                          className="w-full h-full object-cover"
+                  {/* Personal Information Tab */}
+                  <TabsContent value="personal" className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">Full Name *</Label>
+                        <Input
+                          id="fullName"
+                          placeholder="Enter your full name"
+                          value={formData.fullName}
+                          onChange={(e) => handleInputChange('fullName', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
                         />
-                      ) : (
-                        <div className="text-gray-400 text-xs text-center p-1">
-                          Student Photo
-                        </div>
-                      )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="fatherName" className="text-sm font-medium text-gray-700">Father's Name *</Label>
+                        <Input
+                          id="fatherName"
+                          placeholder="Enter father's name"
+                          value={formData.fatherName}
+                          onChange={(e) => handleInputChange('fatherName', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="motherName" className="text-sm font-medium text-gray-700">Mother's Name *</Label>
+                        <Input
+                          id="motherName"
+                          placeholder="Enter mother's name"
+                          value={formData.motherName}
+                          onChange={(e) => handleInputChange('motherName', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="fatherOccupation" className="text-sm font-medium text-gray-700">Father's Occupation *</Label>
+                        <Input
+                          id="fatherOccupation"
+                          placeholder="Enter father's occupation"
+                          value={formData.fatherOccupation}
+                          onChange={(e) => handleInputChange('fatherOccupation', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="motherOccupation" className="text-sm font-medium text-gray-700">Mother's Occupation *</Label>
+                        <Input
+                          id="motherOccupation"
+                          placeholder="Enter mother's occupation"
+                          value={formData.motherOccupation}
+                          onChange={(e) => handleInputChange('motherOccupation', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="contactNumber" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <Phone className="w-4 h-4" />
+                          Contact Number *
+                        </Label>
+                        <Input
+                          id="contactNumber"
+                          placeholder="Enter contact number"
+                          value={formData.contactNumber}
+                          onChange={(e) => handleInputChange('contactNumber', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          Email Address *
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter email address"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="satsNumber" className="text-sm font-medium text-gray-700">SATS Number *</Label>
+                        <Input
+                          id="satsNumber"
+                          placeholder="Enter SATS number"
+                          value={formData.satsNumber}
+                          onChange={(e) => handleInputChange('satsNumber', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="aadhaarNumber" className="text-sm font-medium text-gray-700">Aadhaar Number *</Label>
+                        <Input
+                          id="aadhaarNumber"
+                          placeholder="Enter Aadhaar number"
+                          value={formData.aadhaarNumber}
+                          onChange={(e) => handleInputChange('aadhaarNumber', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="dateOfBirth" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          Date of Birth *
+                        </Label>
+                        <Input
+                          id="dateOfBirth"
+                          type="date"
+                          value={formData.dateOfBirth}
+                          onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Gender *</Label>
+                        <RadioGroup 
+                          value={formData.gender} 
+                          onValueChange={(value) => handleInputChange('gender', value)}
+                          className="flex gap-6"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="male" id="male" />
+                            <Label htmlFor="male">Male</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="female" id="female" />
+                            <Label htmlFor="female">Female</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="other" id="other" />
+                            <Label htmlFor="other">Other</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
+                  </TabsContent>
 
-              {/* Student Information */}
-              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Student Information</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter full name" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="dateOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Date of Birth</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            className="border-gray-300 text-sm sm:text-base"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Gender</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
-                              <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
+                  {/* Academic Information Tab */}
+                  <TabsContent value="academic" className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="currentSchool" className="text-sm font-medium text-gray-700">Current School *</Label>
+                        <Input
+                          id="currentSchool"
+                          placeholder="Enter current school name"
+                          value={formData.currentSchool}
+                          onChange={(e) => handleInputChange('currentSchool', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="class" className="text-sm font-medium text-gray-700">Class *</Label>
+                        <Select value={formData.class} onValueChange={(value) => handleInputChange('class', value)}>
+                          <SelectTrigger className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20">
+                            <SelectValue placeholder="Select class" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="8">8th</SelectItem>
+                            <SelectItem value="9">9th</SelectItem>
+                            <SelectItem value="10">10th</SelectItem>
+                            <SelectItem value="11">11th</SelectItem>
+                            <SelectItem value="12">12th</SelectItem>
+                            <SelectItem value="12-pass">12th Pass</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="class"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Class</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
-                              <SelectValue placeholder="Select class" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
-                            <SelectItem value="3rd">3rd Standard</SelectItem>
-                            <SelectItem value="4th">4th Standard</SelectItem>
-                            <SelectItem value="5th">5th Standard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="currentSchool"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Current School</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter current school" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="aadhaarNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Aadhaar Number *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter 12-digit Aadhaar number" 
-                            {...field} 
-                            className="border-gray-300 text-sm sm:text-base"
-                            maxLength={12}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                      </div>
 
-              {/* Parent/Guardian Information */}
-              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Parent/Guardian Information</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <FormField
-                    control={form.control}
-                    name="fatherName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Father's Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter father's name" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="motherName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Mother's Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter mother's name" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fatherOccupation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Father's Occupation</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter father's occupation" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="motherOccupation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Mother's Occupation</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter mother's occupation" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="contactNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Contact Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter contact number" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter email" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="satsNumber"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">SATS Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter SATS number" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="lastYearPercentage" className="text-sm font-medium text-gray-700">Last Year Percentage *</Label>
+                        <Input
+                          id="lastYearPercentage"
+                          type="number"
+                          placeholder="Enter percentage"
+                          value={formData.lastYearPercentage}
+                          onChange={(e) => handleInputChange('lastYearPercentage', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
 
-              {/* Address */}
-              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Address</h2>
-                <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                  <FormField
-                    control={form.control}
-                    name="streetAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Street Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter street address" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">City</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter city" {...field} className="border-gray-300 text-sm sm:text-base" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">State</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
-                                <SelectValue placeholder="Select state" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
-                              <SelectItem value="Karnataka">Karnataka</SelectItem>
-                              <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
-                              <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                              <SelectItem value="Kerala">Kerala</SelectItem>
-                              <SelectItem value="Telangana">Telangana</SelectItem>
-                              <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                              <SelectItem value="Goa">Goa</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="pinCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">PIN Code</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter PIN code" {...field} className="border-gray-300 text-sm sm:text-base" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name="landmark"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Landmark (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter landmark" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                  {/* Address Information Tab */}
+                  <TabsContent value="address" className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="streetAddress" className="text-sm font-medium text-gray-700">Street Address *</Label>
+                        <Textarea
+                          id="streetAddress"
+                          placeholder="Enter complete address"
+                          value={formData.streetAddress}
+                          onChange={(e) => handleInputChange('streetAddress', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
 
-              {/* Academic Information */}
-              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Academic Information</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <FormField
-                    control={form.control}
-                    name="lastYearPercentage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Last Year Percentage</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter percentage" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="border-gray-300 text-sm sm:text-base bg-white">
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
+                      <div className="space-y-2">
+                        <Label htmlFor="city" className="text-sm font-medium text-gray-700">City *</Label>
+                        <Input
+                          id="city"
+                          placeholder="Enter city"
+                          value={formData.city}
+                          onChange={(e) => handleInputChange('city', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="state" className="text-sm font-medium text-gray-700">State *</Label>
+                        <Input
+                          id="state"
+                          placeholder="Enter state"
+                          value={formData.state}
+                          onChange={(e) => handleInputChange('state', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="pinCode" className="text-sm font-medium text-gray-700">PIN Code *</Label>
+                        <Input
+                          id="pinCode"
+                          placeholder="Enter PIN code"
+                          value={formData.pinCode}
+                          onChange={(e) => handleInputChange('pinCode', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="landmark" className="text-sm font-medium text-gray-700">Landmark</Label>
+                        <Input
+                          id="landmark"
+                          placeholder="Enter nearby landmark"
+                          value={formData.landmark}
+                          onChange={(e) => handleInputChange('landmark', e.target.value)}
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Preferences Tab */}
+                  <TabsContent value="preferences" className="space-y-6">
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="category" className="text-sm font-medium text-gray-700">Category *</Label>
+                        <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                          <SelectTrigger className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20">
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
                             <SelectItem value="general">General</SelectItem>
                             <SelectItem value="obc">OBC</SelectItem>
                             <SelectItem value="sc">SC</SelectItem>
@@ -776,295 +501,121 @@ const Index = () => {
                             <SelectItem value="ews">EWS</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="subjectsWeakIn"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Subjects Weak In</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter subjects" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="examsPreparingFor"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Exams Preparing For</FormLabel>
-                        <FormDescription className="text-xs sm:text-sm">
-                          Select all exams you are preparing for
-                        </FormDescription>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-                          {examOptions.map((exam) => (
-                            <div key={exam.id} className="flex items-center space-x-2">
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label className="text-sm font-medium text-gray-700">Exams Preparing For *</Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {['JEE MAIN', 'JEE ADVANCED', 'NEET', 'BITSAT', 'WBJEE', 'MHT CET', 'KCET', 'EAMCET', 'Board Exams'].map((exam) => (
+                            <div key={exam} className="flex items-center space-x-2">
                               <Checkbox
-                                id={exam.id}
-                                checked={field.value?.includes(exam.id)}
-                                onCheckedChange={(checked) => {
-                                  const currentValue = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...currentValue, exam.id]);
-                                  } else {
-                                    field.onChange(currentValue.filter((value) => value !== exam.id));
-                                  }
-                                }}
+                                id={exam}
+                                checked={formData.examsPreparingFor.includes(exam)}
+                                onCheckedChange={(checked) => handleExamChange(exam, !!checked)}
                               />
-                              <label htmlFor={exam.id} className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                {exam.label}
-                              </label>
+                              <Label htmlFor={exam} className="text-sm">{exam}</Label>
                             </div>
                           ))}
                         </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                      </div>
 
-              {/* Fee Payment Details */}
-              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Fee Payment Details</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  <FormField
-                    control={form.control}
-                    name="paymentMode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Payment Mode</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter payment mode" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="transactionId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Transaction ID</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter transaction ID" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="amountPaid"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Amount Paid</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter amount paid" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="subjectsWeakIn" className="text-sm font-medium text-gray-700">Subjects Weak In</Label>
+                        <Textarea
+                          id="subjectsWeakIn"
+                          placeholder="Mention subjects you need help with"
+                          value={formData.subjectsWeakIn}
+                          onChange={(e) => handleInputChange('subjectsWeakIn', e.target.value)}
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
 
-              {/* Upload Documents */}
-              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Upload Documents</h2>
-                <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                  <FormField
-                    control={form.control}
-                    name="previousMarksheet"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Previous Marksheet</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                const file = e.target.files[0];
-                                if (validateFileSize(file)) {
-                                  field.onChange(file);
-                                } else {
-                                  e.target.value = '';
-                                }
-                              }
-                            }}
-                            className="border-gray-300 text-sm sm:text-base"
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs text-gray-500">
-                          Maximum file size: 50KB
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="aadhaarCard"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Aadhaar Card</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                const file = e.target.files[0];
-                                if (validateFileSize(file)) {
-                                  field.onChange(file);
-                                } else {
-                                  e.target.value = '';
-                                }
-                              }
-                            }}
-                            className="border-gray-300 text-sm sm:text-base"
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs text-gray-500">
-                          Maximum file size: 50KB
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="incomeCertificate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Income Certificate</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                const file = e.target.files[0];
-                                if (validateFileSize(file)) {
-                                  field.onChange(file);
-                                } else {
-                                  e.target.value = '';
-                                }
-                              }
-                            }}
-                            className="border-gray-300 text-sm sm:text-base"
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs text-gray-500">
-                          Maximum file size: 50KB
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="casteCertificate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Caste Certificate</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                const file = e.target.files[0];
-                                if (validateFileSize(file)) {
-                                  field.onChange(file);
-                                } else {
-                                  e.target.value = '';
-                                }
-                              }
-                            }}
-                            className="border-gray-300 text-sm sm:text-base"
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs text-gray-500">
-                          Maximum file size: 50KB
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                  {/* Payment Information Tab */}
+                  <TabsContent value="payment" className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentMode" className="text-sm font-medium text-gray-700">Payment Mode *</Label>
+                        <Select value={formData.paymentMode} onValueChange={(value) => handleInputChange('paymentMode', value)}>
+                          <SelectTrigger className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20">
+                            <SelectValue placeholder="Select payment mode" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="online">Online Payment</SelectItem>
+                            <SelectItem value="cash">Cash</SelectItem>
+                            <SelectItem value="cheque">Cheque</SelectItem>
+                            <SelectItem value="dd">Demand Draft</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-              {/* Declarations */}
-              <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Declarations</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <FormField
-                    control={form.control}
-                    name="place"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Place</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter place" {...field} className="border-gray-300 text-sm sm:text-base" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="declarationDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-700 text-sm sm:text-base">Declaration Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            className="border-gray-300 text-sm sm:text-base"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="amountPaid" className="text-sm font-medium text-gray-700">Amount Paid *</Label>
+                        <Input
+                          id="amountPaid"
+                          type="number"
+                          placeholder="Enter amount"
+                          value={formData.amountPaid}
+                          onChange={(e) => handleInputChange('amountPaid', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
 
-              {/* Submit Button */}
-              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pb-6 sm:pb-8">
-                <PDFPreview formData={form.getValues()} />
-                <Button 
-                  type="button"
-                  onClick={downloadPDF}
-                  variant="outline" 
-                  size="lg" 
-                  className="bg-white text-gray-600 border-gray-600 hover:bg-gray-50 px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto"
-                >
-                  <Download className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  Download PDF
-                </Button>
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Application"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="transactionId" className="text-sm font-medium text-gray-700">Transaction ID *</Label>
+                        <Input
+                          id="transactionId"
+                          placeholder="Enter transaction ID"
+                          value={formData.transactionId}
+                          onChange={(e) => handleInputChange('transactionId', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="place" className="text-sm font-medium text-gray-700">Place *</Label>
+                        <Input
+                          id="place"
+                          placeholder="Enter place"
+                          value={formData.place}
+                          onChange={(e) => handleInputChange('place', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="declarationDate" className="text-sm font-medium text-gray-700">Declaration Date *</Label>
+                        <Input
+                          id="declarationDate"
+                          type="date"
+                          value={formData.declarationDate}
+                          onChange={(e) => handleInputChange('declarationDate', e.target.value)}
+                          required
+                          className="border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500/20"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                <div className="flex justify-center">
+                  <Button 
+                    type="submit" 
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-8 text-lg"
+                  >
+                    Submit Application
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        ) : (
+          <FeesManagement />
+        )}
       </div>
     </div>
   );
