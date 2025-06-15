@@ -22,9 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Download } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PDFPreview from '@/components/PDFPreview';
@@ -79,22 +78,6 @@ const formSchema = z.object({
     if (!file) return true;
     return file.size <= MAX_FILE_SIZE;
   }, "Student photo must be less than 50KB"),
-  previousMarksheet: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Previous marksheet must be less than 50KB"),
-  aadhaarCard: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Aadhaar card must be less than 50KB"),
-  incomeCertificate: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Income certificate must be less than 50KB"),
-  casteCertificate: z.instanceof(File).optional().refine((file) => {
-    if (!file) return true;
-    return file.size <= MAX_FILE_SIZE;
-  }, "Caste certificate must be less than 50KB"),
 })
 
 const Index = () => {
@@ -199,60 +182,48 @@ const Index = () => {
 
       console.log('Application inserted successfully:', application);
 
-      // Upload documents if they exist
-      const documents = [
-        { file: values.studentPhoto, type: 'student_photo' },
-        { file: values.previousMarksheet, type: 'previous_marksheet' },
-        { file: values.aadhaarCard, type: 'aadhaar_card' },
-        { file: values.incomeCertificate, type: 'income_certificate' },
-        { file: values.casteCertificate, type: 'caste_certificate' }
-      ];
+      // Upload student photo if it exists
+      if (values.studentPhoto && values.studentPhoto instanceof File) {
+        try {
+          const fileName = `${application.id}/student_photo_${Date.now()}_${values.studentPhoto.name}`;
+          console.log(`Uploading student photo as ${fileName}`);
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('application-documents')
+            .upload(fileName, values.studentPhoto);
 
-      let uploadedDocuments = 0;
-      for (const doc of documents) {
-        if (doc.file && doc.file instanceof File) {
-          try {
-            const fileName = `${application.id}/${doc.type}_${Date.now()}_${doc.file.name}`;
-            console.log(`Uploading ${doc.type} as ${fileName}`);
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('application-documents')
-              .upload(fileName, doc.file);
-
-            if (uploadError) {
-              console.error(`Upload error for ${doc.type}:`, uploadError);
-              throw new Error(`Failed to upload ${doc.type}: ${uploadError.message}`);
-            }
-
-            console.log(`Upload successful for ${doc.type}:`, uploadData);
-
-            // Insert document record
-            const { error: docError } = await supabase
-              .from('application_documents')
-              .insert({
-                application_id: application.id,
-                document_type: doc.type,
-                file_name: doc.file.name,
-                file_path: uploadData.path
-              });
-
-            if (docError) {
-              console.error(`Document record error for ${doc.type}:`, docError);
-              throw new Error(`Failed to save document record for ${doc.type}: ${docError.message}`);
-            }
-
-            uploadedDocuments++;
-            console.log(`Document record saved for ${doc.type}`);
-          } catch (error) {
-            console.error(`Error processing ${doc.type}:`, error);
-            throw error;
+          if (uploadError) {
+            console.error(`Upload error for student photo:`, uploadError);
+            throw new Error(`Failed to upload student photo: ${uploadError.message}`);
           }
+
+          console.log(`Upload successful for student photo:`, uploadData);
+
+          // Insert document record
+          const { error: docError } = await supabase
+            .from('application_documents')
+            .insert({
+              application_id: application.id,
+              document_type: 'student_photo',
+              file_name: values.studentPhoto.name,
+              file_path: uploadData.path
+            });
+
+          if (docError) {
+            console.error(`Document record error for student photo:`, docError);
+            throw new Error(`Failed to save document record for student photo: ${docError.message}`);
+          }
+
+          console.log(`Document record saved for student photo`);
+        } catch (error) {
+          console.error(`Error processing student photo:`, error);
+          throw error;
         }
       }
 
       toast({
         title: "Success!",
-        description: `Application submitted successfully! ${uploadedDocuments} documents uploaded.`,
+        description: `Application submitted successfully!`,
       });
 
       // Reset form after successful submission
@@ -323,6 +294,134 @@ const Index = () => {
   ];
 
   const renderUploadDocuments = () => {
+    const [documents, setDocuments] = useState({
+      previousMarksheet: null as File | null,
+      aadhaarCard: null as File | null,
+      incomeCertificate: null as File | null,
+      casteCertificate: null as File | null,
+      otherDocuments: [] as File[]
+    });
+    const [selectedStudent, setSelectedStudent] = useState<string>('');
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileUpload = (docType: string, file: File) => {
+      if (validateFileSize(file)) {
+        if (docType === 'other') {
+          setDocuments(prev => ({
+            ...prev,
+            otherDocuments: [...prev.otherDocuments, file]
+          }));
+        } else {
+          setDocuments(prev => ({
+            ...prev,
+            [docType]: file
+          }));
+        }
+      }
+    };
+
+    const removeOtherDocument = (index: number) => {
+      setDocuments(prev => ({
+        ...prev,
+        otherDocuments: prev.otherDocuments.filter((_, i) => i !== index)
+      }));
+    };
+
+    const uploadDocuments = async () => {
+      if (!selectedStudent) {
+        toast({
+          title: "Error",
+          description: "Please select a student first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setUploading(true);
+      try {
+        let uploadedCount = 0;
+
+        // Upload each document type
+        const documentTypes = [
+          { file: documents.previousMarksheet, type: 'previous_marksheet' },
+          { file: documents.aadhaarCard, type: 'aadhaar_card' },
+          { file: documents.incomeCertificate, type: 'income_certificate' },
+          { file: documents.casteCertificate, type: 'caste_certificate' }
+        ];
+
+        for (const doc of documentTypes) {
+          if (doc.file) {
+            const fileName = `${selectedStudent}/${doc.type}_${Date.now()}_${doc.file.name}`;
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('application-documents')
+              .upload(fileName, doc.file);
+
+            if (uploadError) throw uploadError;
+
+            const { error: docError } = await supabase
+              .from('application_documents')
+              .insert({
+                application_id: selectedStudent,
+                document_type: doc.type,
+                file_name: doc.file.name,
+                file_path: uploadData.path
+              });
+
+            if (docError) throw docError;
+            uploadedCount++;
+          }
+        }
+
+        // Upload other documents
+        for (const file of documents.otherDocuments) {
+          const fileName = `${selectedStudent}/other_document_${Date.now()}_${file.name}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('application-documents')
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          const { error: docError } = await supabase
+            .from('application_documents')
+            .insert({
+              application_id: selectedStudent,
+              document_type: 'other_document',
+              file_name: file.name,
+              file_path: uploadData.path
+            });
+
+          if (docError) throw docError;
+          uploadedCount++;
+        }
+
+        toast({
+          title: "Success!",
+          description: `${uploadedCount} documents uploaded successfully!`,
+        });
+
+        // Reset form
+        setDocuments({
+          previousMarksheet: null,
+          aadhaarCard: null,
+          incomeCertificate: null,
+          casteCertificate: null,
+          otherDocuments: []
+        });
+
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to upload documents. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setUploading(false);
+      }
+    };
+
     return (
       <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
         <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
@@ -330,8 +429,143 @@ const Index = () => {
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">UPLOAD DOCUMENTS</h1>
             <p className="text-sm sm:text-base lg:text-lg text-gray-700">Document Upload and Management System</p>
           </div>
-          <div className="p-6">
-            <p className="text-center text-gray-600">Document upload system will be implemented here.</p>
+          
+          <div className="p-6 space-y-6">
+            {/* Student Selection */}
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Select Student</h3>
+              <Input 
+                placeholder="Enter Application ID or Student Name"
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
+                className="border-gray-300"
+              />
+            </div>
+
+            {/* Document Upload Sections */}
+            <div className="bg-gray-50 p-4 rounded-lg border">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4">Upload Documents</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Previous Marksheet */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Previous Marksheet</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleFileUpload('previousMarksheet', e.target.files[0]);
+                      }
+                    }}
+                    className="border-gray-300"
+                  />
+                  {documents.previousMarksheet && (
+                    <p className="text-sm text-green-600 mt-1">✓ {documents.previousMarksheet.name}</p>
+                  )}
+                </div>
+
+                {/* Aadhaar Card */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Card</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleFileUpload('aadhaarCard', e.target.files[0]);
+                      }
+                    }}
+                    className="border-gray-300"
+                  />
+                  {documents.aadhaarCard && (
+                    <p className="text-sm text-green-600 mt-1">✓ {documents.aadhaarCard.name}</p>
+                  )}
+                </div>
+
+                {/* Income Certificate */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Income Certificate</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleFileUpload('incomeCertificate', e.target.files[0]);
+                      }
+                    }}
+                    className="border-gray-300"
+                  />
+                  {documents.incomeCertificate && (
+                    <p className="text-sm text-green-600 mt-1">✓ {documents.incomeCertificate.name}</p>
+                  )}
+                </div>
+
+                {/* Caste Certificate */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Caste Certificate</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleFileUpload('casteCertificate', e.target.files[0]);
+                      }
+                    }}
+                    className="border-gray-300"
+                  />
+                  {documents.casteCertificate && (
+                    <p className="text-sm text-green-600 mt-1">✓ {documents.casteCertificate.name}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Other Documents */}
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Other Documents</label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFileUpload('other', e.target.files[0]);
+                      e.target.value = ''; // Reset input to allow same file again
+                    }
+                  }}
+                  className="border-gray-300"
+                />
+                {documents.otherDocuments.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-sm font-medium text-gray-700">Other Documents Added:</p>
+                    {documents.otherDocuments.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
+                        <span className="text-sm text-gray-600">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeOtherDocument(index)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6">
+                <Button
+                  onClick={uploadDocuments}
+                  disabled={uploading || !selectedStudent}
+                  className="bg-gray-600 hover:bg-gray-700 text-white"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  {uploading ? "Uploading..." : "Upload Documents"}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -904,133 +1138,6 @@ const Index = () => {
                           <FormControl>
                             <Input placeholder="Enter amount paid" {...field} className="border-gray-300 text-sm sm:text-base" />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Upload Documents */}
-                <div className="bg-gray-50 p-3 sm:p-6 rounded-lg border">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-3 sm:mb-4 border-b border-gray-300 pb-2">Upload Documents</h2>
-                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                    <FormField
-                      control={form.control}
-                      name="previousMarksheet"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">Previous Marksheet</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const file = e.target.files[0];
-                                  if (validateFileSize(file)) {
-                                    field.onChange(file);
-                                  } else {
-                                    e.target.value = '';
-                                  }
-                                }
-                              }}
-                              className="border-gray-300 text-sm sm:text-base"
-                            />
-                          </FormControl>
-                          <FormDescription className="text-xs text-gray-500">
-                            Maximum file size: 50KB
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="aadhaarCard"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">Aadhaar Card</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const file = e.target.files[0];
-                                  if (validateFileSize(file)) {
-                                    field.onChange(file);
-                                  } else {
-                                    e.target.value = '';
-                                  }
-                                }
-                              }}
-                              className="border-gray-300 text-sm sm:text-base"
-                            />
-                          </FormControl>
-                          <FormDescription className="text-xs text-gray-500">
-                            Maximum file size: 50KB
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="incomeCertificate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">Income Certificate</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const file = e.target.files[0];
-                                  if (validateFileSize(file)) {
-                                    field.onChange(file);
-                                  } else {
-                                    e.target.value = '';
-                                  }
-                                }
-                              }}
-                              className="border-gray-300 text-sm sm:text-base"
-                            />
-                          </FormControl>
-                          <FormDescription className="text-xs text-gray-500">
-                            Maximum file size: 50KB
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="casteCertificate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 text-sm sm:text-base">Caste Certificate</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const file = e.target.files[0];
-                                  if (validateFileSize(file)) {
-                                    field.onChange(file);
-                                  } else {
-                                    e.target.value = '';
-                                  }
-                                }
-                              }}
-                              className="border-gray-300 text-sm sm:text-base"
-                            />
-                          </FormControl>
-                          <FormDescription className="text-xs text-gray-500">
-                            Maximum file size: 50KB
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
