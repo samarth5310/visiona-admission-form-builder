@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import Navigation from "@/components/Navigation";
 import StudentsSection from "@/components/StudentsSection";
 import FeesManagement from "@/components/FeesManagement";
+import AdmissionForm from "@/components/AdmissionForm";
+import DocumentUpload from "@/components/DocumentUpload";
 import { Button } from "@/components/ui/button";
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +26,10 @@ const Index = () => {
         return <StudentsSection />;
       case 'fees':
         return <FeesManagement />;
+      case 'admission':
+        return <AdmissionForm />;
+      case 'documents':
+        return <DocumentUpload />;
       default:
         return <StudentsSection />;
     }
