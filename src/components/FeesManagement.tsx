@@ -183,13 +183,13 @@ const FeesManagement = () => {
       <div className="max-w-7xl mx-auto py-4 sm:py-6">
         {/* Header */}
         <div className="bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg mb-6">
-          <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-3 sm:p-6">
+          <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-4 sm:p-6">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">FEES MANAGEMENT</h1>
             <p className="text-sm sm:text-base lg:text-lg text-gray-700">Student Fee Tracking and Payment Management</p>
           </div>
 
           {/* Dashboard */}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <FeesDashboard />
 
             {/* Stats and Controls */}
@@ -248,7 +248,7 @@ const FeesManagement = () => {
                 {students.length === 0 ? 'No students found' : 'No students match your search criteria'}
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredStudents.map((student) => (
                   <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200">
                     <CardHeader className="pb-3">

@@ -315,8 +315,8 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl w-full h-full sm:h-auto sm:max-h-[90vh] flex flex-col p-0 sm:p-6 rounded-none sm:rounded-lg">
+        <DialogHeader className="px-6 pt-6 sm:p-0">
           <DialogTitle className="flex items-center justify-between">
             <span>Fee Management - {student.full_name}</span>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -325,7 +325,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto p-6 sm:p-0 flex-1">
           {/* Student Information Section */}
           <Card>
             <CardHeader>
@@ -622,7 +622,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setShowPaymentForm(true)}

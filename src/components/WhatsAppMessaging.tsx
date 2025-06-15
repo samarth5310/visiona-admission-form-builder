@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -110,7 +109,7 @@ const WhatsAppMessaging = ({
               <Textarea
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
-                rows={12}
+                rows={10}
                 className="text-sm font-mono"
                 placeholder="Edit your WhatsApp message..."
               />
