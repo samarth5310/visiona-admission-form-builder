@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -419,7 +418,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="admission_fee"
                         type="number"
-                        value={feeStructure.admission_fee}
+                        value={feeStructure.admission_fee.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           admission_fee: Number(e.target.value) || 0
@@ -435,7 +434,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="tuition_fee"
                         type="number"
-                        value={feeStructure.tuition_fee}
+                        value={feeStructure.tuition_fee.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           tuition_fee: Number(e.target.value) || 0
@@ -451,7 +450,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="administrative_fee"
                         type="number"
-                        value={feeStructure.administrative_fee}
+                        value={feeStructure.administrative_fee.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           administrative_fee: Number(e.target.value) || 0
@@ -467,7 +466,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="exam_fee"
                         type="number"
-                        value={feeStructure.exam_fee}
+                        value={feeStructure.exam_fee.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           exam_fee: Number(e.target.value) || 0
@@ -483,7 +482,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="registration_fee"
                         type="number"
-                        value={feeStructure.registration_fee}
+                        value={feeStructure.registration_fee.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           registration_fee: Number(e.target.value) || 0
@@ -515,7 +514,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="books_materials"
                         type="number"
-                        value={feeStructure.books_materials}
+                        value={feeStructure.books_materials.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           books_materials: Number(e.target.value) || 0
@@ -531,7 +530,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="lab_fee"
                         type="number"
-                        value={feeStructure.lab_fee}
+                        value={feeStructure.lab_fee.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           lab_fee: Number(e.target.value) || 0
@@ -547,7 +546,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="sports_fee"
                         type="number"
-                        value={feeStructure.sports_fee}
+                        value={feeStructure.sports_fee.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           sports_fee: Number(e.target.value) || 0
@@ -563,7 +562,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="library_fee"
                         type="number"
-                        value={feeStructure.library_fee}
+                        value={feeStructure.library_fee.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           library_fee: Number(e.target.value) || 0
@@ -579,7 +578,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       <Input
                         id="other_fees"
                         type="number"
-                        value={feeStructure.other_fees}
+                        value={feeStructure.other_fees.toString()}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
                           other_fees: Number(e.target.value) || 0
