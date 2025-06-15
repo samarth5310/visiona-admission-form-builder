@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import FeeDetailsModal from './FeeDetailsModal';
 import FeesDashboard from './FeesDashboard';
 import InstallPWAButton from './InstallPWAButton';
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 
 interface StudentWithFees {
   id: string;
@@ -33,6 +34,8 @@ const FeesManagement = () => {
   const [selectedStudent, setSelectedStudent] = useState<StudentWithFees | null>(null);
   const [showModal, setShowModal] = useState(false);
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
 
   const fetchStudents = async () => {
     try {
@@ -115,7 +118,20 @@ const FeesManagement = () => {
     }
 
     setFilteredStudents(filtered);
+    setCurrentPage(1);
   }, [searchTerm, statusFilter, students]);
+
+  const pageCount = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = filteredStudents.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= pageCount) {
+      setCurrentPage(page);
+    }
+  };
 
   const handleManageFees = (student: StudentWithFees) => {
     setSelectedStudent(student);
@@ -248,70 +264,102 @@ const FeesManagement = () => {
                 {students.length === 0 ? 'No students found' : 'No students match your search criteria'}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredStudents.map((student) => (
-                  <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200">
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg font-semibold text-gray-800 truncate">
-                          {student.full_name}
-                        </CardTitle>
-                        {getStatusBadge(student.payment_status)}
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0">
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Class:</span>
-                          <span className="font-medium">{student.class}</span>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {paginatedStudents.map((student) => (
+                    <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200">
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg font-semibold text-gray-800 truncate">
+                            {student.full_name}
+                          </CardTitle>
+                          {getStatusBadge(student.payment_status)}
                         </div>
-                        
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Phone:</span>
-                          <span className="font-medium">{student.contact_number}</span>
-                        </div>
-                        
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Applied:</span>
-                          <span className="font-medium">{formatDate(student.created_at)}</span>
-                        </div>
-                        
-                        <div className="border-t pt-2 mt-2">
+                      </CardHeader>
+                      
+                      <CardContent className="pt-0">
+                        <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Total Fees:</span>
-                            <span className="font-medium text-blue-600">
-                              {student.total_fees > 0 ? formatCurrency(student.total_fees) : 'Not Set'}
-                            </span>
+                            <span className="text-gray-600">Class:</span>
+                            <span className="font-medium">{student.class}</span>
                           </div>
                           
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Paid:</span>
-                            <span className="font-medium text-green-600">
-                              {formatCurrency(student.paid_amount)}
-                            </span>
+                            <span className="text-gray-600">Phone:</span>
+                            <span className="font-medium">{student.contact_number}</span>
                           </div>
                           
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Pending:</span>
-                            <span className="font-medium text-red-600">
-                              {student.total_fees > 0 ? formatCurrency(student.pending_amount) : 'Not Set'}
-                            </span>
+                            <span className="text-gray-600">Applied:</span>
+                            <span className="font-medium">{formatDate(student.created_at)}</span>
                           </div>
+                          
+                          <div className="border-t pt-2 mt-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Total Fees:</span>
+                              <span className="font-medium text-blue-600">
+                                {student.total_fees > 0 ? formatCurrency(student.total_fees) : 'Not Set'}
+                              </span>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Paid:</span>
+                              <span className="font-medium text-green-600">
+                                {formatCurrency(student.paid_amount)}
+                              </span>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Pending:</span>
+                              <span className="font-medium text-red-600">
+                                {student.total_fees > 0 ? formatCurrency(student.pending_amount) : 'Not Set'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className="w-full mt-3" 
+                            variant="outline"
+                            onClick={() => handleManageFees(student)}
+                          >
+                            Manage Fees
+                          </Button>
                         </div>
-                        
-                        <Button 
-                          className="w-full mt-3" 
-                          variant="outline"
-                          onClick={() => handleManageFees(student)}
-                        >
-                          Manage Fees
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {pageCount > 1 && (
+                  <div className="mt-8 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                            aria-disabled={currentPage === 1}
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <span className="px-4 py-2 text-sm font-medium">
+                            Page {currentPage} of {pageCount}
+                          </span>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                            aria-disabled={currentPage === pageCount}
+                            className={currentPage === pageCount ? 'pointer-events-none opacity-50' : ''}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
