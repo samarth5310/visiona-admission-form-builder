@@ -1,11 +1,14 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, FileText, CreditCard, Upload, Users } from 'lucide-react';
+import { Menu, FileText, CreditCard, Upload, Users, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -14,7 +17,19 @@ interface NavigationProps {
   onSectionChange: (section: string) => void;
 }
 
-const Navigation = ({ activeSection, onSectionChange }: NavigationProps) => {
+const Navigation = ({ activeSection }: NavigationProps) => {
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className="fixed top-4 left-4 z-50">
       <DropdownMenu>
@@ -26,32 +41,40 @@ const Navigation = ({ activeSection, onSectionChange }: NavigationProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="bg-white border border-gray-300 shadow-lg z-50 w-48">
           <DropdownMenuItem 
-            onClick={() => onSectionChange('admission')}
+            onClick={() => handleNavigation('/admission')}
             className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'admission' ? 'bg-blue-100 text-blue-700' : ''}`}
           >
             <FileText className="h-4 w-4 mr-2" />
             Admission Form
           </DropdownMenuItem>
           <DropdownMenuItem 
-            onClick={() => onSectionChange('students')}
+            onClick={() => handleNavigation('/students')}
             className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'students' ? 'bg-blue-100 text-blue-700' : ''}`}
           >
             <Users className="h-4 w-4 mr-2" />
             Students
           </DropdownMenuItem>
           <DropdownMenuItem 
-            onClick={() => onSectionChange('fees')}
+            onClick={() => handleNavigation('/fees')}
             className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'fees' ? 'bg-blue-100 text-blue-700' : ''}`}
           >
             <CreditCard className="h-4 w-4 mr-2" />
             Fees Management
           </DropdownMenuItem>
           <DropdownMenuItem 
-            onClick={() => onSectionChange('documents')}
+            onClick={() => handleNavigation('/documents')}
             className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'documents' ? 'bg-blue-100 text-blue-700' : ''}`}
           >
             <Upload className="h-4 w-4 mr-2" />
             Upload Documents
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={handleLogout}
+            className="cursor-pointer hover:bg-red-50 text-red-600"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout ({user?.name})
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
