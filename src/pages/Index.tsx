@@ -83,6 +83,18 @@ const formSchema = z.object({
 const Index = () => {
   const [activeSection, setActiveSection] = useState('admission');
   const { toast } = useToast();
+  
+  // Document upload states moved to component level
+  const [documents, setDocuments] = useState({
+    previousMarksheet: null as File | null,
+    aadhaarCard: null as File | null,
+    incomeCertificate: null as File | null,
+    casteCertificate: null as File | null,
+    otherDocuments: [] as File[]
+  });
+  const [selectedStudent, setSelectedStudent] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -127,6 +139,125 @@ const Index = () => {
       return false;
     }
     return true;
+  };
+
+  // Document upload helper functions
+  const handleFileUpload = (docType: string, file: File) => {
+    if (validateFileSize(file)) {
+      if (docType === 'other') {
+        setDocuments(prev => ({
+          ...prev,
+          otherDocuments: [...prev.otherDocuments, file]
+        }));
+      } else {
+        setDocuments(prev => ({
+          ...prev,
+          [docType]: file
+        }));
+      }
+    }
+  };
+
+  const removeOtherDocument = (index: number) => {
+    setDocuments(prev => ({
+      ...prev,
+      otherDocuments: prev.otherDocuments.filter((_, i) => i !== index)
+    }));
+  };
+
+  const uploadDocuments = async () => {
+    if (!selectedStudent) {
+      toast({
+        title: "Error",
+        description: "Please select a student first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      let uploadedCount = 0;
+
+      // Upload each document type
+      const documentTypes = [
+        { file: documents.previousMarksheet, type: 'previous_marksheet' },
+        { file: documents.aadhaarCard, type: 'aadhaar_card' },
+        { file: documents.incomeCertificate, type: 'income_certificate' },
+        { file: documents.casteCertificate, type: 'caste_certificate' }
+      ];
+
+      for (const doc of documentTypes) {
+        if (doc.file) {
+          const fileName = `${selectedStudent}/${doc.type}_${Date.now()}_${doc.file.name}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('application-documents')
+            .upload(fileName, doc.file);
+
+          if (uploadError) throw uploadError;
+
+          const { error: docError } = await supabase
+            .from('application_documents')
+            .insert({
+              application_id: selectedStudent,
+              document_type: doc.type,
+              file_name: doc.file.name,
+              file_path: uploadData.path
+            });
+
+          if (docError) throw docError;
+          uploadedCount++;
+        }
+      }
+
+      // Upload other documents
+      for (const file of documents.otherDocuments) {
+        const fileName = `${selectedStudent}/other_document_${Date.now()}_${file.name}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('application-documents')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { error: docError } = await supabase
+          .from('application_documents')
+          .insert({
+            application_id: selectedStudent,
+            document_type: 'other_document',
+            file_name: file.name,
+            file_path: uploadData.path
+          });
+
+        if (docError) throw docError;
+        uploadedCount++;
+      }
+
+      toast({
+        title: "Success!",
+        description: `${uploadedCount} documents uploaded successfully!`,
+      });
+
+      // Reset form
+      setDocuments({
+        previousMarksheet: null,
+        aadhaarCard: null,
+        incomeCertificate: null,
+        casteCertificate: null,
+        otherDocuments: []
+      });
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload documents. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -294,134 +425,6 @@ const Index = () => {
   ];
 
   const renderUploadDocuments = () => {
-    const [documents, setDocuments] = useState({
-      previousMarksheet: null as File | null,
-      aadhaarCard: null as File | null,
-      incomeCertificate: null as File | null,
-      casteCertificate: null as File | null,
-      otherDocuments: [] as File[]
-    });
-    const [selectedStudent, setSelectedStudent] = useState<string>('');
-    const [uploading, setUploading] = useState(false);
-
-    const handleFileUpload = (docType: string, file: File) => {
-      if (validateFileSize(file)) {
-        if (docType === 'other') {
-          setDocuments(prev => ({
-            ...prev,
-            otherDocuments: [...prev.otherDocuments, file]
-          }));
-        } else {
-          setDocuments(prev => ({
-            ...prev,
-            [docType]: file
-          }));
-        }
-      }
-    };
-
-    const removeOtherDocument = (index: number) => {
-      setDocuments(prev => ({
-        ...prev,
-        otherDocuments: prev.otherDocuments.filter((_, i) => i !== index)
-      }));
-    };
-
-    const uploadDocuments = async () => {
-      if (!selectedStudent) {
-        toast({
-          title: "Error",
-          description: "Please select a student first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setUploading(true);
-      try {
-        let uploadedCount = 0;
-
-        // Upload each document type
-        const documentTypes = [
-          { file: documents.previousMarksheet, type: 'previous_marksheet' },
-          { file: documents.aadhaarCard, type: 'aadhaar_card' },
-          { file: documents.incomeCertificate, type: 'income_certificate' },
-          { file: documents.casteCertificate, type: 'caste_certificate' }
-        ];
-
-        for (const doc of documentTypes) {
-          if (doc.file) {
-            const fileName = `${selectedStudent}/${doc.type}_${Date.now()}_${doc.file.name}`;
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('application-documents')
-              .upload(fileName, doc.file);
-
-            if (uploadError) throw uploadError;
-
-            const { error: docError } = await supabase
-              .from('application_documents')
-              .insert({
-                application_id: selectedStudent,
-                document_type: doc.type,
-                file_name: doc.file.name,
-                file_path: uploadData.path
-              });
-
-            if (docError) throw docError;
-            uploadedCount++;
-          }
-        }
-
-        // Upload other documents
-        for (const file of documents.otherDocuments) {
-          const fileName = `${selectedStudent}/other_document_${Date.now()}_${file.name}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('application-documents')
-            .upload(fileName, file);
-
-          if (uploadError) throw uploadError;
-
-          const { error: docError } = await supabase
-            .from('application_documents')
-            .insert({
-              application_id: selectedStudent,
-              document_type: 'other_document',
-              file_name: file.name,
-              file_path: uploadData.path
-            });
-
-          if (docError) throw docError;
-          uploadedCount++;
-        }
-
-        toast({
-          title: "Success!",
-          description: `${uploadedCount} documents uploaded successfully!`,
-        });
-
-        // Reset form
-        setDocuments({
-          previousMarksheet: null,
-          aadhaarCard: null,
-          incomeCertificate: null,
-          casteCertificate: null,
-          otherDocuments: []
-        });
-
-      } catch (error) {
-        console.error('Upload error:', error);
-        toast({
-          title: "Error",
-          description: "Failed to upload documents. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setUploading(false);
-      }
-    };
-
     return (
       <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
         <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
