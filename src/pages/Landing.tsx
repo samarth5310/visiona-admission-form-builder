@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -162,7 +163,7 @@ const Landing = () => {
           </div>
         </footer>
       </div>
-    
+    </div>
   );
 };
 
