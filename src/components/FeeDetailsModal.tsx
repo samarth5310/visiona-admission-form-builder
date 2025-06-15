@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PaymentForm from './PaymentForm';
 import PaymentHistory from './PaymentHistory';
+import ReceiptGenerator from './ReceiptGenerator';
 
 interface Student {
   id: string;
@@ -652,14 +652,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                   Payment History
                 </Button>
                 
-                <Button
-                  variant="outline"
-                  disabled
-                  className="flex items-center gap-2"
-                >
-                  <Receipt className="h-4 w-4" />
-                  Generate Receipt
-                </Button>
+                <ReceiptGenerator 
+                  student={student}
+                  disabled={loading}
+                />
               </div>
             </CardContent>
           </Card>
