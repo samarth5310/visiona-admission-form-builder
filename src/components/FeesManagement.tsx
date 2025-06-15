@@ -63,18 +63,27 @@ const FeesManagement = () => {
 
       console.log('Raw data from database:', data);
 
-      const studentsWithFees: StudentWithFees[] = data.map(student => ({
-        id: student.id,
-        full_name: student.full_name,
-        class: student.class || 'Not specified',
-        contact_number: student.contact_number || 'Not provided',
-        created_at: student.created_at,
-        total_fees: student.student_fees?.[0]?.total_fees || 0,
-        paid_amount: student.student_fees?.[0]?.paid_amount || 0,
-        pending_amount: student.student_fees?.[0]?.pending_amount || 0,
-        payment_status: student.student_fees?.[0]?.payment_status || 'not_set',
-        fee_id: student.student_fees?.[0]?.id
-      }));
+      const studentsWithFees: StudentWithFees[] = data.map(student => {
+        // Fix: Handle both array and single object response from Supabase
+        const studentFees = Array.isArray(student.student_fees) 
+          ? student.student_fees[0] 
+          : student.student_fees;
+
+        console.log('Processing student:', student.full_name, 'fees data:', studentFees);
+
+        return {
+          id: student.id,
+          full_name: student.full_name,
+          class: student.class || 'Not specified',
+          contact_number: student.contact_number || 'Not provided',
+          created_at: student.created_at,
+          total_fees: studentFees?.total_fees || 0,
+          paid_amount: studentFees?.paid_amount || 0,
+          pending_amount: studentFees?.pending_amount || 0,
+          payment_status: studentFees?.payment_status || 'not_set',
+          fee_id: studentFees?.id
+        };
+      });
 
       console.log('Processed students data:', studentsWithFees);
       setStudents(studentsWithFees);
