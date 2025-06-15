@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, DollarSign, Receipt, History, X } from 'lucide-react';
+import { Calendar, DollarSign, Receipt, History, X, Trash2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PaymentForm from './PaymentForm';
@@ -150,10 +150,14 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
       console.log('Grand total:', grandTotal);
       console.log('Current paid amount:', student.paid_amount);
 
+      // Calculate correct pending amount
+      const pendingAmount = grandTotal - (student.paid_amount || 0);
+
       const feeData = {
         application_id: student.id,
         total_fees: grandTotal,
-        pending_amount: grandTotal - (student.paid_amount || 0),
+        paid_amount: student.paid_amount || 0, // Keep existing paid amount
+        pending_amount: pendingAmount,
         due_date: feeStructure.due_date || null,
         payment_status: (student.paid_amount || 0) > 0 ? 
           ((student.paid_amount || 0) >= grandTotal ? 'paid' : 'partial') : 
@@ -189,6 +193,54 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
       toast({
         title: "Error",
         description: "Failed to save fee structure. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteFeeStructure = async () => {
+    if (!student || !student.fee_id) {
+      toast({
+        title: "Error",
+        description: "No fee structure found to delete.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // First delete all related payments
+      const { error: paymentsError } = await supabase
+        .from('fee_payments')
+        .delete()
+        .eq('student_fees_id', student.fee_id);
+
+      if (paymentsError) throw paymentsError;
+
+      // Then delete the fee structure
+      const { error: feeError } = await supabase
+        .from('student_fees')
+        .delete()
+        .eq('id', student.fee_id);
+
+      if (feeError) throw feeError;
+
+      toast({
+        title: "Success",
+        description: "Fee structure and all payments deleted successfully.",
+      });
+      
+      onUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error deleting fee structure:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete fee structure. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -331,7 +383,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 <div className="p-4 bg-red-50 rounded-lg">
                   <p className="text-sm text-gray-600">Pending Balance</p>
                   <p className="text-xl font-bold text-red-600">
-                    {formatCurrency(student.pending_amount)}
+                    {formatCurrency(Math.max(0, student.total_fees - student.paid_amount))}
                   </p>
                 </div>
               </div>
@@ -341,7 +393,21 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
           {/* Fee Setup Form - Split Layout */}
           <Card>
             <CardHeader>
-              <CardTitle>Fee Structure Setup</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <span>Fee Structure Setup</span>
+                {student.fee_id && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteFeeStructure}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Fee Structure
+                  </Button>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -612,7 +678,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
           <PaymentForm
             studentFeesId={student.fee_id}
             studentName={student.full_name}
-            pendingAmount={student.pending_amount}
+            pendingAmount={Math.max(0, student.total_fees - student.paid_amount)}
             isOpen={showPaymentForm}
             onClose={() => setShowPaymentForm(false)}
             onSuccess={() => {
