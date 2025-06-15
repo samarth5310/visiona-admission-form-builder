@@ -77,9 +77,9 @@ const FeesManagement = () => {
           class: student.class || 'Not specified',
           contact_number: student.contact_number || 'Not provided',
           created_at: student.created_at,
-          total_fees: studentFees?.total_fees || 0,
-          paid_amount: studentFees?.paid_amount || 0,
-          pending_amount: studentFees?.pending_amount || 0,
+          total_fees: Number(studentFees?.total_fees) || 0,
+          paid_amount: Number(studentFees?.paid_amount) || 0,
+          pending_amount: Number(studentFees?.pending_amount) || 0,
           payment_status: studentFees?.payment_status || 'not_set',
           fee_id: studentFees?.id
         };

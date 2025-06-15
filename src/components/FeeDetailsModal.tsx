@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -421,7 +422,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.admission_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          admission_fee: Number(e.target.value) || 0
+                          admission_fee: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -437,7 +438,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.tuition_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          tuition_fee: Number(e.target.value) || 0
+                          tuition_fee: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -453,7 +454,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.administrative_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          administrative_fee: Number(e.target.value) || 0
+                          administrative_fee: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -469,7 +470,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.exam_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          exam_fee: Number(e.target.value) || 0
+                          exam_fee: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -485,7 +486,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.registration_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          registration_fee: Number(e.target.value) || 0
+                          registration_fee: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -517,7 +518,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.books_materials}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          books_materials: Number(e.target.value) || 0
+                          books_materials: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -533,7 +534,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.lab_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          lab_fee: Number(e.target.value) || 0
+                          lab_fee: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -549,7 +550,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.sports_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          sports_fee: Number(e.target.value) || 0
+                          sports_fee: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -565,7 +566,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.library_fee}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          library_fee: Number(e.target.value) || 0
+                          library_fee: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
@@ -581,7 +582,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                         value={feeStructure.other_fees}
                         onChange={(e) => setFeeStructure(prev => ({
                           ...prev,
-                          other_fees: Number(e.target.value) || 0
+                          other_fees: parseInt(e.target.value) || 0
                         }))}
                         placeholder="0"
                         className="text-xs sm:text-sm"
