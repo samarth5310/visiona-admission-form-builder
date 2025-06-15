@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,8 +60,8 @@ const Login = () => {
         description: "Login successful!",
       });
 
-      // Redirect to students page
-      navigate('/', { replace: true });
+      // Redirect to dashboard (students page)
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       console.error('Login error:', error);
       toast({
