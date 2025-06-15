@@ -166,8 +166,8 @@ const FeesManagement = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
-        <div className="max-w-7xl mx-auto py-4 sm:py-6">
+      <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center py-8">
             <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-4 text-gray-600" />
             <p className="text-gray-600">Loading student data...</p>
@@ -178,54 +178,56 @@ const FeesManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
-      <div className="max-w-7xl mx-auto py-4 sm:py-6">
+    <div className="min-h-screen bg-gray-50 p-2 sm:p-4 lg:p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg mb-6">
-          <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-3 sm:p-6">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">FEES MANAGEMENT</h1>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-700">Student Fee Tracking and Payment Management</p>
+        <div className="bg-white border-2 border-gray-300 rounded-lg shadow-lg mb-4 sm:mb-6">
+          <div className="text-center border-b-2 border-gray-500 pb-3 sm:pb-6 mb-4 sm:mb-8 bg-gray-200 rounded-t-lg p-3 sm:p-6">
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-700 mb-1 sm:mb-2">FEES MANAGEMENT</h1>
+            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-700">Student Fee Tracking and Payment Management</p>
           </div>
 
           {/* Stats and Controls */}
-          <div className="p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Users className="h-5 w-5" />
-                  <span className="font-semibold">Total Students: {students.length}</span>
+          <div className="p-3 sm:p-6">
+            <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="font-semibold">Total: {students.length}</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-700">
-                  <CreditCard className="h-5 w-5" />
-                  <span className="font-semibold">Displayed: {filteredStudents.length}</span>
+                <div className="flex items-center gap-2 text-gray-700 text-sm sm:text-base">
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="font-semibold">Shown: {filteredStudents.length}</span>
                 </div>
               </div>
               
               <Button 
                 onClick={fetchStudents} 
                 variant="outline" 
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-xs sm:text-sm w-full sm:w-auto"
                 disabled={loading}
+                size="sm"
               >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
             </div>
 
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:gap-4 mb-4 sm:mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3 sm:h-4 sm:w-4" />
                 <Input
                   placeholder="Search students by name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-sm"
+                  size="sm"
                 />
               </div>
               
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-40 md:w-48 text-sm">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -240,66 +242,69 @@ const FeesManagement = () => {
 
             {/* Students Grid */}
             {filteredStudents.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 text-sm sm:text-base">
                 {students.length === 0 ? 'No students found' : 'No students match your search criteria'}
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
                 {filteredStudents.map((student) => (
                   <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200">
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg font-semibold text-gray-800 truncate">
+                    <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
+                      <div className="flex justify-between items-start gap-2">
+                        <CardTitle className="text-sm sm:text-lg font-semibold text-gray-800 truncate leading-tight">
                           {student.full_name}
                         </CardTitle>
-                        {getStatusBadge(student.payment_status)}
+                        <div className="flex-shrink-0">
+                          {getStatusBadge(student.payment_status)}
+                        </div>
                       </div>
                     </CardHeader>
                     
-                    <CardContent className="pt-0">
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
+                    <CardContent className="pt-0 p-3 sm:p-6 sm:pt-0">
+                      <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                        <div className="flex justify-between items-center">
                           <span className="text-gray-600">Class:</span>
-                          <span className="font-medium">{student.class}</span>
+                          <span className="font-medium truncate ml-2">{student.class}</span>
                         </div>
                         
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <span className="text-gray-600">Phone:</span>
-                          <span className="font-medium">{student.contact_number}</span>
+                          <span className="font-medium text-xs sm:text-sm truncate ml-2">{student.contact_number}</span>
                         </div>
                         
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <span className="text-gray-600">Applied:</span>
-                          <span className="font-medium">{formatDate(student.created_at)}</span>
+                          <span className="font-medium text-xs sm:text-sm">{formatDate(student.created_at)}</span>
                         </div>
                         
-                        <div className="border-t pt-2 mt-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Total Fees:</span>
-                            <span className="font-medium text-blue-600">
+                        <div className="border-t pt-1.5 sm:pt-2 mt-1.5 sm:mt-2 space-y-1 sm:space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">Total:</span>
+                            <span className="font-medium text-blue-600 text-xs sm:text-sm">
                               {student.total_fees > 0 ? formatCurrency(student.total_fees) : 'Not Set'}
                             </span>
                           </div>
                           
-                          <div className="flex justify-between">
+                          <div className="flex justify-between items-center">
                             <span className="text-gray-600">Paid:</span>
-                            <span className="font-medium text-green-600">
+                            <span className="font-medium text-green-600 text-xs sm:text-sm">
                               {formatCurrency(student.paid_amount)}
                             </span>
                           </div>
                           
-                          <div className="flex justify-between">
+                          <div className="flex justify-between items-center">
                             <span className="text-gray-600">Pending:</span>
-                            <span className="font-medium text-red-600">
+                            <span className="font-medium text-red-600 text-xs sm:text-sm">
                               {student.total_fees > 0 ? formatCurrency(student.pending_amount) : 'Not Set'}
                             </span>
                           </div>
                         </div>
                         
                         <Button 
-                          className="w-full mt-3" 
+                          className="w-full mt-2 sm:mt-3 text-xs sm:text-sm py-1.5 sm:py-2" 
                           variant="outline"
                           onClick={() => handleManageFees(student)}
+                          size="sm"
                         >
                           Manage Fees
                         </Button>

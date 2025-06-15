@@ -315,30 +315,27 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[95vh] overflow-y-auto p-3 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Fee Management - {student.full_name}</span>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+          <DialogTitle className="text-base sm:text-lg">
+            Fee Management - {student.full_name}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Student Information Section */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm sm:text-base">
                 <span>Student Information</span>
                 {getStatusBadge(student.payment_status)}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                 <div>
                   <span className="text-gray-600">Name:</span>
-                  <p className="font-medium">{student.full_name}</p>
+                  <p className="font-medium break-words">{student.full_name}</p>
                 </div>
                 <div>
                   <span className="text-gray-600">Class:</span>
@@ -346,7 +343,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 </div>
                 <div>
                   <span className="text-gray-600">Phone:</span>
-                  <p className="font-medium">{student.contact_number}</p>
+                  <p className="font-medium break-all">{student.contact_number}</p>
                 </div>
                 <div>
                   <span className="text-gray-600">Applied:</span>
@@ -360,29 +357,29 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
 
           {/* Current Fee Status */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
                 Current Fee Status
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Total Fees</p>
-                  <p className="text-xl font-bold text-blue-600">
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center">
+                <div className="p-3 sm:p-4 bg-blue-50 rounded-lg">
+                  <p className="text-xs sm:text-sm text-gray-600">Total Fees</p>
+                  <p className="text-lg sm:text-xl font-bold text-blue-600">
                     {formatCurrency(student.total_fees)}
                   </p>
                 </div>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Paid Amount</p>
-                  <p className="text-xl font-bold text-green-600">
+                <div className="p-3 sm:p-4 bg-green-50 rounded-lg">
+                  <p className="text-xs sm:text-sm text-gray-600">Paid Amount</p>
+                  <p className="text-lg sm:text-xl font-bold text-green-600">
                     {formatCurrency(student.paid_amount)}
                   </p>
                 </div>
-                <div className="p-4 bg-red-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Pending Balance</p>
-                  <p className="text-xl font-bold text-red-600">
+                <div className="p-3 sm:p-4 bg-red-50 rounded-lg">
+                  <p className="text-xs sm:text-sm text-gray-600">Pending Balance</p>
+                  <p className="text-lg sm:text-xl font-bold text-red-600">
                     {formatCurrency(Math.max(0, student.total_fees - student.paid_amount))}
                   </p>
                 </div>
@@ -390,10 +387,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
             </CardContent>
           </Card>
 
-          {/* Fee Setup Form - Split Layout */}
+          {/* Fee Setup Form - Mobile Responsive Layout */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm sm:text-base">
                 <span>Fee Structure Setup</span>
                 {student.fee_id && (
                   <Button
@@ -401,178 +398,202 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                     size="sm"
                     onClick={handleDeleteFeeStructure}
                     disabled={loading}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 text-xs"
                   >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Fee Structure
+                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    Delete Structure
                   </Button>
                 )}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* LEFT SIDE - Academic Fees */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Academic Fees</h3>
+            <CardContent className="p-3 sm:p-6 pt-0 space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+                {/* Academic Fees */}
+                <div className="space-y-3 sm:space-y-4">
+                  <h3 className="text-sm sm:text-lg font-semibold text-blue-600 border-b pb-2">Academic Fees</h3>
                   
-                  <div>
-                    <Label htmlFor="admission_fee">Admission Fee</Label>
-                    <Input
-                      id="admission_fee"
-                      type="number"
-                      value={feeStructure.admission_fee}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        admission_fee: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
+                  <div className="space-y-2 sm:space-y-3">
+                    <div>
+                      <Label htmlFor="admission_fee" className="text-xs sm:text-sm">Admission Fee</Label>
+                      <Input
+                        id="admission_fee"
+                        type="number"
+                        value={feeStructure.admission_fee}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          admission_fee: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="tuition_fee" className="text-xs sm:text-sm">Tuition Fee</Label>
+                      <Input
+                        id="tuition_fee"
+                        type="number"
+                        value={feeStructure.tuition_fee}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          tuition_fee: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="administrative_fee" className="text-xs sm:text-sm">Administrative Fee</Label>
+                      <Input
+                        id="administrative_fee"
+                        type="number"
+                        value={feeStructure.administrative_fee}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          administrative_fee: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="exam_fee" className="text-xs sm:text-sm">Exam Fee</Label>
+                      <Input
+                        id="exam_fee"
+                        type="number"
+                        value={feeStructure.exam_fee}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          exam_fee: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="registration_fee" className="text-xs sm:text-sm">Registration Fee</Label>
+                      <Input
+                        id="registration_fee"
+                        type="number"
+                        value={feeStructure.registration_fee}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          registration_fee: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="tuition_fee">Tuition Fee</Label>
-                    <Input
-                      id="tuition_fee"
-                      type="number"
-                      value={feeStructure.tuition_fee}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        tuition_fee: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="administrative_fee">Office/Administrative Fee</Label>
-                    <Input
-                      id="administrative_fee"
-                      type="number"
-                      value={feeStructure.administrative_fee}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        administrative_fee: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="exam_fee">Exam Fee</Label>
-                    <Input
-                      id="exam_fee"
-                      type="number"
-                      value={feeStructure.exam_fee}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        exam_fee: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="registration_fee">Registration Fee</Label>
-                    <Input
-                      id="registration_fee"
-                      type="number"
-                      value={feeStructure.registration_fee}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        registration_fee: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="p-2 sm:p-3 bg-blue-50 rounded-lg">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium">Academic Subtotal:</span>
-                      <span className="text-lg font-bold text-blue-600">
+                      <span className="font-medium text-xs sm:text-sm">Academic Subtotal:</span>
+                      <span className="text-sm sm:text-lg font-bold text-blue-600">
                         {formatCurrency(calculateAcademicSubtotal())}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* RIGHT SIDE - Additional Fees */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-green-600 border-b pb-2">Additional Fees</h3>
+                {/* Additional Fees */}
+                <div className="space-y-3 sm:space-y-4">
+                  <h3 className="text-sm sm:text-lg font-semibold text-green-600 border-b pb-2">Additional Fees</h3>
                   
-                  <div>
-                    <Label htmlFor="books_materials">Books & Materials</Label>
-                    <Input
-                      id="books_materials"
-                      type="number"
-                      value={feeStructure.books_materials}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        books_materials: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
+                  <div className="space-y-2 sm:space-y-3">
+                    <div>
+                      <Label htmlFor="books_materials" className="text-xs sm:text-sm">Books & Materials</Label>
+                      <Input
+                        id="books_materials"
+                        type="number"
+                        value={feeStructure.books_materials}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          books_materials: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="lab_fee" className="text-xs sm:text-sm">Lab Fee</Label>
+                      <Input
+                        id="lab_fee"
+                        type="number"
+                        value={feeStructure.lab_fee}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          lab_fee: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="sports_fee" className="text-xs sm:text-sm">Sports Fee</Label>
+                      <Input
+                        id="sports_fee"
+                        type="number"
+                        value={feeStructure.sports_fee}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          sports_fee: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="library_fee" className="text-xs sm:text-sm">Library Fee</Label>
+                      <Input
+                        id="library_fee"
+                        type="number"
+                        value={feeStructure.library_fee}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          library_fee: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="other_fees" className="text-xs sm:text-sm">Other Fees</Label>
+                      <Input
+                        id="other_fees"
+                        type="number"
+                        value={feeStructure.other_fees}
+                        onChange={(e) => setFeeStructure(prev => ({
+                          ...prev,
+                          other_fees: Number(e.target.value) || 0
+                        }))}
+                        placeholder="0"
+                        className="text-xs sm:text-sm"
+                        size="sm"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="lab_fee">Lab Fee</Label>
-                    <Input
-                      id="lab_fee"
-                      type="number"
-                      value={feeStructure.lab_fee}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        lab_fee: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="sports_fee">Sports Fee</Label>
-                    <Input
-                      id="sports_fee"
-                      type="number"
-                      value={feeStructure.sports_fee}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        sports_fee: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="library_fee">Library Fee</Label>
-                    <Input
-                      id="library_fee"
-                      type="number"
-                      value={feeStructure.library_fee}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        library_fee: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="other_fees">Other Fees</Label>
-                    <Input
-                      id="other_fees"
-                      type="number"
-                      value={feeStructure.other_fees}
-                      onChange={(e) => setFeeStructure(prev => ({
-                        ...prev,
-                        other_fees: Number(e.target.value) || 0
-                      }))}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  <div className="p-3 bg-green-50 rounded-lg">
+                  <div className="p-2 sm:p-3 bg-green-50 rounded-lg">
                     <div className="flex justify-between items-center">
-                      <span className="font-medium">Additional Subtotal:</span>
-                      <span className="text-lg font-bold text-green-600">
+                      <span className="font-medium text-xs sm:text-sm">Additional Subtotal:</span>
+                      <span className="text-sm sm:text-lg font-bold text-green-600">
                         {formatCurrency(calculateAdditionalSubtotal())}
                       </span>
                     </div>
@@ -580,12 +601,11 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 </div>
               </div>
 
-              {/* BOTTOM SECTION */}
               <Separator />
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <Label htmlFor="due_date">Due Date</Label>
+                  <Label htmlFor="due_date" className="text-xs sm:text-sm">Due Date</Label>
                   <Input
                     id="due_date"
                     type="date"
@@ -594,12 +614,14 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       ...prev,
                       due_date: e.target.value
                     }))}
+                    className="text-xs sm:text-sm"
+                    size="sm"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <span className="text-xl font-bold">Grand Total Fees:</span>
-                  <span className="text-2xl font-bold text-purple-600">
+                <div className="flex items-center justify-between p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <span className="text-sm sm:text-xl font-bold">Grand Total:</span>
+                  <span className="text-lg sm:text-2xl font-bold text-purple-600">
                     {formatCurrency(calculateGrandTotal())}
                   </span>
                 </div>
@@ -607,7 +629,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 <Button 
                   onClick={handleSaveFeeStructure} 
                   disabled={loading}
-                  className="w-full text-lg py-6"
+                  className="w-full text-sm sm:text-lg py-4 sm:py-6"
                   size="lg"
                 >
                   {loading ? 'Saving...' : 'Save Fee Structure'}
@@ -618,18 +640,19 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
 
           {/* Quick Actions */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="text-sm sm:text-base">Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setShowPaymentForm(true)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2 sm:p-3"
                   disabled={student.total_fees <= 0}
+                  size="sm"
                 >
-                  <DollarSign className="h-4 w-4" />
+                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
                   Add Payment
                 </Button>
                 
@@ -637,19 +660,21 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                   variant="outline"
                   onClick={handleMarkFullyPaid}
                   disabled={loading || student.pending_amount <= 0}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2 sm:p-3"
+                  size="sm"
                 >
-                  <Receipt className="h-4 w-4" />
-                  Mark Fully Paid
+                  <Receipt className="h-3 w-3 sm:h-4 sm:w-4" />
+                  Mark Paid
                 </Button>
                 
                 <Button
                   variant="outline"
                   onClick={() => setShowPaymentHistory(!showPaymentHistory)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2 sm:p-3"
+                  size="sm"
                 >
-                  <History className="h-4 w-4" />
-                  Payment History
+                  <History className="h-3 w-3 sm:h-4 sm:w-4" />
+                  History
                 </Button>
                 
                 <ReceiptGenerator 
