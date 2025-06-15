@@ -1281,6 +1281,8 @@ const Index = () => {
     switch(activeSection) {
       case 'admission':
         return renderAdmissionForm();
+      case 'students':
+        return <StudentsSection />;
       case 'fees':
         return <FeesManagement />;
       case 'documents':
