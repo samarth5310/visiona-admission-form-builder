@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import FeeDetailsModal from './FeeDetailsModal';
 import FeesDashboard from './FeesDashboard';
+import InstallPWAButton from './InstallPWAButton';
 
 interface StudentWithFees {
   id: string;
@@ -323,6 +323,8 @@ const FeesManagement = () => {
           onClose={handleModalClose}
           onUpdate={handleModalUpdate}
         />
+        
+        <InstallPWAButton />
       </div>
     </div>
   );
