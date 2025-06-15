@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Users, CreditCard, IndianRupee } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import DashboardWhatsAppIntegration from './DashboardWhatsAppIntegration';
 
 interface DashboardMetrics {
   totalStudents: number;
@@ -198,6 +198,11 @@ const FeesDashboard = () => {
 
   return (
     <div className="mb-6">
+      {/* WhatsApp Integration Button */}
+      <div className="mb-6 flex justify-end">
+        <DashboardWhatsAppIntegration />
+      </div>
+
       {/* Metrics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
