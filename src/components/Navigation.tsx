@@ -19,7 +19,7 @@ const Navigation = ({ activeSection, onSectionChange }: NavigationProps) => {
     <div className="fixed top-4 left-4 z-50">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg border-none hover:from-blue-700 hover:to-indigo-700">
+          <Button variant="outline" className="bg-white text-gray-800 shadow-lg border-gray-300 hover:bg-gray-50">
             <Menu className="h-4 w-4 mr-2" />
             Navigation
           </Button>
