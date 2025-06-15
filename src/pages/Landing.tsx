@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Users, Trophy, MapPin, Phone, Mail, AlertCircle, Globe } from 'lucide-react';
+import TestimonialsCarousel from '@/components/TestimonialsCarousel';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ const Landing = () => {
       <div className="relative z-10">
         {/* Moving Alert Banner */}
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 overflow-hidden">
-          <div className="animate-marquee whitespace-nowrap flex items-center">
+          <div className="animate-marquee-slow whitespace-nowrap flex items-center">
             <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
             <span className="font-bold text-lg mr-4">{t.alert}</span>
             <span className="text-sm sm:text-base">
@@ -189,6 +189,9 @@ const Landing = () => {
               </p>
             </div>
           </div>
+
+          {/* Testimonials Carousel */}
+          <TestimonialsCarousel language={language} />
 
           {/* Contact Information */}
           <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 mx-2">
