@@ -146,36 +146,6 @@ export type Database = {
         }
         Relationships: []
       }
-      authorized_users: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean | null
-          mobile_number: string
-          name: string | null
-          password: string
-          role: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean | null
-          mobile_number: string
-          name?: string | null
-          password: string
-          role?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean | null
-          mobile_number?: string
-          name?: string | null
-          password?: string
-          role?: string | null
-        }
-        Relationships: []
-      }
       fee_payments: {
         Row: {
           created_at: string
