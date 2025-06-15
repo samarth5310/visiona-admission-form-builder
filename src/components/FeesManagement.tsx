@@ -9,6 +9,7 @@ import { Search, RefreshCw, Users, CreditCard } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import FeeDetailsModal from './FeeDetailsModal';
+import FeesDashboard from './FeesDashboard';
 
 interface StudentWithFees {
   id: string;
@@ -187,8 +188,11 @@ const FeesManagement = () => {
             <p className="text-sm sm:text-base lg:text-lg text-gray-700">Student Fee Tracking and Payment Management</p>
           </div>
 
-          {/* Stats and Controls */}
+          {/* Dashboard */}
           <div className="p-6">
+            <FeesDashboard />
+
+            {/* Stats and Controls */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-gray-700">
