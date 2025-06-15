@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, FileText, CreditCard, Upload } from 'lucide-react';
+import { Menu, FileText, CreditCard, Upload, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,13 @@ const Navigation = ({ activeSection, onSectionChange }: NavigationProps) => {
           >
             <FileText className="h-4 w-4 mr-2" />
             Admission Form
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => onSectionChange('students')}
+            className={`cursor-pointer ${activeSection === 'students' ? 'bg-gray-100' : ''}`}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Students
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => onSectionChange('fees')}
