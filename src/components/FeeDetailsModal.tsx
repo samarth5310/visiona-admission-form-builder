@@ -675,6 +675,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
           <PaymentForm
             studentFeesId={student.fee_id}
             studentName={student.full_name}
+            phoneNumber={student.contact_number}
             pendingAmount={Math.max(0, student.total_fees - student.paid_amount)}
             isOpen={showPaymentForm}
             onClose={() => setShowPaymentForm(false)}
