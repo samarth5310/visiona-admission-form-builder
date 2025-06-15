@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -131,11 +132,11 @@ const StudentsSection = () => {
 
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
-      case 'general': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'obc': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'sc': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'st': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case 'general': return 'bg-blue-100 text-blue-800';
+      case 'obc': return 'bg-yellow-100 text-yellow-800';
+      case 'sc': return 'bg-green-100 text-green-800';
+      case 'st': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -150,10 +151,10 @@ const StudentsSection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-300 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
       <div className="max-w-7xl mx-auto">
-        <Card className="w-full card-enhanced mb-6">
-          <CardHeader className="gradient-header">
+        <Card className="w-full shadow-lg mb-6">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
             <CardTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
               <Users className="h-6 w-6" />
               Students Database
@@ -162,36 +163,36 @@ const StudentsSection = () => {
           <CardContent className="p-6">
             <div className="flex items-center gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 icon-accent h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search by name, admission number, or class..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 form-input"
+                  className="pl-10"
                 />
               </div>
-              <Button onClick={fetchStudents} disabled={loading} className="transition-all duration-200">
+              <Button onClick={fetchStudents} disabled={loading}>
                 {loading ? 'Loading...' : 'Refresh'}
               </Button>
             </div>
 
             {loading ? (
               <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading students...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading students...</p>
               </div>
             ) : filteredStudents.length === 0 ? (
               <div className="text-center py-12">
-                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-foreground text-lg">No students found</p>
-                <p className="text-muted-foreground text-sm">Try adjusting your search criteria</p>
+                <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600 text-lg">No students found</p>
+                <p className="text-gray-500 text-sm">Try adjusting your search criteria</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredStudents.map((student) => (
-                  <Card key={student.id} className="overflow-hidden card-enhanced hover:shadow-lg transition-all duration-300">
+                  <Card key={student.id} className="overflow-hidden border-2 hover:border-blue-300 transition-colors shadow-md">
                     {/* ID Card Header */}
-                    <div className="gradient-header p-4">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4">
                       <div className="text-center">
                         <h3 className="font-bold text-sm">STUDENT ID CARD</h3>
                         <p className="text-xs opacity-90">Admission No: {student.admission_number}</p>
@@ -201,18 +202,18 @@ const StudentsSection = () => {
                     <CardContent className="p-4">
                       {/* Student Photo and Basic Info */}
                       <div className="flex items-start gap-4 mb-4">
-                        <Avatar className="h-20 w-20 border-2 border-border">
+                        <Avatar className="h-20 w-20 border-2 border-blue-200">
                           <AvatarImage 
                             src={student.student_photo} 
                             alt={student.full_name}
                             className="object-cover"
                           />
-                          <AvatarFallback className="bg-secondary text-secondary-foreground text-lg font-bold">
+                          <AvatarFallback className="bg-blue-100 text-blue-600 text-lg font-bold">
                             {getInitials(student.full_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-lg text-foreground truncate">
+                          <h3 className="font-bold text-lg text-gray-900 truncate">
                             {student.full_name}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
@@ -228,51 +229,51 @@ const StudentsSection = () => {
 
                       {/* Student Details */}
                       <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Calendar className="h-4 w-4 icon-accent" />
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Calendar className="h-4 w-4" />
                           <span>DOB: {formatDate(student.date_of_birth)}</span>
                         </div>
                         
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <User className="h-4 w-4 icon-accent" />
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <User className="h-4 w-4" />
                           <span>{student.gender}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Phone className="h-4 w-4 icon-accent" />
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Phone className="h-4 w-4" />
                           <span>{student.contact_number}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Mail className="h-4 w-4 icon-accent" />
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Mail className="h-4 w-4" />
                           <span className="truncate">{student.email}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin className="h-4 w-4 icon-accent" />
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <MapPin className="h-4 w-4" />
                           <span>{student.city}, {student.state}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <GraduationCap className="h-4 w-4 icon-accent" />
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <GraduationCap className="h-4 w-4" />
                           <span className="truncate">{student.current_school}</span>
                         </div>
                       </div>
 
                       {/* Parent Information */}
-                      <div className="mt-4 pt-3 border-t border-border">
-                        <h4 className="font-medium text-foreground mb-2">Parent Information</h4>
-                        <div className="text-sm text-muted-foreground space-y-1">
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                        <h4 className="font-medium text-gray-900 mb-2">Parent Information</h4>
+                        <div className="text-sm text-gray-600 space-y-1">
                           <p><span className="font-medium">Father:</span> {student.father_name}</p>
                           <p><span className="font-medium">Mother:</span> {student.mother_name}</p>
                         </div>
                       </div>
 
                       {/* WhatsApp Message Button */}
-                      <div className="mt-4 pt-3 border-t border-border">
+                      <div className="mt-4 pt-3 border-t border-gray-200">
                         <Button
                           onClick={() => handleWhatsAppMessage(student)}
-                          className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white flex items-center gap-2 transition-all duration-200"
+                          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
                           size="sm"
                         >
                           <MessageCircle className="h-4 w-4" />
@@ -281,8 +282,8 @@ const StudentsSection = () => {
                       </div>
 
                       {/* Admission Date */}
-                      <div className="mt-3 pt-2 border-t border-border">
-                        <p className="text-xs text-muted-foreground">
+                      <div className="mt-3 pt-2 border-t border-gray-100">
+                        <p className="text-xs text-gray-500">
                           Admitted on: {formatDate(student.created_at)}
                         </p>
                       </div>

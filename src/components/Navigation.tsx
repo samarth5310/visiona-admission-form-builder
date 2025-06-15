@@ -19,38 +19,38 @@ const Navigation = ({ activeSection, onSectionChange }: NavigationProps) => {
     <div className="fixed top-4 left-4 z-50">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="gradient-header shadow-lg border-none hover:shadow-xl transition-all duration-300">
+          <Button variant="outline" className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg border-none hover:from-blue-700 hover:to-indigo-700">
             <Menu className="h-4 w-4 mr-2" />
             Navigation
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="dropdown-enhanced z-50 w-48">
+        <DropdownMenuContent className="bg-white border border-gray-300 shadow-lg z-50 w-48">
           <DropdownMenuItem 
             onClick={() => onSectionChange('admission')}
-            className={`cursor-pointer hover:bg-accent transition-colors duration-200 ${activeSection === 'admission' ? 'bg-accent text-accent-foreground' : ''}`}
+            className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'admission' ? 'bg-blue-100 text-blue-700' : ''}`}
           >
-            <FileText className="h-4 w-4 mr-2 icon-accent" />
+            <FileText className="h-4 w-4 mr-2" />
             Admission Form
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => onSectionChange('students')}
-            className={`cursor-pointer hover:bg-accent transition-colors duration-200 ${activeSection === 'students' ? 'bg-accent text-accent-foreground' : ''}`}
+            className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'students' ? 'bg-blue-100 text-blue-700' : ''}`}
           >
-            <Users className="h-4 w-4 mr-2 icon-accent" />
+            <Users className="h-4 w-4 mr-2" />
             Students
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => onSectionChange('fees')}
-            className={`cursor-pointer hover:bg-accent transition-colors duration-200 ${activeSection === 'fees' ? 'bg-accent text-accent-foreground' : ''}`}
+            className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'fees' ? 'bg-blue-100 text-blue-700' : ''}`}
           >
-            <CreditCard className="h-4 w-4 mr-2 icon-accent" />
+            <CreditCard className="h-4 w-4 mr-2" />
             Fees Management
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => onSectionChange('documents')}
-            className={`cursor-pointer hover:bg-accent transition-colors duration-200 ${activeSection === 'documents' ? 'bg-accent text-accent-foreground' : ''}`}
+            className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'documents' ? 'bg-blue-100 text-blue-700' : ''}`}
           >
-            <Upload className="h-4 w-4 mr-2 icon-accent" />
+            <Upload className="h-4 w-4 mr-2" />
             Upload Documents
           </DropdownMenuItem>
         </DropdownMenuContent>
