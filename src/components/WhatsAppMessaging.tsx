@@ -43,6 +43,22 @@ const WhatsAppMessaging = ({
   };
 
   const getDefaultMessage = () => {
+    if (paymentType === "General Communication") {
+      return `ನಮಸ್ಕಾರ 🙏
+
+ಇದು **VISIONA EDUCATION ACADEMY** ಯಿಂದ ಸಂದೇಶ.
+
+🧒 ವಿದ್ಯಾರ್ಥಿ ಹೆಸರು: ${studentName}
+📚 ಸಂಸ್ಥೆಯ ಮಾಹಿತಿ ಅಥವಾ ನವೀಕರಣಗಳ ಬಗ್ಗೆ ನಿಮ್ಮೊಂದಿಗೆ ಸಂಪರ್ಕದಲ್ಲಿರಲು ಈ ಸಂದೇಶವನ್ನು ಕಳುಹಿಸುತ್ತಿದ್ದೇವೆ.
+
+ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳಿಗೆ ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ.
+
+ಧನ್ಯವಾದಗಳು,
+**VISIONA EDUCATION ACADEMY**
+📍 16th Cross, Vidyagiri, Bagalkot
+📞 ಸಂಪರ್ಕಿಸಿ: 7349420496, 8722189292`;
+    }
+    
     return `ನಮಸ್ಕಾರ 🙏
 ನಿಮ್ಮ ಮಗ/ಮಗುವಿನ ಫೀಸ್ ಪಾವತಿಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ ✅
 
@@ -77,28 +93,28 @@ const WhatsAppMessaging = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-blue-700">
             <MessageCircle className="h-5 w-5 text-green-600" />
             Send WhatsApp Message
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">Sending to:</p>
-            <p className="font-medium">{studentName}</p>
+          <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+            <p className="text-sm text-blue-600 font-medium">Sending to:</p>
+            <p className="font-medium text-gray-900">{studentName}</p>
             <p className="text-sm text-gray-600">+91 {phoneNumber}</p>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <Label>Message Preview</Label>
+              <Label className="text-blue-700 font-medium">Message Preview</Label>
               {!isEditing && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleEditMessage}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                 >
                   <Edit3 className="h-3 w-3" />
                   Edit
@@ -111,7 +127,7 @@ const WhatsAppMessaging = ({
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
                 rows={10}
-                className="text-sm font-mono"
+                className="text-sm font-mono border-blue-200 focus:border-blue-400"
                 placeholder="Edit your WhatsApp message..."
               />
             ) : (
@@ -126,7 +142,7 @@ const WhatsAppMessaging = ({
               type="button" 
               variant="outline" 
               onClick={onClose} 
-              className="flex-1"
+              className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
             >
               Cancel
             </Button>
@@ -148,7 +164,7 @@ const WhatsAppMessaging = ({
                   setIsEditing(false);
                   setCustomMessage('');
                 }}
-                className="flex-1"
+                className="flex-1 text-blue-600 hover:bg-blue-50"
               >
                 Cancel Edit
               </Button>
@@ -156,7 +172,7 @@ const WhatsAppMessaging = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setCustomMessage(getDefaultMessage())}
-                className="flex-1"
+                className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
               >
                 Reset to Default
               </Button>

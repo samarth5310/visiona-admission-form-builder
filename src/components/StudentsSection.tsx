@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Search, Users, Phone, Mail, MapPin, Calendar, GraduationCap, User } from 'lucide-react';
+import { Search, Users, Phone, Mail, MapPin, Calendar, GraduationCap, User, MessageCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import WhatsAppMessaging from './WhatsAppMessaging';
 
 interface Student {
   id: string;
@@ -33,6 +34,8 @@ const StudentsSection = () => {
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -135,6 +138,16 @@ const StudentsSection = () => {
       case 'st': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const handleWhatsAppMessage = (student: Student) => {
+    setSelectedStudent(student);
+    setShowWhatsAppModal(true);
+  };
+
+  const handleCloseWhatsApp = () => {
+    setShowWhatsAppModal(false);
+    setSelectedStudent(null);
   };
 
   return (
@@ -256,6 +269,18 @@ const StudentsSection = () => {
                         </div>
                       </div>
 
+                      {/* WhatsApp Message Button */}
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                        <Button
+                          onClick={() => handleWhatsAppMessage(student)}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                          size="sm"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          Send WhatsApp Message
+                        </Button>
+                      </div>
+
                       {/* Admission Date */}
                       <div className="mt-3 pt-2 border-t border-gray-100">
                         <p className="text-xs text-gray-500">
@@ -270,6 +295,20 @@ const StudentsSection = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* WhatsApp Messaging Modal */}
+      {selectedStudent && (
+        <WhatsAppMessaging
+          studentName={selectedStudent.full_name}
+          amountPaid={0}
+          paymentDate={new Date().toISOString().split('T')[0]}
+          paymentType="General Communication"
+          dueAmount={0}
+          phoneNumber={selectedStudent.contact_number}
+          isOpen={showWhatsAppModal}
+          onClose={handleCloseWhatsApp}
+        />
+      )}
     </div>
   );
 };
