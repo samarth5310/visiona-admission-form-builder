@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Navigation from '@/components/Navigation';
+import FeesManagement from '@/components/FeesManagement';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -26,7 +28,6 @@ import { Download } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PDFPreview from '@/components/PDFPreview';
-import Navigation from '@/components/Navigation';
 
 const MAX_FILE_SIZE = 50 * 1024; // 50KB in bytes
 
@@ -1091,7 +1092,7 @@ const Index = () => {
   return (
     <>
       <Navigation activeSection={activeSection} onSectionChange={setActiveSection} />
-      {activeSection === 'admission' ? renderAdmissionForm() : renderFeesManagement()}
+      {activeSection === 'admission' ? renderAdmissionForm() : <FeesManagement />}
     </>
   );
 };
