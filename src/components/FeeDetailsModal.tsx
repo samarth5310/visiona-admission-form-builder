@@ -664,6 +664,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
           {showPaymentHistory && student.fee_id && (
             <PaymentHistory 
               studentFeesId={student.fee_id}
+              studentData={student}
               onUpdate={onUpdate}
             />
           )}

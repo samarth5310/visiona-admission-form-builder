@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Receipt, History } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import ReceiptGenerator from './ReceiptGenerator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,28 +33,50 @@ interface Payment {
 
 interface PaymentHistoryProps {
   studentFeesId: string;
+  studentData: {
+    id: string;
+    full_name: string;
+    class: string;
+    contact_number: string;
+    created_at: string;
+    total_fees: number;
+    paid_amount: number;
+    pending_amount: number;
+    payment_status: string;
+    fee_id?: string;
+  };
   onUpdate: () => void;
 }
 
-const PaymentHistory = ({ studentFeesId, onUpdate }: PaymentHistoryProps) => {
+const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistoryProps) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchPayments();
+    console.log('PaymentHistory: studentFeesId:', studentFeesId);
+    if (studentFeesId) {
+      fetchPayments();
+    }
   }, [studentFeesId]);
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
+      console.log('Fetching payments for student_fees_id:', studentFeesId);
+      
       const { data, error } = await supabase
         .from('fee_payments')
         .select('*')
         .eq('student_fees_id', studentFeesId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching payments:', error);
+        throw error;
+      }
+      
+      console.log('Fetched payments:', data);
       setPayments(data || []);
     } catch (error) {
       console.error('Error fetching payments:', error);
@@ -69,12 +92,17 @@ const PaymentHistory = ({ studentFeesId, onUpdate }: PaymentHistoryProps) => {
 
   const handleDeletePayment = async (paymentId: string) => {
     try {
+      console.log('Deleting payment:', paymentId);
+      
       const { error } = await supabase
         .from('fee_payments')
         .delete()
         .eq('id', paymentId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting payment:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -117,6 +145,7 @@ const PaymentHistory = ({ studentFeesId, onUpdate }: PaymentHistoryProps) => {
       upi: 'bg-purple-100 text-purple-800',
       card: 'bg-orange-100 text-orange-800',
       cheque: 'bg-yellow-100 text-yellow-800',
+      adjustment: 'bg-gray-100 text-gray-800',
       other: 'bg-gray-100 text-gray-800'
     };
     
@@ -187,9 +216,10 @@ const PaymentHistory = ({ studentFeesId, onUpdate }: PaymentHistoryProps) => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" disabled>
-                          <Receipt className="h-4 w-4" />
-                        </Button>
+                        <ReceiptGenerator 
+                          student={studentData}
+                          disabled={false}
+                        />
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
