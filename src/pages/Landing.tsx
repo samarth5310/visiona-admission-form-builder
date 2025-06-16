@@ -73,6 +73,14 @@ const Landing = () => {
     setLanguage(prev => prev === 'en' ? 'kn' : 'en');
   };
 
+  // Images for slideshow
+  const slideshowImages = [
+    "/lovable-uploads/a5e775c0-2c26-43b1-8921-be177ed88016.png",
+    "/lovable-uploads/9335fc94-811f-47f9-8f36-45eceb0bc7e7.png",
+    "/lovable-uploads/105cad00-0e0a-4155-b8b7-2bb9e04c81c7.png",
+    "/lovable-uploads/3003146b-96f4-4648-bab3-a8c0203219c6.png"
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 relative">
       {/* Hero Background with Subtle Pattern */}
@@ -192,38 +200,65 @@ const Landing = () => {
 
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16 px-2">
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="bg-blue-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20">
+                <img 
+                  src="https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=300&fit=crop&crop=faces"
+                  alt="Expert Coaching background"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">{t.expertCoaching}</h3>
-              <p className="text-sm sm:text-base text-gray-600">
-                {t.expertCoachingDesc}
-              </p>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="bg-green-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+              <div className="relative z-10">
+                <div className="bg-blue-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">{t.expertCoaching}</h3>
+                <p className="text-sm sm:text-base text-gray-600">
+                  {t.expertCoachingDesc}
+                </p>
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">{t.smallBatch}</h3>
-              <p className="text-sm sm:text-base text-gray-600">
-                {t.smallBatchDesc}
-              </p>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300">
-              <div className="bg-yellow-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">{t.provenResults}</h3>
-              <p className="text-sm sm:text-base text-gray-600">
-                {t.provenResultsDesc}
-              </p>
             </div>
 
             <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 opacity-20">
+                <img 
+                  src="https://images.unsplash.com/photo-1466721591366-2d5fba72006d?w=400&h=300&fit=crop&crop=faces"
+                  alt="Small Batch background"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="relative z-10">
+                <div className="bg-green-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">{t.smallBatch}</h3>
+                <p className="text-sm sm:text-base text-gray-600">
+                  {t.smallBatchDesc}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20">
+                <img 
+                  src="https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?w=400&h=300&fit=crop&crop=faces"
+                  alt="Proven Results background"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="relative z-10">
+                <div className="bg-yellow-100 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-4">{t.provenResults}</h3>
+                <p className="text-sm sm:text-base text-gray-600">
+                  {t.provenResultsDesc}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-lg text-center hover:shadow-xl transition-shadow duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20">
                 <img 
                   src="https://images.unsplash.com/photo-1615729947596-a598e5de0ab3?w=400&h=300&fit=crop&crop=faces"
                   alt="Karnataka landscape"
@@ -244,6 +279,35 @@ const Landing = () => {
 
           {/* Testimonials Carousel */}
           <TestimonialsCarousel language={language} />
+
+          {/* Slideshow Section */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-6 sm:p-8 mx-2 mb-8 sm:mb-12 lg:mb-16 overflow-hidden">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                {language === 'en' ? 'Our Success Stories' : 'ನಮ್ಮ ಯಶಸ್ಸಿನ ಕಥೆಗಳು'}
+              </h3>
+              <p className="text-gray-600">
+                {language === 'en' ? 'Meet our successful students and their achievements' : 'ನಮ್ಮ ಯಶಸ್ವಿ ವಿದ್ಯಾರ್ಥಿಗಳು ಮತ್ತು ಅವರ ಸಾಧನೆಗಳನ್ನು ಭೇಟಿ ಮಾಡಿ'}
+              </p>
+            </div>
+            
+            <div className="relative h-48 sm:h-64 overflow-hidden rounded-lg">
+              <div className="flex animate-marquee space-x-4">
+                {[...slideshowImages, ...slideshowImages].map((image, index) => (
+                  <div 
+                    key={index} 
+                    className="flex-shrink-0 w-48 sm:w-64 h-48 sm:h-64 rounded-lg overflow-hidden shadow-md"
+                  >
+                    <img 
+                      src={image} 
+                      alt={`Success story ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* Contact Information */}
           <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 mx-2">
