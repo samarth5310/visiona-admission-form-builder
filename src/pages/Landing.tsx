@@ -292,10 +292,24 @@ const Landing = () => {
             </div>
             
             <div className="relative h-48 sm:h-64 overflow-hidden rounded-lg">
-              <div className="flex animate-marquee space-x-4">
-                {[...slideshowImages, ...slideshowImages].map((image, index) => (
+              <div className="flex animate-marquee-fast space-x-4">
+                {/* First set of images */}
+                {slideshowImages.map((image, index) => (
                   <div 
-                    key={index} 
+                    key={`first-${index}`} 
+                    className="flex-shrink-0 w-48 sm:w-64 h-48 sm:h-64 rounded-lg overflow-hidden shadow-md"
+                  >
+                    <img 
+                      src={image} 
+                      alt={`Success story ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                ))}
+                {/* Second set of images for seamless loop */}
+                {slideshowImages.map((image, index) => (
+                  <div 
+                    key={`second-${index}`} 
                     className="flex-shrink-0 w-48 sm:w-64 h-48 sm:h-64 rounded-lg overflow-hidden shadow-md"
                   >
                     <img 
