@@ -306,50 +306,6 @@ export type Database = {
           },
         ]
       }
-      student_marks: {
-        Row: {
-          created_at: string
-          id: string
-          marks_obtained: number
-          student_id: string
-          subject: string
-          test_date: string
-          test_name: string
-          total_marks: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          marks_obtained: number
-          student_id: string
-          subject: string
-          test_date: string
-          test_name: string
-          total_marks: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          marks_obtained?: number
-          student_id?: string
-          subject?: string
-          test_date?: string
-          test_name?: string
-          total_marks?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_marks_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "applications"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
