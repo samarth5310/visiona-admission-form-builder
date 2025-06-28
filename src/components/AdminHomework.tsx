@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,14 +8,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Trash2, BookOpen, Calendar, User, ExternalLink } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Edit, Trash2, BookOpen, Calendar, User, ExternalLink, Users, UserCheck } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Homework, HomeworkFormData } from "@/types/homework";
+import { Homework, HomeworkFormData, Student, ClassInfo } from "@/types/homework";
 
 const AdminHomework = () => {
   const [homework, setHomework] = useState<Homework[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
@@ -28,16 +30,14 @@ const AdminHomework = () => {
     subject: '',
     description: '',
     google_drive_link: '',
+    assignment_type: 'class',
     assigned_to_class: '',
     assigned_to_students: []
   });
 
-  const subjects = ['Mathematics', 'Science', 'English', 'Social Studies', 'Hindi', 'Physics', 'Chemistry', 'Biology'];
-  const classes = ['6th', '7th', '8th', '9th', '10th', '11th', '12th'];
-
   useEffect(() => {
     fetchHomework();
-    fetchStudents();
+    fetchStudentsAndClasses();
   }, []);
 
   const fetchHomework = async () => {
@@ -61,17 +61,41 @@ const AdminHomework = () => {
     }
   };
 
-  const fetchStudents = async () => {
+  const fetchStudentsAndClasses = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: studentsData, error: studentsError } = await supabase
         .from('applications')
-        .select('full_name, class')
-        .order('class', { ascending: true });
+        .select('id, full_name, class')
+        .order('class', { ascending: true })
+        .order('full_name', { ascending: true });
 
-      if (error) throw error;
-      setStudents(data || []);
+      if (studentsError) throw studentsError;
+
+      const students: Student[] = studentsData || [];
+      setStudents(students);
+
+      // Group students by class to get class information
+      const classGroups = students.reduce((acc, student) => {
+        if (!acc[student.class]) {
+          acc[student.class] = 0;
+        }
+        acc[student.class]++;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const classInfo: ClassInfo[] = Object.entries(classGroups).map(([className, count]) => ({
+        class: className,
+        student_count: count
+      })).sort((a, b) => a.class.localeCompare(b.class));
+
+      setClasses(classInfo);
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error('Error fetching students and classes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch students and classes.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -81,6 +105,7 @@ const AdminHomework = () => {
       subject: '',
       description: '',
       google_drive_link: '',
+      assignment_type: 'class',
       assigned_to_class: '',
       assigned_to_students: []
     });
@@ -90,7 +115,7 @@ const AdminHomework = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title.trim() || !formData.subject.trim() || !formData.google_drive_link.trim() || !formData.assigned_to_class.trim()) {
+    if (!formData.title.trim() || !formData.subject.trim() || !formData.google_drive_link.trim()) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields.",
@@ -99,10 +124,33 @@ const AdminHomework = () => {
       return;
     }
 
+    if (formData.assignment_type === 'class' && !formData.assigned_to_class.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a class to assign to.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.assignment_type === 'student' && formData.assigned_to_students.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one student to assign to.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const homeworkData = {
-        ...formData,
+        title: formData.title,
+        subject: formData.subject,
+        description: formData.description,
+        google_drive_link: formData.google_drive_link,
         assigned_by: 'Admin', // You can get this from auth context if available
+        assigned_to_class: formData.assignment_type === 'class' ? formData.assigned_to_class : '',
+        assigned_to_students: formData.assignment_type === 'student' ? formData.assigned_to_students : []
       };
 
       if (editingHomework) {
@@ -150,8 +198,9 @@ const AdminHomework = () => {
       subject: hw.subject,
       description: hw.description || '',
       google_drive_link: hw.google_drive_link,
-      assigned_to_class: hw.assigned_to_class,
-      assigned_to_students: hw.assigned_to_students
+      assignment_type: hw.assigned_to_class ? 'class' : 'student',
+      assigned_to_class: hw.assigned_to_class || '',
+      assigned_to_students: hw.assigned_to_students || []
     });
     setIsDialogOpen(true);
   };
@@ -220,6 +269,28 @@ const AdminHomework = () => {
     return null;
   };
 
+  const getAssignmentInfo = (hw: Homework) => {
+    if (hw.assigned_to_class) {
+      const classStudents = getStudentsByClass(hw.assigned_to_class);
+      return {
+        type: 'Class',
+        target: hw.assigned_to_class,
+        count: classStudents.length
+      };
+    } else if (hw.assigned_to_students && hw.assigned_to_students.length > 0) {
+      return {
+        type: 'Students',
+        target: `${hw.assigned_to_students.length} selected`,
+        count: hw.assigned_to_students.length
+      };
+    }
+    return {
+      type: 'Unknown',
+      target: 'Not specified',
+      count: 0
+    };
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -246,7 +317,7 @@ const AdminHomework = () => {
               Add Homework
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingHomework ? 'Edit Homework' : 'Add New Homework'}
@@ -267,21 +338,13 @@ const AdminHomework = () => {
 
               <div>
                 <Label htmlFor="subject">Subject *</Label>
-                <Select
+                <Input
+                  id="subject"
                   value={formData.subject}
-                  onValueChange={(value) => setFormData({...formData, subject: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject} value={subject}>
-                        {subject}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                  placeholder="Enter subject name (e.g., Mathematics, Science, English)"
+                  required
+                />
               </div>
 
               <div>
@@ -307,23 +370,102 @@ const AdminHomework = () => {
               </div>
 
               <div>
-                <Label htmlFor="class">Assign to Class *</Label>
-                <Select
-                  value={formData.assigned_to_class}
-                  onValueChange={(value) => setFormData({...formData, assigned_to_class: value})}
+                <Label>Assignment Type *</Label>
+                <RadioGroup
+                  value={formData.assignment_type}
+                  onValueChange={(value: 'class' | 'student') => {
+                    setFormData({
+                      ...formData, 
+                      assignment_type: value,
+                      assigned_to_class: '',
+                      assigned_to_students: []
+                    });
+                  }}
+                  className="flex space-x-6 mt-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((className) => (
-                      <SelectItem key={className} value={className}>
-                        {className}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="class" id="class" />
+                    <Label htmlFor="class" className="flex items-center">
+                      <Users className="h-4 w-4 mr-1" />
+                      Assign to Class
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="student" id="student" />
+                    <Label htmlFor="student" className="flex items-center">
+                      <UserCheck className="h-4 w-4 mr-1" />
+                      Assign to Specific Students
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
+
+              {formData.assignment_type === 'class' && (
+                <div>
+                  <Label htmlFor="class">Select Class *</Label>
+                  <Select
+                    value={formData.assigned_to_class}
+                    onValueChange={(value) => setFormData({...formData, assigned_to_class: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map((classInfo) => (
+                        <SelectItem key={classInfo.class} value={classInfo.class}>
+                          {classInfo.class} ({classInfo.student_count} students)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {formData.assignment_type === 'student' && (
+                <div>
+                  <Label>Select Students *</Label>
+                  <div className="mt-2 space-y-2">
+                    <div className="text-sm text-gray-600 mb-2">
+                      Selected: {formData.assigned_to_students.length} students
+                    </div>
+                    <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
+                      {classes.map((classInfo) => (
+                        <div key={classInfo.class}>
+                          <div className="font-medium text-sm text-gray-700 mb-2">
+                            {classInfo.class} ({classInfo.student_count} students)
+                          </div>
+                          <div className="ml-4 space-y-1">
+                            {getStudentsByClass(classInfo.class).map((student) => (
+                              <div key={student.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={student.id}
+                                  checked={formData.assigned_to_students.includes(student.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setFormData({
+                                        ...formData,
+                                        assigned_to_students: [...formData.assigned_to_students, student.id]
+                                      });
+                                    } else {
+                                      setFormData({
+                                        ...formData,
+                                        assigned_to_students: formData.assigned_to_students.filter(id => id !== student.id)
+                                      });
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={student.id} className="text-sm">
+                                  {student.full_name}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end space-x-2 pt-4">
                 <Button 
@@ -357,49 +499,61 @@ const AdminHomework = () => {
                 </div>
               ) : (
                 <div className="max-h-[600px] overflow-y-auto">
-                  {homework.map((hw) => (
-                    <div
-                      key={hw.id}
-                      className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${
-                        selectedHomework?.id === hw.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                      }`}
-                      onClick={() => setSelectedHomework(hw)}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-medium text-sm">{hw.title}</h3>
-                        <div className="flex space-x-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(hw);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(hw.id);
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                  {homework.map((hw) => {
+                    const assignmentInfo = getAssignmentInfo(hw);
+                    return (
+                      <div
+                        key={hw.id}
+                        className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${
+                          selectedHomework?.id === hw.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                        }`}
+                        onClick={() => setSelectedHomework(hw)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-medium text-sm">{hw.title}</h3>
+                          <div className="flex space-x-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(hw);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(hw.id);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <Badge variant="secondary" className="text-xs">
+                            {hw.subject}
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            {assignmentInfo.type === 'Class' ? (
+                              <Users className="h-3 w-3 text-blue-600" />
+                            ) : (
+                              <UserCheck className="h-3 w-3 text-green-600" />
+                            )}
+                            <p className="text-xs text-gray-600">
+                              {assignmentInfo.type}: {assignmentInfo.target}
+                            </p>
+                          </div>
+                          <p className="text-xs text-gray-600">{formatDate(hw.created_at)}</p>
                         </div>
                       </div>
-                      
-                      <div className="space-y-1">
-                        <Badge variant="secondary" className="text-xs">
-                          {hw.subject}
-                        </Badge>
-                        <p className="text-xs text-gray-600">Class: {hw.assigned_to_class}</p>
-                        <p className="text-xs text-gray-600">{formatDate(hw.created_at)}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
@@ -419,7 +573,19 @@ const AdminHomework = () => {
                     </CardTitle>
                     <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                       <Badge variant="outline">{selectedHomework.subject}</Badge>
-                      <span>Class: {selectedHomework.assigned_to_class}</span>
+                      {(() => {
+                        const assignmentInfo = getAssignmentInfo(selectedHomework);
+                        return (
+                          <div className="flex items-center gap-1">
+                            {assignmentInfo.type === 'Class' ? (
+                              <Users className="h-4 w-4 text-blue-600" />
+                            ) : (
+                              <UserCheck className="h-4 w-4 text-green-600" />
+                            )}
+                            <span>{assignmentInfo.type}: {assignmentInfo.target}</span>
+                          </div>
+                        );
+                      })()}
                       <span>{formatDate(selectedHomework.created_at)}</span>
                     </div>
                   </div>
