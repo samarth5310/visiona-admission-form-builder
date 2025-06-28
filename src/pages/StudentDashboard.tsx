@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail } from 'lucide-react';
+import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail, BookOpen } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -119,10 +119,20 @@ const StudentDashboard = () => {
               <p className="text-sm text-gray-600">Welcome, {studentData.full_name}</p>
             </div>
           </div>
-          <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
-            <LogOut className="h-4 w-4" />
-            <span>Logout</span>
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button 
+              onClick={() => navigate('/homework')} 
+              variant="outline" 
+              className="flex items-center space-x-2"
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>My Homework</span>
+            </Button>
+            <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </Button>
+          </div>
         </div>
       </div>
 

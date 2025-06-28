@@ -15,6 +15,7 @@ import Students from "./pages/Students";
 import Admission from "./pages/Admission";
 import Fees from "./pages/Fees";
 import Documents from "./pages/Documents";
+import Homework from "./pages/Homework";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -38,6 +39,7 @@ const App: React.FC = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/student-login" element={<StudentLogin />} />
             <Route path="/student-dashboard" element={<StudentDashboard />} />
+            <Route path="/homework" element={<Homework />} />
             <Route path="/students" element={
               <ProtectedRoute>
                 <Students />

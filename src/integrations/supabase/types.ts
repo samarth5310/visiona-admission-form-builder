@@ -220,6 +220,45 @@ export type Database = {
           },
         ]
       }
+      homework: {
+        Row: {
+          assigned_by: string
+          assigned_to_class: string
+          assigned_to_students: string[] | null
+          created_at: string
+          description: string | null
+          google_drive_link: string
+          id: string
+          subject: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to_class: string
+          assigned_to_students?: string[] | null
+          created_at?: string
+          description?: string | null
+          google_drive_link: string
+          id?: string
+          subject: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to_class?: string
+          assigned_to_students?: string[] | null
+          created_at?: string
+          description?: string | null
+          google_drive_link?: string
+          id?: string
+          subject?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_fees: {
         Row: {
           application_id: string
@@ -272,7 +311,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      extract_drive_file_id: {
+        Args: { drive_link: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
