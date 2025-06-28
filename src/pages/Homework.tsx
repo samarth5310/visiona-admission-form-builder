@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,25 +9,41 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Homework = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [userType, setUserType] = useState<'student' | 'admin' | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if student is logged in
-    const studentData = localStorage.getItem('visiona_student_data');
-    if (studentData) {
-      setUserType('student');
-      return;
-    }
+    const determineUserType = () => {
+      // First priority: Check if admin is logged in through auth context
+      if (user) {
+        console.log('Admin user detected:', user);
+        setUserType('admin');
+        setLoading(false);
+        return;
+      }
 
-    // Check if admin is logged in
-    if (user) {
-      setUserType('admin');
-      return;
-    }
+      // Second priority: Check if student is logged in through localStorage
+      const studentData = localStorage.getItem('visiona_student_data');
+      if (studentData) {
+        try {
+          const parsedData = JSON.parse(studentData);
+          console.log('Student user detected:', parsedData.full_name);
+          setUserType('student');
+          setLoading(false);
+          return;
+        } catch (error) {
+          console.error('Error parsing student data:', error);
+          localStorage.removeItem('visiona_student_data');
+        }
+      }
 
-    // If neither, redirect to home
-    navigate('/', { replace: true });
+      // If neither admin nor student is logged in, redirect to home
+      console.log('No authenticated user found, redirecting to home');
+      navigate('/', { replace: true });
+    };
+
+    determineUserType();
   }, [user, navigate]);
 
   const handleLogout = () => {
@@ -36,17 +51,35 @@ const Homework = () => {
       localStorage.removeItem('visiona_student_data');
       navigate('/', { replace: true });
     } else if (userType === 'admin') {
-      // Handle admin logout through auth context
+      logout();
       navigate('/login', { replace: true });
     }
   };
 
-  if (!userType) {
+  const handleBackToDashboard = () => {
+    if (userType === 'student') {
+      navigate('/student-dashboard');
+    } else if (userType === 'admin') {
+      navigate('/students');
+    }
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userType) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Redirecting...</p>
         </div>
       </div>
     );
@@ -77,7 +110,7 @@ const Homework = () => {
           <div className="flex items-center space-x-4">
             <Button 
               variant="outline" 
-              onClick={() => navigate(userType === 'student' ? '/student-dashboard' : '/students')}
+              onClick={handleBackToDashboard}
             >
               Back to Dashboard
             </Button>
