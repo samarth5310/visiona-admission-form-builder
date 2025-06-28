@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail, BookOpen, CreditCard, IndianRupee, GraduationCap, Trophy } from 'lucide-react';
+import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail, BookOpen, CreditCard, IndianRupee, GraduationCap, Trophy, Crown, Medal, Award } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from 'html2canvas';
@@ -63,13 +63,23 @@ interface StudentMark {
   created_at: string;
 }
 
+interface LeaderboardEntry {
+  student_id: string;
+  student_name: string;
+  total_score: number;
+  rank: number;
+  is_current_student: boolean;
+}
+
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [feeData, setFeeData] = useState<FeeData | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [studentMarks, setStudentMarks] = useState<StudentMark[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loadingFees, setLoadingFees] = useState(true);
   const [loadingMarks, setLoadingMarks] = useState(true);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -85,6 +95,7 @@ const StudentDashboard = () => {
       setStudentData(parsedData);
       fetchFeeDetails(parsedData.id);
       fetchStudentMarks(parsedData.id);
+      fetchLeaderboard(parsedData.id);
     } catch (error) {
       console.error('Error parsing student data:', error);
       localStorage.removeItem('visiona_student_data');
@@ -159,6 +170,82 @@ const StudentDashboard = () => {
       });
     } finally {
       setLoadingMarks(false);
+    }
+  };
+
+  const fetchLeaderboard = async (currentStudentId: string) => {
+    try {
+      setLoadingLeaderboard(true);
+      
+      // Fetch all student marks with student information
+      const { data: allMarks, error: marksError } = await supabase
+        .from('student_marks')
+        .select(`
+          student_id,
+          marks_obtained,
+          applications (
+            full_name
+          )
+        `);
+
+      if (marksError) {
+        console.error('Error fetching leaderboard data:', marksError);
+        return;
+      }
+
+      // Calculate total scores for each student
+      const studentScores = allMarks.reduce((acc, mark) => {
+        if (!acc[mark.student_id]) {
+          acc[mark.student_id] = {
+            student_id: mark.student_id,
+            student_name: mark.applications?.full_name || 'Unknown',
+            total_score: 0
+          };
+        }
+        acc[mark.student_id].total_score += mark.marks_obtained;
+        return acc;
+      }, {} as Record<string, { student_id: string; student_name: string; total_score: number }>);
+
+      // Convert to array and sort by total score (descending)
+      const sortedStudents = Object.values(studentScores)
+        .sort((a, b) => b.total_score - a.total_score);
+
+      // Create leaderboard with ranks and limit to top 10
+      const leaderboardData: LeaderboardEntry[] = sortedStudents
+        .slice(0, 10)
+        .map((student, index) => ({
+          ...student,
+          rank: index + 1,
+          is_current_student: student.student_id === currentStudentId
+        }));
+
+      // If current student is not in top 10, find their position and add them
+      const currentStudentInTop10 = leaderboardData.find(entry => entry.is_current_student);
+      if (!currentStudentInTop10) {
+        const currentStudentIndex = sortedStudents.findIndex(student => student.student_id === currentStudentId);
+        if (currentStudentIndex !== -1) {
+          const currentStudentEntry: LeaderboardEntry = {
+            ...sortedStudents[currentStudentIndex],
+            rank: currentStudentIndex + 1,
+            is_current_student: true
+          };
+          
+          // Insert current student in the appropriate position in the display
+          // Replace one of the lower-ranked entries to maintain 10 entries
+          leaderboardData[9] = currentStudentEntry;
+        }
+      }
+
+      setLeaderboard(leaderboardData);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch leaderboard data.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingLeaderboard(false);
     }
   };
 
@@ -269,6 +356,21 @@ const StudentDashboard = () => {
     return 'text-red-600';
   };
 
+  const getRankIcon = (rank: number) => {
+    if (rank === 1) return <Crown className="h-5 w-5 text-yellow-500" />;
+    if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
+    if (rank === 3) return <Award className="h-5 w-5 text-amber-600" />;
+    return <Trophy className="h-4 w-4 text-gray-500" />;
+  };
+
+  const getRankBadgeColor = (rank: number, isCurrentStudent: boolean) => {
+    if (isCurrentStudent) return 'bg-blue-100 text-blue-800 border-blue-300';
+    if (rank === 1) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    if (rank === 2) return 'bg-gray-100 text-gray-800 border-gray-300';
+    if (rank === 3) return 'bg-amber-100 text-amber-800 border-amber-300';
+    return 'bg-slate-100 text-slate-800 border-slate-300';
+  };
+
   const groupMarksByTest = () => {
     const grouped = studentMarks.reduce((acc, mark) => {
       const key = `${mark.test_name}-${mark.test_date}`;
@@ -330,6 +432,100 @@ const StudentDashboard = () => {
       </div>
 
       <div className="max-w-6xl mx-auto py-6">
+        {/* Leaderboard Section */}
+        <div className="mb-8">
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center">
+                  <Trophy className="h-5 w-5 mr-2 text-purple-600" />
+                  Overall Student Rankings
+                </span>
+                <Button
+                  onClick={() => fetchLeaderboard(studentData.id)}
+                  variant="outline"
+                  size="sm"
+                  disabled={loadingLeaderboard}
+                >
+                  {loadingLeaderboard ? 'Refreshing...' : 'Refresh'}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingLeaderboard ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading leaderboard...</p>
+                </div>
+              ) : leaderboard.length > 0 ? (
+                <div className="space-y-3">
+                  {leaderboard.map((entry, index) => (
+                    <div
+                      key={entry.student_id}
+                      className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                        entry.is_current_student 
+                          ? 'bg-blue-50 border-blue-300 shadow-md' 
+                          : 'bg-white border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          {getRankIcon(entry.rank)}
+                          <Badge 
+                            variant="outline" 
+                            className={`font-bold text-sm px-3 py-1 border-2 ${getRankBadgeColor(entry.rank, entry.is_current_student)}`}
+                          >
+                            #{entry.rank}
+                          </Badge>
+                        </div>
+                        <div>
+                          <h4 className={`font-semibold ${entry.is_current_student ? 'text-blue-900' : 'text-gray-900'}`}>
+                            {entry.rank === 1 || entry.is_current_student 
+                              ? entry.student_name 
+                              : 'XXXXX'
+                            }
+                          </h4>
+                          {entry.is_current_student && (
+                            <p className="text-sm text-blue-600 font-medium">You</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-2xl font-bold ${
+                          entry.rank === 1 ? 'text-yellow-600' :
+                          entry.rank === 2 ? 'text-gray-600' :
+                          entry.rank === 3 ? 'text-amber-600' :
+                          entry.is_current_student ? 'text-blue-600' : 'text-gray-700'
+                        }`}>
+                          {entry.total_score}
+                        </div>
+                        <p className="text-sm text-gray-500">points</p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border border-blue-200">
+                    <div className="text-center">
+                      <Trophy className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Keep Learning!</h3>
+                      <p className="text-sm text-gray-600">
+                        Rankings are updated automatically when new marks are added. 
+                        Work hard to climb up the leaderboard!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Rankings Available</h3>
+                  <p className="text-gray-600">Rankings will appear once marks are uploaded for multiple students.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Fee Status Overview */}
         <div className="mb-8">
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
@@ -437,11 +633,11 @@ const StudentDashboard = () => {
 
         {/* Student Marks Section */}
         <div className="mb-8">
-          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center">
-                  <GraduationCap className="h-5 w-5 mr-2 text-purple-600" />
+                  <GraduationCap className="h-5 w-5 mr-2 text-green-600" />
                   My Marks & Results
                 </span>
                 <Button
@@ -457,7 +653,7 @@ const StudentDashboard = () => {
             <CardContent>
               {loadingMarks ? (
                 <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
                   <p className="text-gray-600">Loading marks data...</p>
                 </div>
               ) : studentMarks.length > 0 ? (
