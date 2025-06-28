@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, BookOpen, Calendar, User, ExternalLink, Users, UserCheck } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Homework, HomeworkFormData, Student, ClassInfo } from "@/types/homework";
 
 const AdminHomework = () => {
@@ -24,6 +25,7 @@ const AdminHomework = () => {
   const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
   const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState<HomeworkFormData>({
     title: '',
@@ -148,7 +150,7 @@ const AdminHomework = () => {
         subject: formData.subject,
         description: formData.description,
         google_drive_link: formData.google_drive_link,
-        assigned_by: 'Admin', // You can get this from auth context if available
+        assigned_by: user?.name || user?.mobile_number || 'Admin',
         assigned_to_class: formData.assignment_type === 'class' ? formData.assigned_to_class : '',
         assigned_to_students: formData.assignment_type === 'student' ? formData.assigned_to_students : []
       };
