@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
@@ -32,7 +30,8 @@ const Landing = () => {
       contact: "Contact",
       email: "Email",
       viewOnMap: "View on Google Maps",
-      adminLogin: "Admin Login"
+      adminLogin: "Admin Login",
+      studentLogin: "Student Login"
     },
     kn: {
       alert: "ಎಚ್ಚರಿಕೆ:",
@@ -55,7 +54,8 @@ const Landing = () => {
       contact: "ಸಂಪರ್ಕ",
       email: "ಇಮೇಲ್",
       viewOnMap: "ಗೂಗಲ್ ಮ್ಯಾಪ್‌ನಲ್ಲಿ ವೀಕ್ಷಿಸಿ",
-      adminLogin: "ನಿರ್ವಾಹಕ ಲಾಗಿನ್"
+      adminLogin: "ನಿರ್ವಾಹಕ ಲಾಗಿನ್",
+      studentLogin: "ವಿದ್ಯಾರ್ಥಿ ಲಾಗಿನ್"
     }
   };
 
@@ -127,6 +127,12 @@ const Landing = () => {
                 >
                   <Globe className="h-4 w-4" />
                   <span>{language === 'en' ? 'ಕನ್ನಡ' : 'English'}</span>
+                </Button>
+                <Button 
+                  onClick={() => navigate('/student-login')}
+                  className="bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base px-4 py-2"
+                >
+                  {t.studentLogin}
                 </Button>
                 <Button 
                   onClick={() => navigate('/login')}
@@ -376,4 +382,3 @@ const Landing = () => {
 };
 
 export default Landing;
-

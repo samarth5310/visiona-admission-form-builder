@@ -9,6 +9,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import StudentLogin from "./pages/StudentLogin";
+import StudentDashboard from "./pages/StudentDashboard";
 import Students from "./pages/Students";
 import Admission from "./pages/Admission";
 import Fees from "./pages/Fees";
@@ -34,6 +36,8 @@ const App: React.FC = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/student-login" element={<StudentLogin />} />
+            <Route path="/student-dashboard" element={<StudentDashboard />} />
             <Route path="/students" element={
               <ProtectedRoute>
                 <Students />
