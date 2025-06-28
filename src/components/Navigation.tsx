@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, FileText, CreditCard, Upload, Users, LogOut, BookOpen } from 'lucide-react';
+import { Menu, FileText, CreditCard, Upload, Users, LogOut, BookOpen, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -60,6 +59,13 @@ const Navigation = ({ activeSection }: NavigationProps) => {
           >
             <BookOpen className="h-4 w-4 mr-2" />
             Manage Homework
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => handleNavigation('/marks')}
+            className={`cursor-pointer hover:bg-blue-50 ${activeSection === 'marks' ? 'bg-blue-100 text-blue-700' : ''}`}
+          >
+            <GraduationCap className="h-4 w-4 mr-2" />
+            Manage Marks
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => handleNavigation('/fees')}

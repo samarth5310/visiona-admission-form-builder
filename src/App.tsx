@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -16,6 +15,7 @@ import Admission from "./pages/Admission";
 import Fees from "./pages/Fees";
 import Documents from "./pages/Documents";
 import Homework from "./pages/Homework";
+import Marks from "./pages/Marks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -48,6 +48,11 @@ const App: React.FC = () => (
             <Route path="/admission" element={
               <ProtectedRoute>
                 <Admission />
+              </ProtectedRoute>
+            } />
+            <Route path="/marks" element={
+              <ProtectedRoute>
+                <Marks />
               </ProtectedRoute>
             } />
             <Route path="/fees" element={

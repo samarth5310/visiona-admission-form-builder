@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail, BookOpen, CreditCard, IndianRupee } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail, BookOpen, CreditCard, IndianRupee, GraduationCap, Trophy } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import html2canvas from 'html2canvas';
@@ -52,11 +53,23 @@ interface PaymentHistory {
   created_at: string;
 }
 
+interface StudentMark {
+  id: string;
+  subject: string;
+  total_marks: number;
+  marks_obtained: number;
+  test_name: string;
+  test_date: string;
+  created_at: string;
+}
+
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState<StudentData | null>(null);
   const [feeData, setFeeData] = useState<FeeData | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
+  const [studentMarks, setStudentMarks] = useState<StudentMark[]>([]);
   const [loadingFees, setLoadingFees] = useState(true);
+  const [loadingMarks, setLoadingMarks] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -71,6 +84,7 @@ const StudentDashboard = () => {
       const parsedData = JSON.parse(storedData);
       setStudentData(parsedData);
       fetchFeeDetails(parsedData.id);
+      fetchStudentMarks(parsedData.id);
     } catch (error) {
       console.error('Error parsing student data:', error);
       localStorage.removeItem('visiona_student_data');
@@ -118,6 +132,33 @@ const StudentDashboard = () => {
       });
     } finally {
       setLoadingFees(false);
+    }
+  };
+
+  const fetchStudentMarks = async (studentId: string) => {
+    try {
+      setLoadingMarks(true);
+      
+      const { data: marks, error: marksError } = await supabase
+        .from('student_marks')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('test_date', { ascending: false });
+
+      if (marksError) {
+        console.error('Error fetching marks:', marksError);
+      } else {
+        setStudentMarks(marks || []);
+      }
+    } catch (error) {
+      console.error('Error fetching student marks:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch marks data.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingMarks(false);
     }
   };
 
@@ -214,6 +255,35 @@ const StudentDashboard = () => {
         {method.replace('_', ' ').toUpperCase()}
       </span>
     );
+  };
+
+  const getPercentage = (obtained: number, total: number) => {
+    return ((obtained / total) * 100).toFixed(1);
+  };
+
+  const getGradeColor = (percentage: number) => {
+    if (percentage >= 90) return 'text-green-600';
+    if (percentage >= 75) return 'text-blue-600';
+    if (percentage >= 60) return 'text-yellow-600';
+    if (percentage >= 35) return 'text-orange-600';
+    return 'text-red-600';
+  };
+
+  const groupMarksByTest = () => {
+    const grouped = studentMarks.reduce((acc, mark) => {
+      const key = `${mark.test_name}-${mark.test_date}`;
+      if (!acc[key]) {
+        acc[key] = {
+          test_name: mark.test_name,
+          test_date: mark.test_date,
+          marks: []
+        };
+      }
+      acc[key].marks.push(mark);
+      return acc;
+    }, {} as Record<string, { test_name: string; test_date: string; marks: StudentMark[] }>);
+
+    return Object.values(grouped).sort((a, b) => new Date(b.test_date).getTime() - new Date(a.test_date).getTime());
   };
 
   if (!studentData) {
@@ -359,6 +429,105 @@ const StudentDashboard = () => {
                   <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No Fee Structure Set</h3>
                   <p className="text-gray-600">Your fee structure has not been set up yet. Please contact the administration.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Student Marks Section */}
+        <div className="mb-8">
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center">
+                  <GraduationCap className="h-5 w-5 mr-2 text-purple-600" />
+                  My Marks & Results
+                </span>
+                <Button
+                  onClick={() => fetchStudentMarks(studentData.id)}
+                  variant="outline"
+                  size="sm"
+                  disabled={loadingMarks}
+                >
+                  {loadingMarks ? 'Refreshing...' : 'Refresh'}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingMarks ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading marks data...</p>
+                </div>
+              ) : studentMarks.length > 0 ? (
+                <div className="space-y-6">
+                  {groupMarksByTest().map((testGroup, index) => {
+                    const totalMarks = testGroup.marks.reduce((sum, mark) => sum + mark.total_marks, 0);
+                    const obtainedMarks = testGroup.marks.reduce((sum, mark) => sum + mark.marks_obtained, 0);
+                    const percentage = parseFloat(getPercentage(obtainedMarks, totalMarks));
+                    
+                    return (
+                      <div key={index} className="bg-white rounded-lg border p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{testGroup.test_name}</h3>
+                            <p className="text-sm text-gray-600">Test Date: {formatDate(testGroup.test_date)}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center space-x-2">
+                              <Trophy className="h-5 w-5 text-yellow-500" />
+                              <span className={`text-2xl font-bold ${getGradeColor(percentage)}`}>
+                                {percentage}%
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600">
+                              {obtainedMarks}/{totalMarks} marks
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {testGroup.marks.map((mark) => {
+                            const subjectPercentage = parseFloat(getPercentage(mark.marks_obtained, mark.total_marks));
+                            return (
+                              <div key={mark.id} className="bg-gray-50 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-medium text-gray-900">{mark.subject}</h4>
+                                  <Badge variant="outline" className={getGradeColor(subjectPercentage)}>
+                                    {subjectPercentage}%
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-600">Marks:</span>
+                                  <span className="font-medium">
+                                    {mark.marks_obtained}/{mark.total_marks}
+                                  </span>
+                                </div>
+                                <div className="mt-2 bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    className={`h-2 rounded-full ${
+                                      subjectPercentage >= 90 ? 'bg-green-500' :
+                                      subjectPercentage >= 75 ? 'bg-blue-500' :
+                                      subjectPercentage >= 60 ? 'bg-yellow-500' :
+                                      subjectPercentage >= 35 ? 'bg-orange-500' : 'bg-red-500'
+                                    }`}
+                                    style={{ width: `${subjectPercentage}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Marks Available</h3>
+                  <p className="text-gray-600">Your test results will appear here once uploaded by the teacher.</p>
                 </div>
               )}
             </CardContent>
