@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail, BookOpen } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail, BookOpen, CreditCard, IndianRupee } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -28,8 +29,34 @@ interface StudentData {
   created_at: string;
 }
 
+interface FeeData {
+  id: string;
+  total_fees: number;
+  paid_amount: number;
+  pending_amount: number;
+  payment_status: string;
+  paid_date: string | null;
+  fee_category: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PaymentHistory {
+  id: string;
+  payment_amount: number;
+  payment_date: string;
+  payment_method: string;
+  transaction_id: string | null;
+  receipt_number: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 const StudentDashboard = () => {
   const [studentData, setStudentData] = useState<StudentData | null>(null);
+  const [feeData, setFeeData] = useState<FeeData | null>(null);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
+  const [loadingFees, setLoadingFees] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,12 +70,56 @@ const StudentDashboard = () => {
     try {
       const parsedData = JSON.parse(storedData);
       setStudentData(parsedData);
+      fetchFeeDetails(parsedData.id);
     } catch (error) {
       console.error('Error parsing student data:', error);
       localStorage.removeItem('visiona_student_data');
       navigate('/student-login', { replace: true });
     }
   }, [navigate]);
+
+  const fetchFeeDetails = async (studentId: string) => {
+    try {
+      setLoadingFees(true);
+      
+      // Fetch fee details
+      const { data: feeDetails, error: feeError } = await supabase
+        .from('student_fees')
+        .select('*')
+        .eq('application_id', studentId)
+        .maybeSingle();
+
+      if (feeError && feeError.code !== 'PGRST116') {
+        throw feeError;
+      }
+
+      setFeeData(feeDetails);
+
+      // Fetch payment history if fee record exists
+      if (feeDetails) {
+        const { data: payments, error: paymentsError } = await supabase
+          .from('fee_payments')
+          .select('*')
+          .eq('student_fees_id', feeDetails.id)
+          .order('created_at', { ascending: false });
+
+        if (paymentsError) {
+          console.error('Error fetching payment history:', paymentsError);
+        } else {
+          setPaymentHistory(payments || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching fee details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch fee details. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingFees(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('visiona_student_data');
@@ -91,6 +162,58 @@ const StudentDashboard = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      not_set: { label: 'Not Set', className: 'bg-gray-100 text-gray-800' },
+      pending: { label: 'Pending', className: 'bg-red-100 text-red-800' },
+      partial: { label: 'Partial', className: 'bg-yellow-100 text-yellow-800' },
+      paid: { label: 'Paid', className: 'bg-green-100 text-green-800' }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.not_set;
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
+        {config.label}
+      </span>
+    );
+  };
+
+  const getMethodBadge = (method: string) => {
+    const colors = {
+      cash: 'bg-green-100 text-green-800',
+      bank_transfer: 'bg-blue-100 text-blue-800',
+      upi: 'bg-purple-100 text-purple-800',
+      card: 'bg-orange-100 text-orange-800',
+      cheque: 'bg-yellow-100 text-yellow-800',
+      adjustment: 'bg-gray-100 text-gray-800',
+      other: 'bg-gray-100 text-gray-800'
+    };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[method as keyof typeof colors] || colors.other}`}>
+        {method.replace('_', ' ').toUpperCase()}
+      </span>
+    );
   };
 
   if (!studentData) {
@@ -137,6 +260,159 @@ const StudentDashboard = () => {
       </div>
 
       <div className="max-w-6xl mx-auto py-6">
+        {/* Fee Status Overview */}
+        <div className="mb-8">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center">
+                  <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
+                  Fee Status Overview
+                </span>
+                <Button
+                  onClick={() => fetchFeeDetails(studentData.id)}
+                  variant="outline"
+                  size="sm"
+                  disabled={loadingFees}
+                >
+                  {loadingFees ? 'Refreshing...' : 'Refresh'}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loadingFees ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading fee details...</p>
+                </div>
+              ) : feeData ? (
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Total Fees</p>
+                          <p className="text-xl font-bold text-blue-600">
+                            {formatCurrency(feeData.total_fees)}
+                          </p>
+                        </div>
+                        <IndianRupee className="h-8 w-8 text-blue-600" />
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Paid Amount</p>
+                          <p className="text-xl font-bold text-green-600">
+                            {formatCurrency(feeData.paid_amount)}
+                          </p>
+                        </div>
+                        <IndianRupee className="h-8 w-8 text-green-600" />
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Pending Amount</p>
+                          <p className="text-xl font-bold text-red-600">
+                            {formatCurrency(feeData.pending_amount)}
+                          </p>
+                        </div>
+                        <IndianRupee className="h-8 w-8 text-red-600" />
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-lg shadow-sm border">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Payment Status</p>
+                          <div className="mt-1">
+                            {getStatusBadge(feeData.payment_status)}
+                          </div>
+                        </div>
+                        <CreditCard className="h-8 w-8 text-gray-600" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="bg-white p-3 rounded border">
+                      <span className="text-gray-600">Fee Category:</span>
+                      <span className="ml-2 font-medium capitalize">{feeData.fee_category}</span>
+                    </div>
+                    <div className="bg-white p-3 rounded border">
+                      <span className="text-gray-600">Last Updated:</span>
+                      <span className="ml-2 font-medium">{formatDate(feeData.updated_at)}</span>
+                    </div>
+                    {feeData.paid_date && (
+                      <div className="bg-white p-3 rounded border">
+                        <span className="text-gray-600">Last Payment Date:</span>
+                        <span className="ml-2 font-medium text-green-600">{formatDate(feeData.paid_date)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Fee Structure Set</h3>
+                  <p className="text-gray-600">Your fee structure has not been set up yet. Please contact the administration.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Payment History */}
+        {feeData && paymentHistory.length > 0 && (
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-green-600" />
+                  Payment History ({paymentHistory.length} payments)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {paymentHistory.map((payment) => (
+                    <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium text-green-600">
+                            {formatCurrency(payment.payment_amount)}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {formatDate(payment.payment_date)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getMethodBadge(payment.payment_method)}
+                          {payment.transaction_id && (
+                            <span className="text-xs text-gray-500">
+                              TXN: {payment.transaction_id}
+                            </span>
+                          )}
+                          {payment.receipt_number && (
+                            <span className="text-xs text-gray-500">
+                              Receipt: {payment.receipt_number}
+                            </span>
+                          )}
+                        </div>
+                        {payment.notes && (
+                          <p className="text-xs text-gray-600 mt-1">{payment.notes}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Student Information Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Personal Information */}
