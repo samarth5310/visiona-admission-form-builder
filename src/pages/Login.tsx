@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -93,6 +92,13 @@ const Login = () => {
           <p className="text-xs sm:text-sm text-gray-500 px-2">
             Authorized personnel only. Contact administrator for access.
           </p>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/')}
+            className="mt-3 text-sm"
+          >
+            Back to Home
+          </Button>
         </div>
       </div>
     </div>
