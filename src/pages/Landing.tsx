@@ -80,6 +80,16 @@ const Landing = () => {
     "/lovable-uploads/3003146b-96f4-4648-bab3-a8c0203219c6.png"
   ];
 
+  // Exam badges with unique colors and hover effects
+  const examBadges = [
+    { name: 'Navodaya', bgColor: 'bg-blue-600', hoverColor: 'hover:bg-blue-700', textColor: 'text-white' },
+    { name: 'Sainik', bgColor: 'bg-green-600', hoverColor: 'hover:bg-green-700', textColor: 'text-white' },
+    { name: 'Morarji', bgColor: 'bg-purple-600', hoverColor: 'hover:bg-purple-700', textColor: 'text-white' },
+    { name: 'Kittur', bgColor: 'bg-orange-600', hoverColor: 'hover:bg-orange-700', textColor: 'text-white' },
+    { name: 'RMS', bgColor: 'bg-red-600', hoverColor: 'hover:bg-red-700', textColor: 'text-white' },
+    { name: 'Alvas', bgColor: 'bg-indigo-600', hoverColor: 'hover:bg-indigo-700', textColor: 'text-white' }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative">
       {/* Dark theme background with subtle pattern */}
@@ -193,12 +203,14 @@ const Landing = () => {
               </div>
 
               <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-xs sm:text-sm font-medium px-2">
-                <span className="bg-gray-800 border border-[#beef00] text-[#beef00] px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm">Navodaya</span>
-                <span className="bg-gray-800 border border-[#ff0028] text-[#ff0028] px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm">Sainik</span>
-                <span className="bg-gray-800 border border-[#1400c6] text-[#1400c6] px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm">Morarji</span>
-                <span className="bg-gray-800 border border-[#657a00] text-[#657a00] px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm">Kittur</span>
-                <span className="bg-gray-800 border border-[#beef00] text-[#beef00] px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm">RMS</span>
-                <span className="bg-gray-800 border border-[#ff0028] text-[#ff0028] px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm">Alvas</span>
+                {examBadges.map((exam, index) => (
+                  <span 
+                    key={index}
+                    className={`${exam.bgColor} ${exam.hoverColor} ${exam.textColor} px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm cursor-pointer transform transition-all duration-300 hover:scale-110 hover:shadow-lg`}
+                  >
+                    {exam.name}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
