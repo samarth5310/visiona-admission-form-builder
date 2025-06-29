@@ -87,7 +87,6 @@ const MarksManagement = () => {
     }
   };
 
-  // ... keep existing code (all the handler functions)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -281,7 +280,7 @@ const MarksManagement = () => {
     if (key === 'class') {
       return [...new Set(students.map(s => s.class))];
     }
-    return [...new Set(marks.map(mark => mark[key as keyof StudentMark]))];
+    return [...new Set(marks.map(mark => String(mark[key as keyof StudentMark])))];
   };
 
   const getBulkStudents = () => {
