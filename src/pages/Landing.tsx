@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Users, Trophy, MapPin, Phone, Mail, AlertCircle, Globe } from 'lucide-react';
-import TestimonialsCarousel from '@/components/TestimonialsCarousel';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -281,11 +280,6 @@ const Landing = () => {
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Testimonials Carousel with dark theme */}
-          <div className="bg-gray-800/60 backdrop-blur-sm rounded-lg shadow-xl p-6 sm:p-8 mx-2 mb-8 sm:mb-12 lg:mb-16 border border-gray-700">
-            <TestimonialsCarousel language={language} />
           </div>
 
           {/* Slideshow Section with dark theme */}
