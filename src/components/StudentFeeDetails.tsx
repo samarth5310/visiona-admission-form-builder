@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,9 +80,9 @@ const StudentFeeDetails = () => {
         .from('student_fees')
         .select('*')
         .eq('application_id', student.id)
-        .single();
+        .maybeSingle();
 
-      if (feeError && feeError.code !== 'PGRST116') {
+      if (feeError) {
         throw feeError;
       }
 
