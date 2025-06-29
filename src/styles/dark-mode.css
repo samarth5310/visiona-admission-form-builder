@@ -1,0 +1,228 @@
+/* Dark Mode CSS Variables */
+:root {
+  /* Base colors */
+  --clr-dark-a0: #000000;
+  --clr-light-a0: #ffffff;
+
+  /* Theme primary colors */
+  --clr-primary-a0: #2ae8d5;
+  --clr-primary-a10: #58ebda;
+  --clr-primary-a20: #75eede;
+  --clr-primary-a30: #8ef1e3;
+  --clr-primary-a40: #a3f4e7;
+  --clr-primary-a50: #b7f6ec;
+
+  /* Theme surface colors */
+  --clr-surface-a0: #121212;
+  --clr-surface-a10: #282828;
+  --clr-surface-a20: #3f3f3f;
+  --clr-surface-a30: #575757;
+  --clr-surface-a40: #717171;
+  --clr-surface-a50: #8b8b8b;
+
+  /* Theme tonal surface colors */
+  --clr-surface-tonal-a0: #1a2422;
+  --clr-surface-tonal-a10: #2f3937;
+  --clr-surface-tonal-a20: #464e4c;
+  --clr-surface-tonal-a30: #5d6563;
+  --clr-surface-tonal-a40: #767d7b;
+  --clr-surface-tonal-a50: #909694;
+}
+
+/* Dark Mode Styles */
+.student-dark-mode {
+  /* Background colors */
+  --background: var(--clr-surface-a0);
+  --foreground: var(--clr-light-a0);
+  
+  /* Card colors */
+  --card: var(--clr-surface-a10);
+  --card-foreground: var(--clr-light-a0);
+  
+  /* Border colors */
+  --border: var(--clr-surface-a30);
+  --input: var(--clr-surface-a20);
+  
+  /* Muted colors */
+  --muted: var(--clr-surface-a20);
+  --muted-foreground: var(--clr-surface-a50);
+  
+  /* Accent colors */
+  --accent: var(--clr-surface-tonal-a10);
+  --accent-foreground: var(--clr-light-a0);
+  
+  /* Primary colors */
+  --primary: var(--clr-primary-a0);
+  --primary-foreground: var(--clr-dark-a0);
+  
+  /* Secondary colors */
+  --secondary: var(--clr-surface-a20);
+  --secondary-foreground: var(--clr-light-a0);
+  
+  /* Popover colors */
+  --popover: var(--clr-surface-a10);
+  --popover-foreground: var(--clr-light-a0);
+}
+
+/* Dark mode specific styles for student dashboard */
+.student-dark-mode body {
+  background-color: var(--clr-surface-a0);
+  color: var(--clr-light-a0);
+}
+
+.student-dark-mode .bg-gray-50 {
+  background-color: var(--clr-surface-a0) !important;
+}
+
+.student-dark-mode .bg-white {
+  background-color: var(--clr-surface-a10) !important;
+  color: var(--clr-light-a0) !important;
+}
+
+.student-dark-mode .bg-gray-100 {
+  background-color: var(--clr-surface-a20) !important;
+}
+
+.student-dark-mode .bg-gray-200 {
+  background-color: var(--clr-surface-a30) !important;
+}
+
+.student-dark-mode .text-gray-900 {
+  color: var(--clr-light-a0) !important;
+}
+
+.student-dark-mode .text-gray-800 {
+  color: var(--clr-surface-a50) !important;
+}
+
+.student-dark-mode .text-gray-700 {
+  color: var(--clr-surface-a40) !important;
+}
+
+.student-dark-mode .text-gray-600 {
+  color: var(--clr-surface-a40) !important;
+}
+
+.student-dark-mode .text-gray-500 {
+  color: var(--clr-surface-a50) !important;
+}
+
+.student-dark-mode .border-gray-200 {
+  border-color: var(--clr-surface-a30) !important;
+}
+
+.student-dark-mode .border-gray-300 {
+  border-color: var(--clr-surface-a30) !important;
+}
+
+.student-dark-mode .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.student-dark-mode .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+}
+
+.student-dark-mode .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Gradient backgrounds for dark mode */
+.student-dark-mode .bg-gradient-to-r.from-blue-50.to-indigo-50 {
+  background: linear-gradient(to right, var(--clr-surface-tonal-a10), var(--clr-surface-tonal-a20)) !important;
+}
+
+.student-dark-mode .border-blue-100 {
+  border-color: var(--clr-primary-a40) !important;
+}
+
+.student-dark-mode .border-blue-200 {
+  border-color: var(--clr-primary-a30) !important;
+}
+
+.student-dark-mode .bg-blue-100 {
+  background-color: var(--clr-surface-tonal-a20) !important;
+}
+
+.student-dark-mode .text-blue-600 {
+  color: var(--clr-primary-a20) !important;
+}
+
+.student-dark-mode .text-blue-700 {
+  color: var(--clr-primary-a10) !important;
+}
+
+.student-dark-mode .text-blue-800 {
+  color: var(--clr-primary-a0) !important;
+}
+
+.student-dark-mode .bg-green-100 {
+  background-color: var(--clr-surface-tonal-a20) !important;
+}
+
+.student-dark-mode .text-green-600 {
+  color: #4ade80 !important;
+}
+
+.student-dark-mode .text-green-800 {
+  color: #22c55e !important;
+}
+
+/* Card hover effects in dark mode */
+.student-dark-mode .hover\:shadow-md:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Button styles in dark mode */
+.student-dark-mode .bg-blue-600 {
+  background-color: var(--clr-primary-a0) !important;
+  color: var(--clr-dark-a0) !important;
+}
+
+.student-dark-mode .hover\:bg-blue-700:hover {
+  background-color: var(--clr-primary-a10) !important;
+}
+
+/* Input and form elements */
+.student-dark-mode input,
+.student-dark-mode textarea,
+.student-dark-mode select {
+  background-color: var(--clr-surface-a20) !important;
+  color: var(--clr-light-a0) !important;
+  border-color: var(--clr-surface-a30) !important;
+}
+
+.student-dark-mode input::placeholder,
+.student-dark-mode textarea::placeholder {
+  color: var(--clr-surface-a50) !important;
+}
+
+/* Tab styles */
+.student-dark-mode [role="tablist"] {
+  background-color: var(--clr-surface-a20) !important;
+}
+
+.student-dark-mode [role="tab"] {
+  color: var(--clr-surface-a50) !important;
+}
+
+.student-dark-mode [role="tab"][data-state="active"] {
+  background-color: var(--clr-surface-a10) !important;
+  color: var(--clr-light-a0) !important;
+}
+
+/* Badge styles */
+.student-dark-mode .bg-blue-100.text-blue-800 {
+  background-color: var(--clr-surface-tonal-a20) !important;
+  color: var(--clr-primary-a20) !important;
+}
+
+.student-dark-mode .bg-green-100.text-green-800 {
+  background-color: var(--clr-surface-tonal-a20) !important;
+  color: #4ade80 !important;
+}
+
+/* Smooth transitions */
+.student-dark-mode * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
+}
