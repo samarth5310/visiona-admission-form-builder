@@ -50,7 +50,7 @@ const MarksManagement = () => {
     subject: '',
     total_marks: '',
     test_date: new Date().toISOString().split('T')[0],
-    class_filter: ''
+    class_filter: 'all'
   });
   
   const [bulkMarks, setBulkMarks] = useState<{[key: string]: string}>({});
@@ -136,7 +136,7 @@ const MarksManagement = () => {
     
     try {
       const filteredStudents = students.filter(student => 
-        bulkData.class_filter === '' || student.class === bulkData.class_filter
+        bulkData.class_filter === 'all' || student.class === bulkData.class_filter
       );
 
       const marksToInsert = filteredStudents
@@ -257,7 +257,7 @@ const MarksManagement = () => {
       subject: '',
       total_marks: '',
       test_date: new Date().toISOString().split('T')[0],
-      class_filter: ''
+      class_filter: 'all'
     });
     setBulkMarks({});
   };
@@ -284,7 +284,7 @@ const MarksManagement = () => {
 
   const getBulkStudents = () => {
     return students.filter(student => 
-      bulkData.class_filter === '' || student.class === bulkData.class_filter
+      bulkData.class_filter === 'all' || student.class === bulkData.class_filter
     );
   };
 
@@ -693,7 +693,7 @@ const MarksManagement = () => {
                         <SelectValue placeholder="All classes" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All classes</SelectItem>
+                        <SelectItem value="all">All classes</SelectItem>
                         {getUniqueValues('class').map(cls => (
                           <SelectItem key={cls} value={cls}>{cls}</SelectItem>
                         ))}
