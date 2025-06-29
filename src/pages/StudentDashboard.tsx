@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, User, BookOpen, GraduationCap, CreditCard, Home } from 'lucide-react';
+import { LogOut, User, BookOpen, GraduationCap, CreditCard, Home, Trophy } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import StudentMarks from '@/components/StudentMarks';
 import StudentFeeDetails from '@/components/StudentFeeDetails';
+import StudentLeaderboard from '@/components/StudentLeaderboard';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -107,6 +107,11 @@ const StudentDashboard = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Leaderboard Section - Always visible at top */}
+        <div className="mb-6">
+          <StudentLeaderboard />
+        </div>
+
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile" className="flex items-center gap-2">

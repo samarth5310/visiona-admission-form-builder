@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LogOut, BookOpen, Home } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import AdminHomework from '@/components/AdminHomework';
 import { useAuth } from '@/contexts/AuthContext';
+import Navigation from '@/components/Navigation';
 
 const Homework = () => {
   const navigate = useNavigate();
@@ -90,6 +89,29 @@ const Homework = () => {
     );
   }
 
+  // For admin users, use the same layout as other admin pages
+  if (userType === 'admin') {
+    return (
+      <>
+        <Navigation activeSection="homework" onSectionChange={() => {}} />
+        <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+          <div className="max-w-7xl mx-auto py-4 sm:py-6">
+            <div className="bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
+              <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-3 sm:p-6">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">HOMEWORK MANAGEMENT</h1>
+                <p className="text-sm sm:text-base lg:text-lg text-gray-700">Create and Manage Student Assignments</p>
+              </div>
+              <div className="p-2 sm:p-4 lg:p-6">
+                <AdminHomework />
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // For student users, keep the existing layout
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -104,42 +126,31 @@ const Homework = () => {
             <div>
               <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
-                Homework {userType === 'admin' ? 'Management' : 'Portal'}
+                Homework Portal
               </h1>
               <p className="text-sm text-gray-600">
-                {userType === 'admin' ? 'Manage homework assignments' : 'View your assignments'}
+                View your assignments
               </p>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            {userType === 'student' ? (
-              <>
-                <Button 
-                  variant="outline" 
-                  onClick={handleBackToDashboard}
-                  className="flex items-center space-x-2"
-                >
-                  <Home className="h-4 w-4" />
-                  <span>Back to Dashboard</span>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleBackToHome}
-                  className="flex items-center space-x-2"
-                >
-                  <Home className="h-4 w-4" />
-                  <span>Home</span>
-                </Button>
-              </>
-            ) : (
-              <Button 
-                variant="outline" 
-                onClick={handleBackToDashboard}
-              >
-                Back to Dashboard
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              onClick={handleBackToDashboard}
+              className="flex items-center space-x-2"
+            >
+              <Home className="h-4 w-4" />
+              <span>Back to Dashboard</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleBackToHome}
+              className="flex items-center space-x-2"
+            >
+              <Home className="h-4 w-4" />
+              <span>Home</span>
+            </Button>
             <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
@@ -150,11 +161,7 @@ const Homework = () => {
 
       {/* Content */}
       <div className="py-6">
-        {userType === 'student' ? (
-          <StudentHomework />
-        ) : (
-          <AdminHomework />
-        )}
+        <StudentHomework />
       </div>
     </div>
   );

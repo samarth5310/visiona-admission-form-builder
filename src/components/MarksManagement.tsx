@@ -22,7 +22,6 @@ interface Student {
 }
 
 const MarksManagement = () => {
-  // ... keep existing code (state variables and initial values)
   const [marks, setMarks] = useState<StudentMark[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
