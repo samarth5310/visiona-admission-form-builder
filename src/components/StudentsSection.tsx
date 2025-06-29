@@ -50,6 +50,7 @@ const StudentsSection = () => {
       student.class.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredStudents(filtered);
+    setCurrentPage(1); // Reset to first page when filtering
   }, [searchTerm, students]);
 
   const fetchStudents = async () => {
@@ -57,77 +58,138 @@ const StudentsSection = () => {
       setLoading(true);
       console.log('Fetching students data...');
       
-      // Fetch applications with their documents
-      const { data: applications, error } = await supabase
+      // Test connection first
+      const { data: testData, error: testError } = await supabase
         .from('applications')
-        .select(`
-          *,
-          application_documents (
-            document_type,
-            file_path,
-            file_name
-          )
-        `)
+        .select('count')
+        .limit(1);
+
+      if (testError) {
+        console.error('Connection test failed:', testError);
+        throw new Error(`Database connection failed: ${testError.message}`);
+      }
+
+      console.log('Connection test successful');
+
+      // Fetch applications first
+      const { data: applications, error: applicationsError } = await supabase
+        .from('applications')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (applicationsError) {
+        console.error('Error fetching applications:', applicationsError);
+        throw new Error(`Failed to fetch applications: ${applicationsError.message}`);
+      }
 
-      const studentsWithPhotos: Student[] = applications.map(app => {
-        // Find student photo from documents
-        const documents = Array.isArray(app.application_documents) ? app.application_documents : [];
-        const photoDoc = documents.find(doc => doc.document_type === 'student_photo');
+      console.log('Applications fetched:', applications?.length || 0);
+
+      // Fetch documents separately to avoid join issues
+      const { data: documents, error: documentsError } = await supabase
+        .from('application_documents')
+        .select('application_id, document_type, file_path, file_name')
+        .eq('document_type', 'student_photo');
+
+      if (documentsError) {
+        console.warn('Error fetching documents (non-critical):', documentsError);
+      }
+
+      console.log('Documents fetched:', documents?.length || 0);
+
+      // Create a map of application_id to photo document
+      const photoMap = new Map();
+      if (documents) {
+        documents.forEach(doc => {
+          photoMap.set(doc.application_id, doc);
+        });
+      }
+
+      const studentsWithPhotos: Student[] = (applications || []).map(app => {
+        const photoDoc = photoMap.get(app.id);
         
         return {
           id: app.id,
-          admission_number: app.admission_number,
-          full_name: app.full_name,
-          date_of_birth: app.date_of_birth,
-          gender: app.gender,
-          class: app.class,
-          contact_number: app.contact_number,
-          email: app.email,
-          father_name: app.father_name,
-          mother_name: app.mother_name,
-          current_school: app.current_school,
-          category: app.category,
-          city: app.city,
-          state: app.state,
-          created_at: app.created_at,
+          admission_number: app.admission_number || '',
+          full_name: app.full_name || '',
+          date_of_birth: app.date_of_birth || '',
+          gender: app.gender || '',
+          class: app.class || '',
+          contact_number: app.contact_number || '',
+          email: app.email || '',
+          father_name: app.father_name || '',
+          mother_name: app.mother_name || '',
+          current_school: app.current_school || '',
+          category: app.category || '',
+          city: app.city || '',
+          state: app.state || '',
+          created_at: app.created_at || '',
           student_photo: photoDoc ? getPhotoUrl(photoDoc.file_path) : undefined
         };
       });
 
-      console.log('Processed students data:', studentsWithPhotos);
+      console.log('Processed students data:', studentsWithPhotos.length);
       setStudents(studentsWithPhotos);
       setFilteredStudents(studentsWithPhotos);
+      
+      toast({
+        title: "Success",
+        description: `Loaded ${studentsWithPhotos.length} students successfully.`,
+      });
     } catch (error) {
       console.error('Error fetching students:', error);
+      
+      let errorMessage = "Failed to fetch students data. Please try again.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage = "Network connection failed. Please check your internet connection and try again.";
+        } else if (error.message.includes('Database connection failed')) {
+          errorMessage = "Database connection failed. Please check your Supabase configuration.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to fetch students data. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // Set empty arrays to prevent UI issues
+      setStudents([]);
+      setFilteredStudents([]);
     } finally {
       setLoading(false);
     }
   };
 
   const getPhotoUrl = (filePath: string) => {
-    const { data } = supabase.storage
-      .from('form-documents')
-      .getPublicUrl(filePath);
-    return data.publicUrl;
+    try {
+      const { data } = supabase.storage
+        .from('form-documents')
+        .getPublicUrl(filePath);
+      return data.publicUrl;
+    } catch (error) {
+      console.warn('Error getting photo URL:', error);
+      return undefined;
+    }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return dateString;
+    }
   };
 
   const getInitials = (name: string) => {
+    if (!name) return 'NA';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
@@ -181,7 +243,6 @@ const StudentsSection = () => {
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
-                  setCurrentPage(1);
                 }}
                 className="pl-10 text-sm"
               />
@@ -210,7 +271,12 @@ const StudentsSection = () => {
             <div className="text-center py-12">
               <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600 text-lg">No students found</p>
-              <p className="text-gray-500 text-sm">Try adjusting your search criteria</p>
+              <p className="text-gray-500 text-sm">
+                {students.length === 0 
+                  ? "No students have been added yet or there was an error loading data."
+                  : "Try adjusting your search criteria"
+                }
+              </p>
             </div>
           ) : (
             <>
