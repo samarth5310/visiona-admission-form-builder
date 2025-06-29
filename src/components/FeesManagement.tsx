@@ -186,204 +186,188 @@ const FeesManagement = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
-        <div className="max-w-7xl mx-auto py-4 sm:py-6">
-          <div className="text-center py-8">
-            <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-4 text-gray-600" />
-            <p className="text-gray-600">Loading student data...</p>
-          </div>
-        </div>
+      <div className="text-center py-8">
+        <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-4 text-gray-600" />
+        <p className="text-gray-600">Loading student data...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
-      <div className="max-w-7xl mx-auto py-4 sm:py-6">
-        {/* Header */}
-        <div className="bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg mb-6">
-          <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-4 sm:p-6">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">FEES MANAGEMENT</h1>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-700">Student Fee Tracking and Payment Management</p>
+    <div className="space-y-6">
+      {/* Dashboard */}
+      <FeesDashboard />
+
+      {/* Stats and Controls */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-gray-700">
+            <Users className="h-5 w-5" />
+            <span className="font-semibold">Total Students: {students.length}</span>
           </div>
-
-          {/* Dashboard */}
-          <div className="p-4 sm:p-6">
-            <FeesDashboard />
-
-            {/* Stats and Controls */}
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Users className="h-5 w-5" />
-                  <span className="font-semibold">Total Students: {students.length}</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-700">
-                  <CreditCard className="h-5 w-5" />
-                  <span className="font-semibold">Displayed: {filteredStudents.length}</span>
-                </div>
-              </div>
-              
-              <Button 
-                onClick={fetchStudents} 
-                variant="outline" 
-                className="flex items-center gap-2"
-                disabled={loading}
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            </div>
-
-            {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search students by name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="not_set">Not Set</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="partial">Partial</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Students Grid */}
-            {filteredStudents.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                {students.length === 0 ? 'No students found' : 'No students match your search criteria'}
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {paginatedStudents.map((student) => (
-                    <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200">
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-lg font-semibold text-gray-800 truncate">
-                            {student.full_name}
-                          </CardTitle>
-                          {getStatusBadge(student.payment_status)}
-                        </div>
-                      </CardHeader>
-                      
-                      <CardContent className="pt-0">
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Class:</span>
-                            <span className="font-medium">{student.class}</span>
-                          </div>
-                          
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Phone:</span>
-                            <span className="font-medium">{student.contact_number}</span>
-                          </div>
-                          
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Applied:</span>
-                            <span className="font-medium">{formatDate(student.created_at)}</span>
-                          </div>
-                          
-                          {student.paid_date && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Paid Date:</span>
-                              <span className="font-medium text-green-600">{formatDate(student.paid_date)}</span>
-                            </div>
-                          )}
-                          
-                          <div className="border-t pt-2 mt-2">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Total Fees:</span>
-                              <span className="font-medium text-blue-600">
-                                {student.total_fees > 0 ? formatCurrency(student.total_fees) : 'Not Set'}
-                              </span>
-                            </div>
-                            
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Paid:</span>
-                              <span className="font-medium text-green-600">
-                                {formatCurrency(student.paid_amount)}
-                              </span>
-                            </div>
-                            
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Pending:</span>
-                              <span className="font-medium text-red-600">
-                                {student.total_fees > 0 ? formatCurrency(student.pending_amount) : 'Not Set'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <Button 
-                            className="w-full mt-3" 
-                            variant="outline"
-                            onClick={() => handleManageFees(student)}
-                          >
-                            Manage Fees
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {pageCount > 1 && (
-                  <div className="mt-8 flex justify-center">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            href="#"
-                            onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                            aria-disabled={currentPage === 1}
-                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                          />
-                        </PaginationItem>
-                        <PaginationItem>
-                          <span className="px-4 py-2 text-sm font-medium">
-                            Page {currentPage} of {pageCount}
-                          </span>
-                        </PaginationItem>
-                        <PaginationItem>
-                          <PaginationNext
-                            href="#"
-                            onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                            aria-disabled={currentPage === pageCount}
-                            className={currentPage === pageCount ? 'pointer-events-none opacity-50' : ''}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
-              </>
-            )}
+          <div className="flex items-center gap-2 text-gray-700">
+            <CreditCard className="h-5 w-5" />
+            <span className="font-semibold">Displayed: {filteredStudents.length}</span>
           </div>
         </div>
-
-        {/* Fee Details Modal */}
-        <FeeDetailsModal
-          student={selectedStudent}
-          isOpen={showModal}
-          onClose={handleModalClose}
-          onUpdate={handleModalUpdate}
-        />
         
-        <InstallPWAButton />
+        <Button 
+          onClick={fetchStudents} 
+          variant="outline" 
+          className="flex items-center gap-2"
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
+
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search students by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="not_set">Not Set</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="partial">Partial</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Students Grid */}
+      {filteredStudents.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          {students.length === 0 ? 'No students found' : 'No students match your search criteria'}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {paginatedStudents.map((student) => (
+              <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg font-semibold text-gray-800 truncate">
+                      {student.full_name}
+                    </CardTitle>
+                    {getStatusBadge(student.payment_status)}
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="pt-0">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Class:</span>
+                      <span className="font-medium">{student.class}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Phone:</span>
+                      <span className="font-medium">{student.contact_number}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Applied:</span>
+                      <span className="font-medium">{formatDate(student.created_at)}</span>
+                    </div>
+                    
+                    {student.paid_date && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Paid Date:</span>
+                        <span className="font-medium text-green-600">{formatDate(student.paid_date)}</span>
+                      </div>
+                    )}
+                    
+                    <div className="border-t pt-2 mt-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Fees:</span>
+                        <span className="font-medium text-blue-600">
+                          {student.total_fees > 0 ? formatCurrency(student.total_fees) : 'Not Set'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Paid:</span>
+                        <span className="font-medium text-green-600">
+                          {formatCurrency(student.paid_amount)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Pending:</span>
+                        <span className="font-medium text-red-600">
+                          {student.total_fees > 0 ? formatCurrency(student.pending_amount) : 'Not Set'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      className="w-full mt-3" 
+                      variant="outline"
+                      onClick={() => handleManageFees(student)}
+                    >
+                      Manage Fees
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {pageCount > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                      aria-disabled={currentPage === 1}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="px-4 py-2 text-sm font-medium">
+                      Page {currentPage} of {pageCount}
+                    </span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                      aria-disabled={currentPage === pageCount}
+                      className={currentPage === pageCount ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Fee Details Modal */}
+      <FeeDetailsModal
+        student={selectedStudent}
+        isOpen={showModal}
+        onClose={handleModalClose}
+        onUpdate={handleModalUpdate}
+      />
+      
+      <InstallPWAButton />
     </div>
   );
 };
