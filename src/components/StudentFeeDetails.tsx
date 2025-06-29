@@ -137,15 +137,15 @@ const StudentFeeDetails = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <CreditCard className="h-5 w-5" />
             Fee Details
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
+          <div className="text-center py-8 sm:py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-500 mt-2">Loading fee details...</p>
+            <p className="text-gray-500 mt-2 text-sm sm:text-base">Loading fee details...</p>
           </div>
         </CardContent>
       </Card>
@@ -156,17 +156,17 @@ const StudentFeeDetails = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <CreditCard className="h-5 w-5" />
             Fee Details
           </CardTitle>
-          <CardDescription>Your fee information and payment history</CardDescription>
+          <CardDescription className="text-sm sm:text-base">Your fee information and payment history</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
+          <div className="text-center py-8 sm:py-12">
             <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No fee details available</p>
-            <p className="text-sm text-gray-400">Fee information will appear here once set up by the admin</p>
+            <p className="text-gray-500 text-sm sm:text-base">No fee details available</p>
+            <p className="text-xs sm:text-sm text-gray-400 mt-1">Fee information will appear here once set up by the admin</p>
           </div>
         </CardContent>
       </Card>
@@ -174,65 +174,65 @@ const StudentFeeDetails = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
       {/* Fee Summary */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <CreditCard className="h-5 w-5" />
             Fee Summary
           </CardTitle>
-          <CardDescription>Your current fee status and payment information</CardDescription>
+          <CardDescription className="text-sm sm:text-base">Your current fee status and payment information</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
+        <CardContent className="p-3 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <IndianRupee className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">Total Fees</span>
+                <span className="text-xs sm:text-sm font-medium text-blue-800">Total Fees</span>
               </div>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-lg sm:text-2xl font-bold text-blue-900">
                 ₹{feeDetails.total_fees.toLocaleString()}
               </p>
             </div>
 
-            <div className="bg-green-50 p-4 rounded-lg">
+            <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <IndianRupee className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-green-800">Paid Amount</span>
+                <span className="text-xs sm:text-sm font-medium text-green-800">Paid Amount</span>
               </div>
-              <p className="text-2xl font-bold text-green-900">
+              <p className="text-lg sm:text-2xl font-bold text-green-900">
                 ₹{feeDetails.paid_amount.toLocaleString()}
               </p>
             </div>
 
-            <div className="bg-red-50 p-4 rounded-lg">
+            <div className="bg-red-50 p-3 sm:p-4 rounded-lg sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2 mb-2">
                 <IndianRupee className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-medium text-red-800">Pending Amount</span>
+                <span className="text-xs sm:text-sm font-medium text-red-800">Pending Amount</span>
               </div>
-              <p className="text-2xl font-bold text-red-900">
+              <p className="text-lg sm:text-2xl font-bold text-red-900">
                 ₹{feeDetails.pending_amount.toLocaleString()}
               </p>
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="text-sm text-gray-600">Payment Status</p>
-              <Badge className={`${getStatusColor(feeDetails.payment_status)} text-white mt-1`}>
+              <p className="text-xs sm:text-sm text-gray-600">Payment Status</p>
+              <Badge className={`${getStatusColor(feeDetails.payment_status)} text-white mt-1 text-xs`}>
                 {getStatusText(feeDetails.payment_status)}
               </Badge>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Fee Category</p>
-              <p className="font-medium capitalize">{feeDetails.fee_category}</p>
+            <div className="sm:text-right">
+              <p className="text-xs sm:text-sm text-gray-600">Fee Category</p>
+              <p className="font-medium capitalize text-sm sm:text-base">{feeDetails.fee_category}</p>
             </div>
           </div>
 
           {feeDetails.paid_date && (
-            <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-              <Calendar className="h-4 w-4" />
+            <div className="mt-3 sm:mt-4 flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+              <Calendar className="h-4 w-4 shrink-0" />
               <span>Last Payment: {new Date(feeDetails.paid_date).toLocaleDateString()}</span>
             </div>
           )}
@@ -242,41 +242,41 @@ const StudentFeeDetails = () => {
       {/* Payment History */}
       {paymentHistory.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Receipt className="h-5 w-5" />
               Payment History
             </CardTitle>
-            <CardDescription>Record of all your fee payments</CardDescription>
+            <CardDescription className="text-sm sm:text-base">Record of all your fee payments</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-3 sm:p-6">
+            <div className="space-y-3 sm:space-y-4">
               {paymentHistory.map((payment) => (
-                <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
+                <div key={payment.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-3 sm:gap-0">
+                  <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <IndianRupee className="h-4 w-4 text-green-600" />
-                      <span className="font-semibold">₹{payment.payment_amount.toLocaleString()}</span>
+                      <IndianRupee className="h-4 w-4 text-green-600 shrink-0" />
+                      <span className="font-semibold text-sm sm:text-base">₹{payment.payment_amount.toLocaleString()}</span>
                     </div>
-                    <p className="text-sm text-gray-600 capitalize">
+                    <p className="text-xs sm:text-sm text-gray-600 capitalize">
                       {payment.payment_method}
                     </p>
                     {payment.receipt_number && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 mt-0.5">
                         Receipt: {payment.receipt_number}
                       </p>
                     )}
                     {payment.notes && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
                         {payment.notes}
                       </p>
                     )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">
+                  <div className="sm:text-right flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2">
+                    <p className="text-xs sm:text-sm font-medium">
                       {new Date(payment.payment_date).toLocaleDateString()}
                     </p>
-                    <Badge variant="outline" className="mt-1">
+                    <Badge variant="outline" className="text-xs">
                       Paid
                     </Badge>
                   </div>
@@ -289,24 +289,24 @@ const StudentFeeDetails = () => {
 
       {/* Payment Progress */}
       <Card>
-        <CardHeader>
-          <CardTitle>Payment Progress</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg">Payment Progress</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6">
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span>Payment Completion</span>
-              <span>{((feeDetails.paid_amount / feeDetails.total_fees) * 100).toFixed(1)}%</span>
+              <span className="font-medium">{((feeDetails.paid_amount / feeDetails.total_fees) * 100).toFixed(1)}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
               <div 
-                className="bg-green-500 h-3 rounded-full transition-all duration-300"
+                className="bg-green-500 h-2 sm:h-3 rounded-full transition-all duration-300"
                 style={{ 
                   width: `${Math.min((feeDetails.paid_amount / feeDetails.total_fees) * 100, 100)}%` 
                 }}
               />
             </div>
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-gray-500 pt-1">
               <span>₹{feeDetails.paid_amount.toLocaleString()} paid</span>
               <span>₹{feeDetails.total_fees.toLocaleString()} total</span>
             </div>

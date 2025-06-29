@@ -91,9 +91,9 @@ const WhatsAppMessaging = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-blue-700">
+          <DialogTitle className="flex items-center gap-2 text-blue-700 text-lg sm:text-xl">
             <MessageCircle className="h-5 w-5 text-green-600" />
             Send WhatsApp Message
           </DialogTitle>
@@ -102,22 +102,22 @@ const WhatsAppMessaging = ({
         <div className="space-y-4">
           <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-600 font-medium">Sending to:</p>
-            <p className="font-medium text-gray-900">{studentName}</p>
+            <p className="font-medium text-gray-900 text-sm sm:text-base">{studentName}</p>
             <p className="text-sm text-gray-600">+91 {phoneNumber}</p>
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-blue-700 font-medium">Message Preview</Label>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+              <Label className="text-blue-700 font-medium text-sm sm:text-base">Message Preview</Label>
               {!isEditing && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleEditMessage}
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 w-fit"
                 >
                   <Edit3 className="h-3 w-3" />
-                  Edit
+                  <span className="text-xs sm:text-sm">Edit</span>
                 </Button>
               )}
             </div>
@@ -126,29 +126,29 @@ const WhatsAppMessaging = ({
               <Textarea
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
-                rows={10}
-                className="text-sm font-mono border-blue-200 focus:border-blue-400"
+                rows={8}
+                className="text-xs sm:text-sm font-mono border-blue-200 focus:border-blue-400"
                 placeholder="Edit your WhatsApp message..."
               />
             ) : (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs sm:text-sm font-mono whitespace-pre-wrap max-h-48 sm:max-h-64 overflow-y-auto">
                 {getDefaultMessage()}
               </div>
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button 
               type="button" 
               variant="outline" 
               onClick={onClose} 
-              className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+              className="w-full sm:flex-1 border-blue-200 text-blue-700 hover:bg-blue-50 text-sm"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleSendWhatsApp}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+              className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 text-sm"
             >
               <Send className="h-4 w-4" />
               Send WhatsApp
@@ -156,7 +156,7 @@ const WhatsAppMessaging = ({
           </div>
 
           {isEditing && (
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -164,7 +164,7 @@ const WhatsAppMessaging = ({
                   setIsEditing(false);
                   setCustomMessage('');
                 }}
-                className="flex-1 text-blue-600 hover:bg-blue-50"
+                className="w-full sm:flex-1 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm"
               >
                 Cancel Edit
               </Button>
@@ -172,7 +172,7 @@ const WhatsAppMessaging = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setCustomMessage(getDefaultMessage())}
-                className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                className="w-full sm:flex-1 border-blue-200 text-blue-700 hover:bg-blue-50 text-xs sm:text-sm"
               >
                 Reset to Default
               </Button>
