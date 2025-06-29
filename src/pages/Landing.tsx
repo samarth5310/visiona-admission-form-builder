@@ -82,12 +82,48 @@ const Landing = () => {
 
   // Exam badges with unique colors and hover effects
   const examBadges = [
-    { name: 'Navodaya', bgColor: 'bg-blue-600', hoverColor: 'hover:bg-blue-700', textColor: 'text-white' },
-    { name: 'Sainik', bgColor: 'bg-green-600', hoverColor: 'hover:bg-green-700', textColor: 'text-white' },
-    { name: 'Morarji', bgColor: 'bg-purple-600', hoverColor: 'hover:bg-purple-700', textColor: 'text-white' },
-    { name: 'Kittur', bgColor: 'bg-orange-600', hoverColor: 'hover:bg-orange-700', textColor: 'text-white' },
-    { name: 'RMS', bgColor: 'bg-red-600', hoverColor: 'hover:bg-red-700', textColor: 'text-white' },
-    { name: 'Alvas', bgColor: 'bg-indigo-600', hoverColor: 'hover:bg-indigo-700', textColor: 'text-white' }
+    { 
+      name: 'Navodaya', 
+      bgColor: 'bg-emerald-600', 
+      hoverColor: 'hover:bg-emerald-500', 
+      textColor: 'text-white',
+      shadowColor: 'hover:shadow-emerald-500/50'
+    },
+    { 
+      name: 'Sainik', 
+      bgColor: 'bg-blue-600', 
+      hoverColor: 'hover:bg-blue-500', 
+      textColor: 'text-white',
+      shadowColor: 'hover:shadow-blue-500/50'
+    },
+    { 
+      name: 'Morarji', 
+      bgColor: 'bg-purple-600', 
+      hoverColor: 'hover:bg-purple-500', 
+      textColor: 'text-white',
+      shadowColor: 'hover:shadow-purple-500/50'
+    },
+    { 
+      name: 'Kittur', 
+      bgColor: 'bg-orange-600', 
+      hoverColor: 'hover:bg-orange-500', 
+      textColor: 'text-white',
+      shadowColor: 'hover:shadow-orange-500/50'
+    },
+    { 
+      name: 'RMS', 
+      bgColor: 'bg-red-600', 
+      hoverColor: 'hover:bg-red-500', 
+      textColor: 'text-white',
+      shadowColor: 'hover:shadow-red-500/50'
+    },
+    { 
+      name: 'Alvas', 
+      bgColor: 'bg-indigo-600', 
+      hoverColor: 'hover:bg-indigo-500', 
+      textColor: 'text-white',
+      shadowColor: 'hover:shadow-indigo-500/50'
+    }
   ];
 
   return (
@@ -206,7 +242,7 @@ const Landing = () => {
                 {examBadges.map((exam, index) => (
                   <span 
                     key={index}
-                    className={`${exam.bgColor} ${exam.hoverColor} ${exam.textColor} px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-sm cursor-pointer transform transition-all duration-300 hover:scale-110 hover:shadow-lg`}
+                    className={`${exam.bgColor} ${exam.hoverColor} ${exam.textColor} ${exam.shadowColor} px-3 sm:px-5 py-2 sm:py-3 rounded-full shadow-lg cursor-pointer transform transition-all duration-300 hover:scale-110 hover:shadow-xl hover:-translate-y-1 font-semibold`}
                   >
                     {exam.name}
                   </span>
