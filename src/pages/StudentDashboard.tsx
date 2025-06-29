@@ -160,11 +160,6 @@ const StudentDashboard = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Leaderboard Section - Always visible at top */}
-        <div className="mb-6">
-          <StudentLeaderboard />
-        </div>
-
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="grid w-full grid-cols-4 h-auto">
             <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3">
@@ -297,6 +292,11 @@ const StudentDashboard = () => {
             <StudentFeeDetails />
           </TabsContent>
         </Tabs>
+
+        {/* Leaderboard Section - Moved to bottom */}
+        <div className="mt-8">
+          <StudentLeaderboard />
+        </div>
       </div>
     </div>
   );
