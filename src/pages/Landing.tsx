@@ -398,7 +398,24 @@ const Landing = () => {
                   <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-[#657a00]" />
                 </div>
                 <h4 className="font-semibold text-white mb-2 text-sm sm:text-base">{t.contact}</h4>
-                <p className="text-xs sm:text-sm text-gray-300">+91 8722189292<br />+91 73494 20496</p>
+                <div className="space-y-1">
+                  <a 
+                    href="https://wa.me/918722189292" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block text-xs sm:text-sm text-gray-300 hover:text-[#beef00] transition-colors duration-200 underline decoration-dotted hover:decoration-solid"
+                  >
+                    +91 8722189292
+                  </a>
+                  <a 
+                    href="https://wa.me/917349420496" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block text-xs sm:text-sm text-gray-300 hover:text-[#beef00] transition-colors duration-200 underline decoration-dotted hover:decoration-solid"
+                  >
+                    +91 73494 20496
+                  </a>
+                </div>
               </div>
 
               <div className="flex flex-col items-center">
