@@ -1,18 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, GraduationCap, Calendar, User, MessageCircle, Users, UserCheck } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, GraduationCap, Edit2, Trash2, MessageCircle } from 'lucide-react';
+import type { StudentMark, MarkFormData } from '@/types/marks';
 
 interface Student {
   id: string;
@@ -21,62 +18,51 @@ interface Student {
   contact_number: string;
 }
 
-interface ClassInfo {
-  class: string;
-  student_count: number;
-}
-
-interface StudentMark {
-  id: string;
-  student_id: string;
-  subject: string;
-  total_marks: number;
-  marks_obtained: number;
-  test_name: string;
-  test_date: string;
-  created_at: string;
-  updated_at: string;
-  student_name?: string;
-  student_class?: string;
-  contact_number?: string;
-}
-
-interface MarksFormData {
-  subject: string;
-  total_marks: string;
-  marks_obtained: string;
-  test_name: string;
-  test_date: string;
-  assignment_type: 'class' | 'student';
-  assigned_to_class: string;
-  assigned_to_students: string[];
-}
-
 const MarksManagement = () => {
-  const [marks, setMarks] = useState<StudentMark[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<ClassInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingMark, setEditingMark] = useState<StudentMark | null>(null);
-  const [selectedMarks, setSelectedMarks] = useState<StudentMark[]>([]);
+  const [marks, setMarks] = useState<(StudentMark & { student_name: string; contact_number: string })[]>([]);
+  const [classes, setClasses] = useState<string[]>([]);
+  const [formData, setFormData] = useState<MarkFormData>({
+    student_id: '',
+    subject: '',
+    total_marks: 0,
+    marks_obtained: 0,
+    test_name: '',
+    test_date: ''
+  });
+  const [entryType, setEntryType] = useState<'individual' | 'bulk'>('individual');
+  const [selectedClass, setSelectedClass] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState<MarksFormData>({
-    subject: '',
-    total_marks: '',
-    marks_obtained: '',
-    test_name: '',
-    test_date: new Date().toISOString().split('T')[0],
-    assignment_type: 'class',
-    assigned_to_class: '',
-    assigned_to_students: []
-  });
-
   useEffect(() => {
-    fetchMarks();
     fetchStudentsAndClasses();
+    fetchMarks();
   }, []);
+
+  const fetchStudentsAndClasses = async () => {
+    try {
+      const { data: studentsData, error } = await supabase
+        .from('applications')
+        .select('id, full_name, class, contact_number')
+        .order('full_name');
+
+      if (error) throw error;
+
+      setStudents(studentsData || []);
+      
+      const uniqueClasses = [...new Set(studentsData?.map(s => s.class) || [])];
+      setClasses(uniqueClasses.sort());
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch students",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchMarks = async () => {
     try {
@@ -84,212 +70,192 @@ const MarksManagement = () => {
         .from('student_marks')
         .select(`
           *,
-          applications (
-            full_name,
-            class,
-            contact_number
-          )
+          applications(full_name, contact_number)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const marksWithStudentInfo = data.map(mark => ({
+      const marksWithNames = data?.map(mark => ({
         ...mark,
-        student_name: mark.applications?.full_name,
-        student_class: mark.applications?.class,
-        contact_number: mark.applications?.contact_number
-      }));
+        student_name: mark.applications?.full_name || 'Unknown',
+        contact_number: mark.applications?.contact_number || ''
+      })) || [];
 
-      setMarks(marksWithStudentInfo || []);
+      setMarks(marksWithNames);
     } catch (error) {
       console.error('Error fetching marks:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch marks data.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStudentsAndClasses = async () => {
-    try {
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('applications')
-        .select('id, full_name, class, contact_number')
-        .order('class', { ascending: true })
-        .order('full_name', { ascending: true });
-
-      if (studentsError) throw studentsError;
-
-      const students: Student[] = studentsData || [];
-      setStudents(students);
-
-      // Group students by class to get class information
-      const classGroups = students.reduce((acc, student) => {
-        if (!acc[student.class]) {
-          acc[student.class] = 0;
-        }
-        acc[student.class]++;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const classInfo: ClassInfo[] = Object.entries(classGroups).map(([className, count]) => ({
-        class: className,
-        student_count: count
-      })).sort((a, b) => a.class.localeCompare(b.class));
-
-      setClasses(classInfo);
-    } catch (error) {
-      console.error('Error fetching students and classes:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch students and classes.",
+        description: "Failed to fetch marks",
         variant: "destructive",
       });
     }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      subject: '',
-      total_marks: '',
-      marks_obtained: '',
-      test_name: '',
-      test_date: new Date().toISOString().split('T')[0],
-      assignment_type: 'class',
-      assigned_to_class: '',
-      assigned_to_students: []
-    });
-    setEditingMark(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.subject.trim() || !formData.total_marks || !formData.marks_obtained || !formData.test_name.trim()) {
+    if (!formData.student_id || !formData.subject.trim() || !formData.test_name.trim() || !formData.test_date) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
     }
 
-    const totalMarks = Number(formData.total_marks);
-    const marksObtained = Number(formData.marks_obtained);
-
-    if (marksObtained > totalMarks) {
+    if (formData.marks_obtained > formData.total_marks) {
       toast({
         title: "Validation Error",
-        description: "Marks obtained cannot be greater than total marks.",
+        description: "Marks obtained cannot be greater than total marks",
         variant: "destructive",
       });
       return;
     }
 
-    if (formData.assignment_type === 'class' && !formData.assigned_to_class.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please select a class.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (formData.assignment_type === 'student' && formData.assigned_to_students.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please select at least one student.",
-        variant: "destructive",
-      });
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
-      let studentsToUpdate: string[] = [];
-
-      if (formData.assignment_type === 'class') {
-        const classStudents = students.filter(s => s.class === formData.assigned_to_class);
-        studentsToUpdate = classStudents.map(s => s.id);
-      } else {
-        studentsToUpdate = formData.assigned_to_students;
-      }
-
-      const marksData = studentsToUpdate.map(studentId => ({
-        student_id: studentId,
-        subject: formData.subject,
-        total_marks: totalMarks,
-        marks_obtained: marksObtained,
-        test_name: formData.test_name,
+      const markData = {
+        student_id: formData.student_id,
+        subject: formData.subject.trim(),
+        total_marks: formData.total_marks,
+        marks_obtained: formData.marks_obtained,
+        test_name: formData.test_name.trim(),
         test_date: formData.test_date
-      }));
+      };
 
-      if (editingMark) {
+      if (editingId) {
         const { error } = await supabase
           .from('student_marks')
-          .update({
-            subject: formData.subject,
-            total_marks: totalMarks,
-            marks_obtained: marksObtained,
-            test_name: formData.test_name,
-            test_date: formData.test_date
-          })
-          .eq('id', editingMark.id);
+          .update(markData)
+          .eq('id', editingId);
 
         if (error) throw error;
 
         toast({
           title: "Success",
-          description: "Marks updated successfully.",
+          description: "Marks updated successfully!",
         });
       } else {
         const { error } = await supabase
           .from('student_marks')
-          .insert(marksData);
+          .insert([markData]);
 
         if (error) throw error;
 
         toast({
           title: "Success",
-          description: `Marks added for ${studentsToUpdate.length} student(s) successfully.`,
+          description: "Marks added successfully!",
         });
       }
 
-      setIsDialogOpen(false);
-      resetForm();
+      setFormData({
+        student_id: '',
+        subject: '',
+        total_marks: 0,
+        marks_obtained: 0,
+        test_name: '',
+        test_date: ''
+      });
+      setEditingId(null);
       fetchMarks();
     } catch (error) {
       console.error('Error saving marks:', error);
       toast({
         title: "Error",
-        description: "Failed to save marks.",
+        description: "Failed to save marks. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleEdit = (mark: StudentMark) => {
-    setEditingMark(mark);
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedClass || !formData.subject.trim() || !formData.test_name.trim() || !formData.test_date) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.marks_obtained > formData.total_marks) {
+      toast({
+        title: "Validation Error",
+        description: "Marks obtained cannot be greater than total marks",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const classStudents = students.filter(s => s.class === selectedClass);
+      
+      const bulkMarks = classStudents.map(student => ({
+        student_id: student.id,
+        subject: formData.subject.trim(),
+        total_marks: formData.total_marks,
+        marks_obtained: formData.marks_obtained,
+        test_name: formData.test_name.trim(),
+        test_date: formData.test_date
+      }));
+
+      const { error } = await supabase
+        .from('student_marks')
+        .insert(bulkMarks);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Marks added for ${classStudents.length} students!`,
+      });
+
+      setFormData({
+        student_id: '',
+        subject: '',
+        total_marks: 0,
+        marks_obtained: 0,
+        test_name: '',
+        test_date: ''
+      });
+      setSelectedClass('');
+      fetchMarks();
+    } catch (error) {
+      console.error('Error saving bulk marks:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save bulk marks. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEdit = (mark: StudentMark & { student_name: string }) => {
     setFormData({
+      student_id: mark.student_id,
       subject: mark.subject,
-      total_marks: mark.total_marks.toString(),
-      marks_obtained: mark.marks_obtained.toString(),
+      total_marks: mark.total_marks,
+      marks_obtained: mark.marks_obtained,
       test_name: mark.test_name,
-      test_date: mark.test_date,
-      assignment_type: 'student',
-      assigned_to_class: '',
-      assigned_to_students: [mark.student_id]
+      test_date: mark.test_date
     });
-    setIsDialogOpen(true);
+    setEditingId(mark.id);
+    setEntryType('individual');
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this mark entry?')) {
-      return;
-    }
+    if (!confirm('Are you sure you want to delete this mark entry?')) return;
 
     try {
       const { error } = await supabase
@@ -301,227 +267,103 @@ const MarksManagement = () => {
 
       toast({
         title: "Success",
-        description: "Mark entry deleted successfully.",
+        description: "Mark entry deleted successfully!",
       });
-
       fetchMarks();
     } catch (error) {
       console.error('Error deleting mark:', error);
       toast({
         title: "Error",
-        description: "Failed to delete mark entry.",
+        description: "Failed to delete mark entry",
         variant: "destructive",
       });
     }
   };
 
-  const getStudentsByClass = (className: string) => {
-    return students.filter(student => student.class === className);
-  };
+  const sendWhatsAppMessage = (mark: StudentMark & { student_name: string; contact_number: string }) => {
+    const message = `ನಮಸ್ಕಾರ, ನಿಮ್ಮ ಮಗು ${mark.student_name} ಯವರು ${mark.test_name} ಪರೀಕ್ಷೆಯಲ್ಲಿ ಈ ಕೆಳಗಿನಂತೆ ಅಂಕಗಳನ್ನು ಪಡೆದಿದ್ದಾರೆ (ಪರೀಕ್ಷೆ ದಿನಾಂಕ: ${new Date(mark.test_date).toLocaleDateString()}):
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+ವಿಷಯ: ${mark.subject} – ${mark.marks_obtained}/${mark.total_marks}
 
-  const generateWhatsAppMessage = (studentMarks: StudentMark[]) => {
-    if (studentMarks.length === 0) return '';
+ಧನ್ಯವಾದಗಳು,
+VISIONA EDUCATION ACADEMY`;
 
-    const student = studentMarks[0];
-    const testName = student.test_name;
-    const testDate = formatDate(student.test_date);
-    
-    let message = `ನಮಸ್ಕಾರ, ನಿಮ್ಮ ಮಗು ${student.student_name} ಯವರು ${testName} ಪರೀಕ್ಷೆಯಲ್ಲಿ ಈ ಕೆಳಗಿನಂತೆ ಅಂಕಗಳನ್ನು ಪಡೆದಿದ್ದಾರೆ (ಪರೀಕ್ಷೆ ದಿನಾಂಕ: ${testDate}):\n\n`;
-
-    studentMarks.forEach(mark => {
-      message += `ವಿಷಯ: ${mark.subject} – ${mark.marks_obtained}/${mark.total_marks}\n`;
-    });
-
-    message += `\nಧನ್ಯವಾದಗಳು,\nVISIONA EDUCATION ACADEMY`;
-
-    return message;
-  };
-
-  const sendWhatsAppMessage = (studentMarks: StudentMark[]) => {
-    if (studentMarks.length === 0) return;
-
-    const student = studentMarks[0];
-    const message = generateWhatsAppMessage(studentMarks);
-    const phoneNumber = student.contact_number?.replace(/[^0-9]/g, '');
-    
-    if (!phoneNumber) {
-      toast({
-        title: "Error",
-        description: "Student's phone number not found.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const whatsappUrl = `https://wa.me/91${phoneNumber}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/${mark.contact_number}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
-  const groupMarksByStudent = () => {
-    const grouped = marks.reduce((acc, mark) => {
-      if (!acc[mark.student_id]) {
-        acc[mark.student_id] = [];
-      }
-      acc[mark.student_id].push(mark);
-      return acc;
-    }, {} as Record<string, StudentMark[]>);
-
-    return Object.values(grouped);
+  const getFilteredStudents = () => {
+    return entryType === 'individual' ? students : students.filter(s => s.class === selectedClass);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading marks management...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Marks Management</h1>
-          <p className="text-gray-600">Add and manage student marks for tests and exams</p>
-        </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Marks
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingMark ? 'Edit Marks' : 'Add New Marks'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="subject">Subject *</Label>
-                  <Input
-                    id="subject"
-                    value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    placeholder="Enter subject name"
-                    required
-                  />
-                </div>
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <Tabs defaultValue="add" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="add" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Marks
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4" />
+            Manage Marks
+          </TabsTrigger>
+        </TabsList>
 
-                <div>
-                  <Label htmlFor="test_name">Test Name *</Label>
-                  <Input
-                    id="test_name"
-                    value={formData.test_name}
-                    onChange={(e) => setFormData({...formData, test_name: e.target.value})}
-                    placeholder="Enter test name"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="total_marks">Total Marks *</Label>
-                  <Input
-                    id="total_marks"
-                    type="number"
-                    min="1"
-                    value={formData.total_marks}
-                    onChange={(e) => setFormData({...formData, total_marks: e.target.value})}
-                    placeholder="100"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="marks_obtained">Marks Obtained *</Label>
-                  <Input
-                    id="marks_obtained"
-                    type="number"
-                    min="0"
-                    max={formData.total_marks || undefined}
-                    value={formData.marks_obtained}
-                    onChange={(e) => setFormData({...formData, marks_obtained: e.target.value})}
-                    placeholder="85"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="test_date">Test Date *</Label>
-                  <Input
-                    id="test_date"
-                    type="date"
-                    value={formData.test_date}
-                    onChange={(e) => setFormData({...formData, test_date: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-
-              {!editingMark && (
-                <>
+        <TabsContent value="add">
+          <Card>
+            <CardHeader>
+              <CardTitle>{editingId ? 'Edit Marks' : 'Add Student Marks'}</CardTitle>
+              <CardDescription>
+                {editingId ? 'Update the mark entry' : 'Add marks for individual students or entire class'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {!editingId && (
                   <div>
-                    <Label>Assignment Type *</Label>
-                    <RadioGroup
-                      value={formData.assignment_type}
-                      onValueChange={(value: 'class' | 'student') => {
+                    <Label>Entry Type</Label>
+                    <Select
+                      value={entryType}
+                      onValueChange={(value: 'individual' | 'bulk') => {
+                        setEntryType(value);
                         setFormData({
-                          ...formData, 
-                          assignment_type: value,
-                          assigned_to_class: '',
-                          assigned_to_students: []
+                          student_id: '',
+                          subject: '',
+                          total_marks: 0,
+                          marks_obtained: 0,
+                          test_name: '',
+                          test_date: ''
                         });
+                        setSelectedClass('');
                       }}
-                      className="flex space-x-6 mt-2"
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="class" id="class" />
-                        <Label htmlFor="class" className="flex items-center">
-                          <Users className="h-4 w-4 mr-1" />
-                          Assign to Class
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="student" id="student" />
-                        <Label htmlFor="student" className="flex items-center">
-                          <UserCheck className="h-4 w-4 mr-1" />
-                          Assign to Specific Students
-                        </Label>
-                      </div>
-                    </RadioGroup>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="individual">Individual Student</SelectItem>
+                        <SelectItem value="bulk">Entire Class</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
+                )}
 
-                  {formData.assignment_type === 'class' && (
+                <form onSubmit={entryType === 'bulk' ? handleBulkSubmit : handleSubmit} className="space-y-6">
+                  {entryType === 'bulk' && !editingId && (
                     <div>
                       <Label htmlFor="class">Select Class *</Label>
                       <Select
-                        value={formData.assigned_to_class}
-                        onValueChange={(value) => setFormData({...formData, assigned_to_class: value})}
+                        value={selectedClass}
+                        onValueChange={setSelectedClass}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select class" />
+                          <SelectValue placeholder="Select a class" />
                         </SelectTrigger>
                         <SelectContent>
-                          {classes.map((classInfo) => (
-                            <SelectItem key={classInfo.class} value={classInfo.class}>
-                              {classInfo.class} ({classInfo.student_count} students)
+                          {classes.map((className) => (
+                            <SelectItem key={className} value={className}>
+                              {className}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -529,213 +371,178 @@ const MarksManagement = () => {
                     </div>
                   )}
 
-                  {formData.assignment_type === 'student' && (
+                  {entryType === 'individual' && (
                     <div>
-                      <Label>Select Students *</Label>
-                      <div className="mt-2 space-y-2">
-                        <div className="text-sm text-gray-600 mb-2">
-                          Selected: {formData.assigned_to_students.length} students
-                        </div>
-                        <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
-                          {classes.map((classInfo) => (
-                            <div key={classInfo.class}>
-                              <div className="font-medium text-sm text-gray-700 mb-2">
-                                {classInfo.class} ({classInfo.student_count} students)
-                              </div>
-                              <div className="ml-4 space-y-1">
-                                {getStudentsByClass(classInfo.class).map((student) => (
-                                  <div key={student.id} className="flex items-center space-x-2">
-                                    <Checkbox
-                                      id={student.id}
-                                      checked={formData.assigned_to_students.includes(student.id)}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          setFormData({
-                                            ...formData,
-                                            assigned_to_students: [...formData.assigned_to_students, student.id]
-                                          });
-                                        } else {
-                                          setFormData({
-                                            ...formData,
-                                            assigned_to_students: formData.assigned_to_students.filter(id => id !== student.id)
-                                          });
-                                        }
-                                      }}
-                                    />
-                                    <Label htmlFor={student.id} className="text-sm">
-                                      {student.full_name}
-                                    </Label>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                      <Label htmlFor="student">Select Student *</Label>
+                      <Select
+                        value={formData.student_id}
+                        onValueChange={(value) => setFormData({ ...formData, student_id: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a student" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {students.map((student) => (
+                            <SelectItem key={student.id} value={student.id}>
+                              {student.full_name} - {student.class}
+                            </SelectItem>
                           ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="subject">Subject *</Label>
+                      <Input
+                        id="subject"
+                        value={formData.subject}
+                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                        placeholder="Enter subject name"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="test_name">Test Name *</Label>
+                      <Input
+                        id="test_name"
+                        value={formData.test_name}
+                        onChange={(e) => setFormData({ ...formData, test_name: e.target.value })}
+                        placeholder="Enter test name"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <Label htmlFor="total_marks">Total Marks *</Label>
+                      <Input
+                        id="total_marks"
+                        type="number"
+                        min="0"
+                        value={formData.total_marks}
+                        onChange={(e) => setFormData({ ...formData, total_marks: Number(e.target.value) })}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="marks_obtained">Marks Obtained *</Label>
+                      <Input
+                        id="marks_obtained"
+                        type="number"
+                        min="0"
+                        max={formData.total_marks}
+                        value={formData.marks_obtained}
+                        onChange={(e) => setFormData({ ...formData, marks_obtained: Number(e.target.value) })}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="test_date">Test Date *</Label>
+                      <Input
+                        id="test_date"
+                        type="date"
+                        value={formData.test_date}
+                        onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <Button type="submit" disabled={isSubmitting} className="flex-1">
+                      {isSubmitting ? (editingId ? 'Updating...' : (entryType === 'bulk' ? 'Adding for Class...' : 'Adding...')) : 
+                       (editingId ? 'Update Marks' : (entryType === 'bulk' ? 'Add for Entire Class' : 'Add Marks'))}
+                    </Button>
+                    {editingId && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => {
+                          setEditingId(null);
+                          setFormData({
+                            student_id: '',
+                            subject: '',
+                            total_marks: 0,
+                            marks_obtained: 0,
+                            test_name: '',
+                            test_date: ''
+                          });
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="manage">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manage Student Marks</CardTitle>
+              <CardDescription>View, edit, delete marks and send WhatsApp messages</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {marks.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">No marks found</p>
+                ) : (
+                  marks.map((mark) => (
+                    <div key={mark.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{mark.student_name}</h3>
+                          <p className="text-sm text-gray-600">{mark.test_name} - {mark.subject}</p>
+                          <p className="text-sm text-gray-700">
+                            Marks: {mark.marks_obtained}/{mark.total_marks} 
+                            ({((mark.marks_obtained / mark.total_marks) * 100).toFixed(1)}%)
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Test Date: {new Date(mark.test_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => sendWhatsAppMessage(mark)}
+                            className="text-green-600 border-green-600 hover:bg-green-50"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(mark)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(mark.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
-                  )}
-                </>
-              )}
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingMark ? 'Update' : 'Add'} Marks
-                </Button>
+                  ))
+                )}
               </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Marks Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Student Marks ({marks.length} entries)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {marks.length === 0 ? (
-            <div className="text-center py-8">
-              <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No marks recorded yet.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Test Name</TableHead>
-                    <TableHead>Marks</TableHead>
-                    <TableHead>Test Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {marks.map((mark) => (
-                    <TableRow key={mark.id}>
-                      <TableCell className="font-medium">{mark.student_name}</TableCell>
-                      <TableCell>{mark.student_class}</TableCell>
-                      <TableCell>{mark.subject}</TableCell>
-                      <TableCell>{mark.test_name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {mark.marks_obtained}/{mark.total_marks}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(mark.test_date)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(mark)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(mark.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              const studentMarks = marks.filter(m => 
-                                m.student_id === mark.student_id && 
-                                m.test_name === mark.test_name &&
-                                m.test_date === mark.test_date
-                              );
-                              sendWhatsAppMessage(studentMarks);
-                            }}
-                            className="text-green-600 hover:text-green-700"
-                          >
-                            <MessageCircle className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* WhatsApp Bulk Send Section */}
-      {marks.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center">
-              <MessageCircle className="h-5 w-5 mr-2 text-green-600" />
-              Send Marks via WhatsApp
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Send marks to parents grouped by student and test. Each student will receive their marks for all subjects in a single message.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {groupMarksByStudent().map((studentMarks) => {
-                  const student = studentMarks[0];
-                  const testGroups = studentMarks.reduce((acc, mark) => {
-                    const key = `${mark.test_name}-${mark.test_date}`;
-                    if (!acc[key]) {
-                      acc[key] = [];
-                    }
-                    acc[key].push(mark);
-                    return acc;
-                  }, {} as Record<string, StudentMark[]>);
-
-                  return (
-                    <Card key={student.student_id} className="border-green-200">
-                      <CardContent className="p-4">
-                        <div className="mb-3">
-                          <h4 className="font-medium">{student.student_name}</h4>
-                          <p className="text-sm text-gray-600">Class: {student.student_class}</p>
-                          <p className="text-sm text-gray-600">Phone: {student.contact_number}</p>
-                        </div>
-                        <div className="space-y-2">
-                          {Object.entries(testGroups).map(([testKey, testMarks]) => (
-                            <div key={testKey} className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm font-medium">{testMarks[0].test_name}</p>
-                                <p className="text-xs text-gray-500">{formatDate(testMarks[0].test_date)}</p>
-                                <p className="text-xs text-gray-500">{testMarks.length} subjects</p>
-                              </div>
-                              <Button
-                                size="sm"
-                                onClick={() => sendWhatsAppMessage(testMarks)}
-                                className="bg-green-600 hover:bg-green-700 text-white"
-                              >
-                                <MessageCircle className="h-3 w-3 mr-1" />
-                                Send
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

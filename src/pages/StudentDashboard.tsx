@@ -1,408 +1,73 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { LogOut, Download, User, Phone, Calendar, School, MapPin, Mail, BookOpen, CreditCard, IndianRupee, GraduationCap, Trophy, Crown, Medal, Award } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-
-interface StudentData {
-  id: string;
-  full_name: string;
-  contact_number: string;
-  email: string;
-  date_of_birth: string;
-  father_name: string;
-  mother_name: string;
-  current_school: string;
-  class: string;
-  admission_number: string;
-  street_address: string;
-  city: string;
-  state: string;
-  pin_code: string;
-  exams_preparing_for: string[];
-  category: string;
-  last_year_percentage: number;
-  created_at: string;
-}
-
-interface FeeData {
-  id: string;
-  total_fees: number;
-  paid_amount: number;
-  pending_amount: number;
-  payment_status: string;
-  paid_date: string | null;
-  fee_category: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface PaymentHistory {
-  id: string;
-  payment_amount: number;
-  payment_date: string;
-  payment_method: string;
-  transaction_id: string | null;
-  receipt_number: string | null;
-  notes: string | null;
-  created_at: string;
-}
-
-interface StudentMark {
-  id: string;
-  subject: string;
-  total_marks: number;
-  marks_obtained: number;
-  test_name: string;
-  test_date: string;
-  created_at: string;
-}
-
-interface LeaderboardEntry {
-  student_id: string;
-  student_name: string;
-  total_score: number;
-  rank: number;
-  is_current_student: boolean;
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogOut, User, BookOpen, GraduationCap, CreditCard, Home } from 'lucide-react';
+import StudentHomework from '@/components/StudentHomework';
+import StudentMarks from '@/components/StudentMarks';
+import StudentFeeDetails from '@/components/StudentFeeDetails';
 
 const StudentDashboard = () => {
-  const [studentData, setStudentData] = useState<StudentData | null>(null);
-  const [feeData, setFeeData] = useState<FeeData | null>(null);
-  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
-  const [studentMarks, setStudentMarks] = useState<StudentMark[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [loadingFees, setLoadingFees] = useState(true);
-  const [loadingMarks, setLoadingMarks] = useState(true);
-  const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const [studentData, setStudentData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedData = localStorage.getItem('visiona_student_data');
-    if (!storedData) {
-      navigate('/student-login', { replace: true });
+    const data = localStorage.getItem('visiona_student_data');
+    if (!data) {
+      navigate('/', { replace: true });
       return;
     }
 
     try {
-      const parsedData = JSON.parse(storedData);
+      const parsedData = JSON.parse(data);
       setStudentData(parsedData);
-      fetchFeeDetails(parsedData.id);
-      fetchStudentMarks(parsedData.id);
-      fetchLeaderboard(parsedData.id);
     } catch (error) {
       console.error('Error parsing student data:', error);
       localStorage.removeItem('visiona_student_data');
-      navigate('/student-login', { replace: true });
+      navigate('/', { replace: true });
+    } finally {
+      setLoading(false);
     }
   }, [navigate]);
 
-  const fetchFeeDetails = async (studentId: string) => {
-    try {
-      setLoadingFees(true);
-      
-      // Fetch fee details
-      const { data: feeDetails, error: feeError } = await supabase
-        .from('student_fees')
-        .select('*')
-        .eq('application_id', studentId)
-        .maybeSingle();
-
-      if (feeError && feeError.code !== 'PGRST116') {
-        throw feeError;
-      }
-
-      setFeeData(feeDetails);
-
-      // Fetch payment history if fee record exists
-      if (feeDetails) {
-        const { data: payments, error: paymentsError } = await supabase
-          .from('fee_payments')
-          .select('*')
-          .eq('student_fees_id', feeDetails.id)
-          .order('created_at', { ascending: false });
-
-        if (paymentsError) {
-          console.error('Error fetching payment history:', paymentsError);
-        } else {
-          setPaymentHistory(payments || []);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching fee details:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch fee details. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingFees(false);
-    }
-  };
-
-  const fetchStudentMarks = async (studentId: string) => {
-    try {
-      setLoadingMarks(true);
-      
-      const { data: marks, error: marksError } = await supabase
-        .from('student_marks')
-        .select('*')
-        .eq('student_id', studentId)
-        .order('test_date', { ascending: false });
-
-      if (marksError) {
-        console.error('Error fetching marks:', marksError);
-      } else {
-        setStudentMarks(marks || []);
-      }
-    } catch (error) {
-      console.error('Error fetching student marks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch marks data.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingMarks(false);
-    }
-  };
-
-  const fetchLeaderboard = async (currentStudentId: string) => {
-    try {
-      setLoadingLeaderboard(true);
-      
-      // Fetch all student marks with student information
-      const { data: allMarks, error: marksError } = await supabase
-        .from('student_marks')
-        .select(`
-          student_id,
-          marks_obtained,
-          applications (
-            full_name
-          )
-        `);
-
-      if (marksError) {
-        console.error('Error fetching leaderboard data:', marksError);
-        return;
-      }
-
-      // Calculate total scores for each student
-      const studentScores = allMarks.reduce((acc, mark) => {
-        if (!acc[mark.student_id]) {
-          acc[mark.student_id] = {
-            student_id: mark.student_id,
-            student_name: mark.applications?.full_name || 'Unknown',
-            total_score: 0
-          };
-        }
-        acc[mark.student_id].total_score += mark.marks_obtained;
-        return acc;
-      }, {} as Record<string, { student_id: string; student_name: string; total_score: number }>);
-
-      // Convert to array and sort by total score (descending)
-      const sortedStudents = Object.values(studentScores)
-        .sort((a, b) => b.total_score - a.total_score);
-
-      // Create leaderboard with ranks and limit to top 10
-      const leaderboardData: LeaderboardEntry[] = sortedStudents
-        .slice(0, 10)
-        .map((student, index) => ({
-          ...student,
-          rank: index + 1,
-          is_current_student: student.student_id === currentStudentId
-        }));
-
-      // If current student is not in top 10, find their position and add them
-      const currentStudentInTop10 = leaderboardData.find(entry => entry.is_current_student);
-      if (!currentStudentInTop10) {
-        const currentStudentIndex = sortedStudents.findIndex(student => student.student_id === currentStudentId);
-        if (currentStudentIndex !== -1) {
-          const currentStudentEntry: LeaderboardEntry = {
-            ...sortedStudents[currentStudentIndex],
-            rank: currentStudentIndex + 1,
-            is_current_student: true
-          };
-          
-          // Insert current student in the appropriate position in the display
-          // Replace one of the lower-ranked entries to maintain 10 entries
-          leaderboardData[9] = currentStudentEntry;
-        }
-      }
-
-      setLeaderboard(leaderboardData);
-    } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch leaderboard data.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingLeaderboard(false);
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('visiona_student_data');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
     navigate('/', { replace: true });
   };
 
-  const handleDownloadIdCard = async () => {
-    const idCardElement = document.getElementById('student-id-card');
-    if (!idCardElement) return;
-
-    try {
-      const canvas = await html2canvas(idCardElement, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-      });
-
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: [85.6, 53.98] // Credit card size
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 53.98);
-      pdf.save(`${studentData?.full_name}_ID_Card.pdf`);
-
-      toast({
-        title: "ID Card Downloaded",
-        description: "Your student ID card has been downloaded successfully.",
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: "Download Failed",
-        description: "Failed to download ID card. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleBackToHome = () => {
+    navigate('/', { replace: true });
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      not_set: { label: 'Not Set', className: 'bg-gray-100 text-gray-800' },
-      pending: { label: 'Pending', className: 'bg-red-100 text-red-800' },
-      partial: { label: 'Partial', className: 'bg-yellow-100 text-yellow-800' },
-      paid: { label: 'Paid', className: 'bg-green-100 text-green-800' }
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.not_set;
-    
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
-        {config.label}
-      </span>
-    );
-  };
-
-  const getMethodBadge = (method: string) => {
-    const colors = {
-      cash: 'bg-green-100 text-green-800',
-      bank_transfer: 'bg-blue-100 text-blue-800',
-      upi: 'bg-purple-100 text-purple-800',
-      card: 'bg-orange-100 text-orange-800',
-      cheque: 'bg-yellow-100 text-yellow-800',
-      adjustment: 'bg-gray-100 text-gray-800',
-      other: 'bg-gray-100 text-gray-800'
-    };
-    
-    return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[method as keyof typeof colors] || colors.other}`}>
-        {method.replace('_', ' ').toUpperCase()}
-      </span>
-    );
-  };
-
-  const getPercentage = (obtained: number, total: number) => {
-    return ((obtained / total) * 100).toFixed(1);
-  };
-
-  const getGradeColor = (percentage: number) => {
-    if (percentage >= 90) return 'text-green-600';
-    if (percentage >= 75) return 'text-blue-600';
-    if (percentage >= 60) return 'text-yellow-600';
-    if (percentage >= 35) return 'text-orange-600';
-    return 'text-red-600';
-  };
-
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Crown className="h-5 w-5 text-yellow-500" />;
-    if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
-    if (rank === 3) return <Award className="h-5 w-5 text-amber-600" />;
-    return <Trophy className="h-4 w-4 text-gray-500" />;
-  };
-
-  const getRankBadgeColor = (rank: number, isCurrentStudent: boolean) => {
-    if (isCurrentStudent) return 'bg-blue-100 text-blue-800 border-blue-300';
-    if (rank === 1) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    if (rank === 2) return 'bg-gray-100 text-gray-800 border-gray-300';
-    if (rank === 3) return 'bg-amber-100 text-amber-800 border-amber-300';
-    return 'bg-slate-100 text-slate-800 border-slate-300';
-  };
-
-  const groupMarksByTest = () => {
-    const grouped = studentMarks.reduce((acc, mark) => {
-      const key = `${mark.test_name}-${mark.test_date}`;
-      if (!acc[key]) {
-        acc[key] = {
-          test_name: mark.test_name,
-          test_date: mark.test_date,
-          marks: []
-        };
-      }
-      acc[key].marks.push(mark);
-      return acc;
-    }, {} as Record<string, { test_name: string; test_date: string; marks: StudentMark[] }>);
-
-    return Object.values(grouped).sort((a, b) => new Date(b.test_date).getTime() - new Date(a.test_date).getTime());
-  };
-
-  if (!studentData) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
+  if (!studentData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-3">
             <img 
               src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
@@ -410,20 +75,29 @@ const StudentDashboard = () => {
               className="w-10 h-10 object-contain"
             />
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Student Dashboard</h1>
-              <p className="text-sm text-gray-600">Welcome, {studentData.full_name}</p>
+              <h1 className="text-lg font-bold text-gray-900">
+                Welcome, {studentData.full_name}
+              </h1>
+              <p className="text-sm text-gray-600">
+                Class: {studentData.class} | Admission: {studentData.admission_number}
+              </p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          
+          <div className="flex items-center space-x-4">
             <Button 
-              onClick={() => navigate('/homework')} 
+              variant="outline" 
+              onClick={handleBackToHome}
+              className="flex items-center space-x-2"
+            >
+              <Home className="h-4 w-4" />
+              <span>Back to Home</span>
+            </Button>
+            <Button 
+              onClick={handleLogout} 
               variant="outline" 
               className="flex items-center space-x-2"
             >
-              <BookOpen className="h-4 w-4" />
-              <span>My Homework</span>
-            </Button>
-            <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
             </Button>
@@ -431,541 +105,116 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto py-6">
-        {/* Leaderboard Section */}
-        <div className="mb-8">
-          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <Trophy className="h-5 w-5 mr-2 text-purple-600" />
-                  Overall Student Rankings
-                </span>
-                <Button
-                  onClick={() => fetchLeaderboard(studentData.id)}
-                  variant="outline"
-                  size="sm"
-                  disabled={loadingLeaderboard}
-                >
-                  {loadingLeaderboard ? 'Refreshing...' : 'Refresh'}
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loadingLeaderboard ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading leaderboard...</p>
-                </div>
-              ) : leaderboard.length > 0 ? (
-                <div className="space-y-3">
-                  {leaderboard.map((entry, index) => (
-                    <div
-                      key={entry.student_id}
-                      className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
-                        entry.is_current_student 
-                          ? 'bg-blue-50 border-blue-300 shadow-md' 
-                          : 'bg-white border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                          {getRankIcon(entry.rank)}
-                          <Badge 
-                            variant="outline" 
-                            className={`font-bold text-sm px-3 py-1 border-2 ${getRankBadgeColor(entry.rank, entry.is_current_student)}`}
-                          >
-                            #{entry.rank}
-                          </Badge>
-                        </div>
-                        <div>
-                          <h4 className={`font-semibold ${entry.is_current_student ? 'text-blue-900' : 'text-gray-900'}`}>
-                            {entry.rank === 1 || entry.is_current_student 
-                              ? entry.student_name 
-                              : 'XXXXX'
-                            }
-                          </h4>
-                          {entry.is_current_student && (
-                            <p className="text-sm text-blue-600 font-medium">You</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-2xl font-bold ${
-                          entry.rank === 1 ? 'text-yellow-600' :
-                          entry.rank === 2 ? 'text-gray-600' :
-                          entry.rank === 3 ? 'text-amber-600' :
-                          entry.is_current_student ? 'text-blue-600' : 'text-gray-700'
-                        }`}>
-                          {entry.total_score}
-                        </div>
-                        <p className="text-sm text-gray-500">points</p>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg border border-blue-200">
-                    <div className="text-center">
-                      <Trophy className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Keep Learning!</h3>
-                      <p className="text-sm text-gray-600">
-                        Rankings are updated automatically when new marks are added. 
-                        Work hard to climb up the leaderboard!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Rankings Available</h3>
-                  <p className="text-gray-600">Rankings will appear once marks are uploaded for multiple students.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="homework" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Homework
+            </TabsTrigger>
+            <TabsTrigger value="marks" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Marks
+            </TabsTrigger>
+            <TabsTrigger value="fees" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Fees
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Fee Status Overview */}
-        <div className="mb-8">
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
-                  Fee Status Overview
-                </span>
-                <Button
-                  onClick={() => fetchFeeDetails(studentData.id)}
-                  variant="outline"
-                  size="sm"
-                  disabled={loadingFees}
-                >
-                  {loadingFees ? 'Refreshing...' : 'Refresh'}
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loadingFees ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading fee details...</p>
-                </div>
-              ) : feeData ? (
-                <div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white p-4 rounded-lg shadow-sm border">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Total Fees</p>
-                          <p className="text-xl font-bold text-blue-600">
-                            {formatCurrency(feeData.total_fees)}
-                          </p>
-                        </div>
-                        <IndianRupee className="h-8 w-8 text-blue-600" />
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white p-4 rounded-lg shadow-sm border">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Paid Amount</p>
-                          <p className="text-xl font-bold text-green-600">
-                            {formatCurrency(feeData.paid_amount)}
-                          </p>
-                        </div>
-                        <IndianRupee className="h-8 w-8 text-green-600" />
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white p-4 rounded-lg shadow-sm border">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Pending Amount</p>
-                          <p className="text-xl font-bold text-red-600">
-                            {formatCurrency(feeData.pending_amount)}
-                          </p>
-                        </div>
-                        <IndianRupee className="h-8 w-8 text-red-600" />
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white p-4 rounded-lg shadow-sm border">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Payment Status</p>
-                          <div className="mt-1">
-                            {getStatusBadge(feeData.payment_status)}
-                          </div>
-                        </div>
-                        <CreditCard className="h-8 w-8 text-gray-600" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="bg-white p-3 rounded border">
-                      <span className="text-gray-600">Fee Category:</span>
-                      <span className="ml-2 font-medium capitalize">{feeData.fee_category}</span>
-                    </div>
-                    <div className="bg-white p-3 rounded border">
-                      <span className="text-gray-600">Last Updated:</span>
-                      <span className="ml-2 font-medium">{formatDate(feeData.updated_at)}</span>
-                    </div>
-                    {feeData.paid_date && (
-                      <div className="bg-white p-3 rounded border">
-                        <span className="text-gray-600">Last Payment Date:</span>
-                        <span className="ml-2 font-medium text-green-600">{formatDate(feeData.paid_date)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Fee Structure Set</h3>
-                  <p className="text-gray-600">Your fee structure has not been set up yet. Please contact the administration.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Student Marks Section */}
-        <div className="mb-8">
-          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center">
-                  <GraduationCap className="h-5 w-5 mr-2 text-green-600" />
-                  My Marks & Results
-                </span>
-                <Button
-                  onClick={() => fetchStudentMarks(studentData.id)}
-                  variant="outline"
-                  size="sm"
-                  disabled={loadingMarks}
-                >
-                  {loadingMarks ? 'Refreshing...' : 'Refresh'}
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loadingMarks ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading marks data...</p>
-                </div>
-              ) : studentMarks.length > 0 ? (
-                <div className="space-y-6">
-                  {groupMarksByTest().map((testGroup, index) => {
-                    const totalMarks = testGroup.marks.reduce((sum, mark) => sum + mark.total_marks, 0);
-                    const obtainedMarks = testGroup.marks.reduce((sum, mark) => sum + mark.marks_obtained, 0);
-                    const percentage = parseFloat(getPercentage(obtainedMarks, totalMarks));
-                    
-                    return (
-                      <div key={index} className="bg-white rounded-lg border p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{testGroup.test_name}</h3>
-                            <p className="text-sm text-gray-600">Test Date: {formatDate(testGroup.test_date)}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="flex items-center space-x-2">
-                              <Trophy className="h-5 w-5 text-yellow-500" />
-                              <span className={`text-2xl font-bold ${getGradeColor(percentage)}`}>
-                                {percentage}%
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                              {obtainedMarks}/{totalMarks} marks
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {testGroup.marks.map((mark) => {
-                            const subjectPercentage = parseFloat(getPercentage(mark.marks_obtained, mark.total_marks));
-                            return (
-                              <div key={mark.id} className="bg-gray-50 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="font-medium text-gray-900">{mark.subject}</h4>
-                                  <Badge variant="outline" className={getGradeColor(subjectPercentage)}>
-                                    {subjectPercentage}%
-                                  </Badge>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600">Marks:</span>
-                                  <span className="font-medium">
-                                    {mark.marks_obtained}/{mark.total_marks}
-                                  </span>
-                                </div>
-                                <div className="mt-2 bg-gray-200 rounded-full h-2">
-                                  <div 
-                                    className={`h-2 rounded-full ${
-                                      subjectPercentage >= 90 ? 'bg-green-500' :
-                                      subjectPercentage >= 75 ? 'bg-blue-500' :
-                                      subjectPercentage >= 60 ? 'bg-yellow-500' :
-                                      subjectPercentage >= 35 ? 'bg-orange-500' : 'bg-red-500'
-                                    }`}
-                                    style={{ width: `${subjectPercentage}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Marks Available</h3>
-                  <p className="text-gray-600">Your test results will appear here once uploaded by the teacher.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Payment History */}
-        {feeData && paymentHistory.length > 0 && (
-          <div className="mb-8">
+          <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-green-600" />
-                  Payment History ({paymentHistory.length} payments)
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Student Profile
                 </CardTitle>
+                <CardDescription>Your personal information and academic details</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {paymentHistory.map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-green-600">
-                            {formatCurrency(payment.payment_amount)}
-                          </span>
-                          <span className="text-sm text-gray-500">
-                            {formatDate(payment.payment_date)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getMethodBadge(payment.payment_method)}
-                          {payment.transaction_id && (
-                            <span className="text-xs text-gray-500">
-                              TXN: {payment.transaction_id}
-                            </span>
-                          )}
-                          {payment.receipt_number && (
-                            <span className="text-xs text-gray-500">
-                              Receipt: {payment.receipt_number}
-                            </span>
-                          )}
-                        </div>
-                        {payment.notes && (
-                          <p className="text-xs text-gray-600 mt-1">{payment.notes}</p>
-                        )}
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Full Name</label>
+                      <p className="text-lg font-semibold">{studentData.full_name}</p>
                     </div>
-                  ))}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Class</label>
+                      <p className="text-lg">{studentData.class}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Admission Number</label>
+                      <p className="text-lg">{studentData.admission_number}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Date of Birth</label>
+                      <p className="text-lg">{new Date(studentData.date_of_birth).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Gender</label>
+                      <p className="text-lg capitalize">{studentData.gender}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Contact Number</label>
+                      <p className="text-lg">{studentData.contact_number}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Email</label>
+                      <p className="text-lg">{studentData.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Current School</label>
+                      <p className="text-lg">{studentData.current_school}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Father's Name</label>
+                      <p className="text-lg">{studentData.father_name}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Mother's Name</label>
+                      <p className="text-lg">{studentData.mother_name}</p>
+                    </div>
+                  </div>
                 </div>
+
+                {studentData.exams_preparing_for && studentData.exams_preparing_for.length > 0 && (
+                  <div className="mt-6">
+                    <label className="text-sm font-medium text-gray-700">Preparing for Exams</label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {studentData.exams_preparing_for.map((exam: string, index: number) => (
+                        <span 
+                          key={index}
+                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                        >
+                          {exam}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          </div>
-        )}
+          </TabsContent>
 
-        {/* Student Information Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Personal Information */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <User className="h-5 w-5 mr-2 text-blue-600" />
-              Personal Information
-            </h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Full Name:</span>
-                <span className="font-medium">{studentData.full_name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Date of Birth:</span>
-                <span className="font-medium">{new Date(studentData.date_of_birth).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Father's Name:</span>
-                <span className="font-medium">{studentData.father_name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Mother's Name:</span>
-                <span className="font-medium">{studentData.mother_name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Category:</span>
-                <span className="font-medium">{studentData.category}</span>
-              </div>
-            </div>
-          </div>
+          <TabsContent value="homework">
+            <StudentHomework />
+          </TabsContent>
 
-          {/* Contact Information */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <Phone className="h-5 w-5 mr-2 text-green-600" />
-              Contact Information
-            </h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Mobile:</span>
-                <span className="font-medium">{studentData.contact_number}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Email:</span>
-                <span className="font-medium">{studentData.email}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Address:</span>
-                <span className="font-medium text-right">{studentData.street_address}, {studentData.city}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">State:</span>
-                <span className="font-medium">{studentData.state}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">PIN Code:</span>
-                <span className="font-medium">{studentData.pin_code}</span>
-              </div>
-            </div>
-          </div>
+          <TabsContent value="marks">
+            <StudentMarks />
+          </TabsContent>
 
-          {/* Academic Information */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <School className="h-5 w-5 mr-2 text-purple-600" />
-              Academic Information
-            </h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Current School:</span>
-                <span className="font-medium">{studentData.current_school}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Class:</span>
-                <span className="font-medium">{studentData.class}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Last Year %:</span>
-                <span className="font-medium">{studentData.last_year_percentage}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Admission Number:</span>
-                <span className="font-medium">{studentData.admission_number}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Exam Preparation */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-orange-600" />
-              Exam Preparation
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <span className="text-gray-600">Preparing for:</span>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {studentData.exams_preparing_for.map((exam, index) => (
-                    <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      {exam}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Enrolled On:</span>
-                <span className="font-medium">{new Date(studentData.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Student ID Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Student ID Card</h2>
-            <Button onClick={handleDownloadIdCard} className="flex items-center space-x-2">
-              <Download className="h-4 w-4" />
-              <span>Download ID Card</span>
-            </Button>
-          </div>
-
-          {/* ID Card */}
-          <div className="flex justify-center">
-            <div 
-              id="student-id-card"
-              className="w-[340px] h-[215px] bg-gradient-to-br from-blue-600 to-purple-700 rounded-lg p-4 text-white shadow-lg relative overflow-hidden"
-            >
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-4 right-4 w-20 h-20 border-2 border-white rounded-full"></div>
-                <div className="absolute bottom-4 left-4 w-16 h-16 border-2 border-white rounded-full"></div>
-              </div>
-
-              {/* Content */}
-              <div className="relative z-10 h-full flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <img 
-                      src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-                      alt="Logo" 
-                      className="w-8 h-8 bg-white rounded p-1"
-                    />
-                    <div>
-                      <h3 className="text-sm font-bold">VISIONA EDUCATION</h3>
-                      <p className="text-xs opacity-90">ACADEMY</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs opacity-90">Student ID</p>
-                    <p className="text-sm font-bold">{studentData.admission_number}</p>
-                  </div>
-                </div>
-
-                {/* Student Info */}
-                <div className="flex-1">
-                  <div className="mb-2">
-                    <h4 className="text-lg font-bold truncate">{studentData.full_name}</h4>
-                    <p className="text-xs opacity-90">Class: {studentData.class} | {studentData.category}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <p className="opacity-90">Mobile:</p>
-                      <p className="font-medium">{studentData.contact_number}</p>
-                    </div>
-                    <div>
-                      <p className="opacity-90">DOB:</p>
-                      <p className="font-medium">{new Date(studentData.date_of_birth).toLocaleDateString('en-GB')}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="border-t border-white/20 pt-2 flex justify-between items-center text-xs">
-                  <div>
-                    <p className="opacity-90">Valid for Academic Year 2024-25</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="opacity-90">Bagalkot, Karnataka</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          <TabsContent value="fees">
+            <StudentFeeDetails />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

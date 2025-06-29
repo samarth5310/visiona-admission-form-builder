@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, BookOpen } from 'lucide-react';
+import { LogOut, BookOpen, Home } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import AdminHomework from '@/components/AdminHomework';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,6 +65,10 @@ const Homework = () => {
     }
   };
 
+  const handleBackToHome = () => {
+    navigate('/', { replace: true });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -108,12 +113,33 @@ const Homework = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline" 
-              onClick={handleBackToDashboard}
-            >
-              Back to Dashboard
-            </Button>
+            {userType === 'student' ? (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={handleBackToDashboard}
+                  className="flex items-center space-x-2"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Back to Dashboard</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleBackToHome}
+                  className="flex items-center space-x-2"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </Button>
+              </>
+            ) : (
+              <Button 
+                variant="outline" 
+                onClick={handleBackToDashboard}
+              >
+                Back to Dashboard
+              </Button>
+            )}
             <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
               <LogOut className="h-4 w-4" />
               <span>Logout</span>

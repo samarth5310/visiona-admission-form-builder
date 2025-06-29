@@ -1,46 +1,98 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, BookOpen, Calendar, User, ExternalLink, Users, UserCheck } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { Homework, HomeworkFormData, Student, ClassInfo } from "@/types/homework";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, BookOpen, Eye, Edit2, Trash2 } from 'lucide-react';
+
+interface HomeworkFormData {
+  title: string;
+  subject: string;
+  description: string;
+  google_drive_link: string;
+  assigned_to_class: string;
+  assigned_to_students: string[];
+  assignment_type: 'class' | 'individual';
+}
+
+interface Student {
+  id: string;
+  full_name: string;
+  class: string;
+}
+
+interface HomeworkItem {
+  id: string;
+  title: string;
+  subject: string;
+  description: string;
+  google_drive_link: string;
+  assigned_to_class: string;
+  assigned_to_students: string[];
+  assigned_by: string;
+  created_at: string;
+}
 
 const AdminHomework = () => {
-  const [homework, setHomework] = useState<Homework[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<ClassInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
-  const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
-  const { toast } = useToast();
-  const { user } = useAuth();
-
   const [formData, setFormData] = useState<HomeworkFormData>({
     title: '',
     subject: '',
     description: '',
     google_drive_link: '',
-    assignment_type: 'class',
     assigned_to_class: '',
-    assigned_to_students: []
+    assigned_to_students: [],
+    assignment_type: 'class'
   });
+
+  const [homework, setHomework] = useState<HomeworkItem[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<string[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchHomework();
     fetchStudentsAndClasses();
   }, []);
+
+  useEffect(() => {
+    if (formData.assignment_type === 'individual' && formData.assigned_to_class) {
+      const filtered = students.filter(student => student.class === formData.assigned_to_class);
+      setFilteredStudents(filtered);
+    }
+  }, [formData.assigned_to_class, formData.assignment_type, students]);
+
+  const fetchStudentsAndClasses = async () => {
+    try {
+      const { data: studentsData, error } = await supabase
+        .from('applications')
+        .select('id, full_name, class')
+        .order('full_name');
+
+      if (error) throw error;
+
+      setStudents(studentsData || []);
+      
+      // Extract unique classes
+      const uniqueClasses = [...new Set(studentsData?.map(s => s.class) || [])];
+      setClasses(uniqueClasses.sort());
+    } catch (error) {
+      console.error('Error fetching students and classes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch students and classes",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchHomework = async () => {
     try {
@@ -55,63 +107,10 @@ const AdminHomework = () => {
       console.error('Error fetching homework:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch homework assignments.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchStudentsAndClasses = async () => {
-    try {
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('applications')
-        .select('id, full_name, class')
-        .order('class', { ascending: true })
-        .order('full_name', { ascending: true });
-
-      if (studentsError) throw studentsError;
-
-      const students: Student[] = studentsData || [];
-      setStudents(students);
-
-      // Group students by class to get class information
-      const classGroups = students.reduce((acc, student) => {
-        if (!acc[student.class]) {
-          acc[student.class] = 0;
-        }
-        acc[student.class]++;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const classInfo: ClassInfo[] = Object.entries(classGroups).map(([className, count]) => ({
-        class: className,
-        student_count: count
-      })).sort((a, b) => a.class.localeCompare(b.class));
-
-      setClasses(classInfo);
-    } catch (error) {
-      console.error('Error fetching students and classes:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch students and classes.",
+        description: "Failed to fetch homework assignments",
         variant: "destructive",
       });
     }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      subject: '',
-      description: '',
-      google_drive_link: '',
-      assignment_type: 'class',
-      assigned_to_class: '',
-      assigned_to_students: []
-    });
-    setEditingHomework(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -120,52 +119,54 @@ const AdminHomework = () => {
     if (!formData.title.trim() || !formData.subject.trim() || !formData.google_drive_link.trim()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
     }
 
-    if (formData.assignment_type === 'class' && !formData.assigned_to_class.trim()) {
+    if (formData.assignment_type === 'class' && !formData.assigned_to_class) {
       toast({
         title: "Validation Error",
-        description: "Please select a class to assign to.",
+        description: "Please select a class",
         variant: "destructive",
       });
       return;
     }
 
-    if (formData.assignment_type === 'student' && formData.assigned_to_students.length === 0) {
+    if (formData.assignment_type === 'individual' && formData.assigned_to_students.length === 0) {
       toast({
         title: "Validation Error",
-        description: "Please select at least one student to assign to.",
+        description: "Please select at least one student",
         variant: "destructive",
       });
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const homeworkData = {
-        title: formData.title,
-        subject: formData.subject,
-        description: formData.description,
-        google_drive_link: formData.google_drive_link,
-        assigned_by: user?.name || user?.mobile_number || 'Admin',
+        title: formData.title.trim(),
+        subject: formData.subject.trim(),
+        description: formData.description.trim(),
+        google_drive_link: formData.google_drive_link.trim(),
         assigned_to_class: formData.assignment_type === 'class' ? formData.assigned_to_class : '',
-        assigned_to_students: formData.assignment_type === 'student' ? formData.assigned_to_students : []
+        assigned_to_students: formData.assignment_type === 'individual' ? formData.assigned_to_students : null,
+        assigned_by: 'Admin'
       };
 
-      if (editingHomework) {
+      if (editingId) {
         const { error } = await supabase
           .from('homework')
           .update(homeworkData)
-          .eq('id', editingHomework.id);
+          .eq('id', editingId);
 
         if (error) throw error;
 
         toast({
           title: "Success",
-          description: "Homework updated successfully.",
+          description: "Homework assignment updated successfully!",
         });
       } else {
         const { error } = await supabase
@@ -176,41 +177,49 @@ const AdminHomework = () => {
 
         toast({
           title: "Success",
-          description: "Homework assigned successfully.",
+          description: "Homework assignment created successfully!",
         });
       }
 
-      setIsDialogOpen(false);
-      resetForm();
+      // Reset form
+      setFormData({
+        title: '',
+        subject: '',
+        description: '',
+        google_drive_link: '',
+        assigned_to_class: '',
+        assigned_to_students: [],
+        assignment_type: 'class'
+      });
+      setEditingId(null);
       fetchHomework();
     } catch (error) {
       console.error('Error saving homework:', error);
       toast({
         title: "Error",
-        description: "Failed to save homework assignment.",
+        description: "Failed to save homework assignment. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleEdit = (hw: Homework) => {
-    setEditingHomework(hw);
+  const handleEdit = (homework: HomeworkItem) => {
     setFormData({
-      title: hw.title,
-      subject: hw.subject,
-      description: hw.description || '',
-      google_drive_link: hw.google_drive_link,
-      assignment_type: hw.assigned_to_class ? 'class' : 'student',
-      assigned_to_class: hw.assigned_to_class || '',
-      assigned_to_students: hw.assigned_to_students || []
+      title: homework.title,
+      subject: homework.subject,
+      description: homework.description || '',
+      google_drive_link: homework.google_drive_link,
+      assigned_to_class: homework.assigned_to_class,
+      assigned_to_students: homework.assigned_to_students || [],
+      assignment_type: homework.assigned_to_students && homework.assigned_to_students.length > 0 ? 'individual' : 'class'
     });
-    setIsDialogOpen(true);
+    setEditingId(homework.id);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this homework assignment?')) {
-      return;
-    }
+    if (!confirm('Are you sure you want to delete this homework assignment?')) return;
 
     try {
       const { error } = await supabase
@@ -222,431 +231,284 @@ const AdminHomework = () => {
 
       toast({
         title: "Success",
-        description: "Homework deleted successfully.",
+        description: "Homework assignment deleted successfully!",
       });
-
       fetchHomework();
-      if (selectedHomework?.id === id) {
-        setSelectedHomework(null);
-      }
     } catch (error) {
       console.error('Error deleting homework:', error);
       toast({
         title: "Error",
-        description: "Failed to delete homework assignment.",
+        description: "Failed to delete homework assignment",
         variant: "destructive",
       });
     }
   };
 
-  const getStudentsByClass = (className: string) => {
-    return students.filter(student => student.class === className);
+  const getStudentNames = (studentIds: string[]) => {
+    return studentIds.map(id => {
+      const student = students.find(s => s.id === id);
+      return student ? student.full_name : 'Unknown';
+    }).join(', ');
   };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getEmbedUrl = (driveLink: string) => {
-    const patterns = [
-      /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
-      /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/
-    ];
-    
-    for (const pattern of patterns) {
-      const match = driveLink.match(pattern);
-      if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
-    }
-    
-    if (/^[a-zA-Z0-9_-]+$/.test(driveLink)) {
-      return `https://drive.google.com/file/d/${driveLink}/preview`;
-    }
-    
-    return null;
-  };
-
-  const getAssignmentInfo = (hw: Homework) => {
-    if (hw.assigned_to_class) {
-      const classStudents = getStudentsByClass(hw.assigned_to_class);
-      return {
-        type: 'Class',
-        target: hw.assigned_to_class,
-        count: classStudents.length
-      };
-    } else if (hw.assigned_to_students && hw.assigned_to_students.length > 0) {
-      return {
-        type: 'Students',
-        target: `${hw.assigned_to_students.length} selected`,
-        count: hw.assigned_to_students.length
-      };
-    }
-    return {
-      type: 'Unknown',
-      target: 'Not specified',
-      count: 0
-    };
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading homework management...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Manage Homework</h1>
-          <p className="text-gray-600">Create and manage homework assignments for students</p>
-        </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Homework
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingHomework ? 'Edit Homework' : 'Add New Homework'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  placeholder="Enter homework title"
-                  required
-                />
-              </div>
+    <div className="max-w-7xl mx-auto px-4 py-6">
+      <Tabs defaultValue="create" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="create" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            {editingId ? 'Edit Assignment' : 'Create Assignment'}
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Manage Assignments
+          </TabsTrigger>
+        </TabsList>
 
-              <div>
-                <Label htmlFor="subject">Subject *</Label>
-                <Input
-                  id="subject"
-                  value={formData.subject}
-                  onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                  placeholder="Enter subject name (e.g., Mathematics, Science, English)"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Optional description"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="google_drive_link">Google Drive Link *</Label>
-                <Input
-                  id="google_drive_link"
-                  value={formData.google_drive_link}
-                  onChange={(e) => setFormData({...formData, google_drive_link: e.target.value})}
-                  placeholder="Paste Google Drive share link"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label>Assignment Type *</Label>
-                <RadioGroup
-                  value={formData.assignment_type}
-                  onValueChange={(value: 'class' | 'student') => {
-                    setFormData({
-                      ...formData, 
-                      assignment_type: value,
-                      assigned_to_class: '',
-                      assigned_to_students: []
-                    });
-                  }}
-                  className="flex space-x-6 mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="class" id="class" />
-                    <Label htmlFor="class" className="flex items-center">
-                      <Users className="h-4 w-4 mr-1" />
-                      Assign to Class
-                    </Label>
+        <TabsContent value="create">
+          <Card>
+            <CardHeader>
+              <CardTitle>{editingId ? 'Edit Homework Assignment' : 'Create New Homework Assignment'}</CardTitle>
+              <CardDescription>
+                {editingId ? 'Update the homework assignment details' : 'Add a new homework assignment for students'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="title">Assignment Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Enter assignment title"
+                      required
+                    />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="student" id="student" />
-                    <Label htmlFor="student" className="flex items-center">
-                      <UserCheck className="h-4 w-4 mr-1" />
-                      Assign to Specific Students
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
 
-              {formData.assignment_type === 'class' && (
+                  <div>
+                    <Label htmlFor="subject">Subject *</Label>
+                    <Input
+                      id="subject"
+                      value={formData.subject}
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                      placeholder="Enter subject name"
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="class">Select Class *</Label>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Enter assignment description (optional)"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="google_drive_link">Google Drive Link *</Label>
+                  <Input
+                    id="google_drive_link"
+                    value={formData.google_drive_link}
+                    onChange={(e) => setFormData({ ...formData, google_drive_link: e.target.value })}
+                    placeholder="https://drive.google.com/..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>Assignment Type *</Label>
                   <Select
-                    value={formData.assigned_to_class}
-                    onValueChange={(value) => setFormData({...formData, assigned_to_class: value})}
+                    value={formData.assignment_type}
+                    onValueChange={(value: 'class' | 'individual') => {
+                      setFormData({ 
+                        ...formData, 
+                        assignment_type: value, 
+                        assigned_to_class: '',
+                        assigned_to_students: []
+                      });
+                    }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select class" />
+                      <SelectValue placeholder="Select assignment type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {classes.map((classInfo) => (
-                        <SelectItem key={classInfo.class} value={classInfo.class}>
-                          {classInfo.class} ({classInfo.student_count} students)
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="class">Assign to Entire Class</SelectItem>
+                      <SelectItem value="individual">Assign to Specific Students</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              )}
 
-              {formData.assignment_type === 'student' && (
-                <div>
-                  <Label>Select Students *</Label>
-                  <div className="mt-2 space-y-2">
-                    <div className="text-sm text-gray-600 mb-2">
-                      Selected: {formData.assigned_to_students.length} students
-                    </div>
-                    <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
-                      {classes.map((classInfo) => (
-                        <div key={classInfo.class}>
-                          <div className="font-medium text-sm text-gray-700 mb-2">
-                            {classInfo.class} ({classInfo.student_count} students)
-                          </div>
-                          <div className="ml-4 space-y-1">
-                            {getStudentsByClass(classInfo.class).map((student) => (
-                              <div key={student.id} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={student.id}
-                                  checked={formData.assigned_to_students.includes(student.id)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      setFormData({
-                                        ...formData,
-                                        assigned_to_students: [...formData.assigned_to_students, student.id]
-                                      });
-                                    } else {
-                                      setFormData({
-                                        ...formData,
-                                        assigned_to_students: formData.assigned_to_students.filter(id => id !== student.id)
-                                      });
-                                    }
-                                  }}
-                                />
-                                <Label htmlFor={student.id} className="text-sm">
-                                  {student.full_name}
-                                </Label>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingHomework ? 'Update' : 'Create'} Homework
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Homework List */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Homework Assignments ({homework.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {homework.length === 0 ? (
-                <div className="text-center py-8">
-                  <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No homework assignments yet.</p>
-                </div>
-              ) : (
-                <div className="max-h-[600px] overflow-y-auto">
-                  {homework.map((hw) => {
-                    const assignmentInfo = getAssignmentInfo(hw);
-                    return (
-                      <div
-                        key={hw.id}
-                        className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${
-                          selectedHomework?.id === hw.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                        }`}
-                        onClick={() => setSelectedHomework(hw)}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-medium text-sm">{hw.title}</h3>
-                          <div className="flex space-x-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(hw);
-                              }}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(hw.id);
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <Badge variant="secondary" className="text-xs">
-                            {hw.subject}
-                          </Badge>
-                          <div className="flex items-center gap-1">
-                            {assignmentInfo.type === 'Class' ? (
-                              <Users className="h-3 w-3 text-blue-600" />
-                            ) : (
-                              <UserCheck className="h-3 w-3 text-green-600" />
-                            )}
-                            <p className="text-xs text-gray-600">
-                              {assignmentInfo.type}: {assignmentInfo.target}
-                            </p>
-                          </div>
-                          <p className="text-xs text-gray-600">{formatDate(hw.created_at)}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Preview Section */}
-        <div className="lg:col-span-2">
-          {selectedHomework ? (
-            <Card className="h-full">
-              <CardHeader>
-                <div className="flex items-start justify-between">
+                {formData.assignment_type === 'class' && (
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      {selectedHomework.title}
-                    </CardTitle>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                      <Badge variant="outline">{selectedHomework.subject}</Badge>
-                      {(() => {
-                        const assignmentInfo = getAssignmentInfo(selectedHomework);
-                        return (
-                          <div className="flex items-center gap-1">
-                            {assignmentInfo.type === 'Class' ? (
-                              <Users className="h-4 w-4 text-blue-600" />
-                            ) : (
-                              <UserCheck className="h-4 w-4 text-green-600" />
-                            )}
-                            <span>{assignmentInfo.type}: {assignmentInfo.target}</span>
-                          </div>
-                        );
-                      })()}
-                      <span>{formatDate(selectedHomework.created_at)}</span>
-                    </div>
+                    <Label htmlFor="class">Select Class *</Label>
+                    <Select
+                      value={formData.assigned_to_class}
+                      onValueChange={(value) => setFormData({ ...formData, assigned_to_class: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classes.map((className) => (
+                          <SelectItem key={className} value={className}>
+                            {className}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(selectedHomework.google_drive_link, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-1" />
-                    Open in Drive
-                  </Button>
-                </div>
-                
-                {selectedHomework.description && (
-                  <p className="text-gray-600 mt-2">{selectedHomework.description}</p>
                 )}
-              </CardHeader>
-              
-              <CardContent className="flex-1">
-                <div className="h-[600px] border rounded-lg overflow-hidden">
-                  {getEmbedUrl(selectedHomework.google_drive_link) ? (
-                    <iframe
-                      src={getEmbedUrl(selectedHomework.google_drive_link)!}
-                      className="w-full h-full"
-                      frameBorder="0"
-                      title={selectedHomework.title}
-                      allow="autoplay"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full bg-gray-50">
-                      <div className="text-center">
-                        <ExternalLink className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Preview Not Available</h3>
-                        <p className="text-gray-600 mb-4">Unable to preview this document format.</p>
-                        <Button
-                          onClick={() => window.open(selectedHomework.google_drive_link, '_blank')}
-                        >
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Open in Google Drive
-                        </Button>
-                      </div>
+
+                {formData.assignment_type === 'individual' && (
+                  <>
+                    <div>
+                      <Label htmlFor="class">Select Class First *</Label>
+                      <Select
+                        value={formData.assigned_to_class}
+                        onValueChange={(value) => setFormData({ ...formData, assigned_to_class: value, assigned_to_students: [] })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a class to filter students" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {classes.map((className) => (
+                            <SelectItem key={className} value={className}>
+                              {className}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
+
+                    {formData.assigned_to_class && (
+                      <div>
+                        <Label>Select Students *</Label>
+                        <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-2">
+                          {filteredStudents.map((student) => (
+                            <div key={student.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={student.id}
+                                checked={formData.assigned_to_students.includes(student.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({
+                                      ...formData,
+                                      assigned_to_students: [...formData.assigned_to_students, student.id]
+                                    });
+                                  } else {
+                                    setFormData({
+                                      ...formData,
+                                      assigned_to_students: formData.assigned_to_students.filter(id => id !== student.id)
+                                    });
+                                  }
+                                }}
+                                className="rounded"
+                              />
+                              <Label htmlFor={student.id} className="text-sm">
+                                {student.full_name}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className="flex gap-4">
+                  <Button type="submit" disabled={isSubmitting} className="flex-1">
+                    {isSubmitting ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Assignment' : 'Create Assignment')}
+                  </Button>
+                  {editingId && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        setEditingId(null);
+                        setFormData({
+                          title: '',
+                          subject: '',
+                          description: '',
+                          google_drive_link: '',
+                          assigned_to_class: '',
+                          assigned_to_students: [],
+                          assignment_type: 'class'
+                        });
+                      }}
+                    >
+                      Cancel
+                    </Button>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="h-full">
-              <CardContent className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Select Homework</h3>
-                  <p className="text-gray-600">Choose a homework assignment to preview the document.</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="manage">
+          <Card>
+            <CardHeader>
+              <CardTitle>Manage Homework Assignments</CardTitle>
+              <CardDescription>View, edit, or delete existing homework assignments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {homework.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">No homework assignments found</p>
+                ) : (
+                  homework.map((item) => (
+                    <div key={item.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{item.title}</h3>
+                          <p className="text-sm text-gray-600">Subject: {item.subject}</p>
+                          {item.description && (
+                            <p className="text-sm text-gray-700 mt-1">{item.description}</p>
+                          )}
+                          <div className="mt-2 text-xs text-gray-500">
+                            <p>Assigned to: {item.assigned_to_class || `Students: ${getStudentNames(item.assigned_to_students || [])}`}</p>
+                            <p>Created: {new Date(item.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(item.google_drive_link, '_blank')}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(item)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
