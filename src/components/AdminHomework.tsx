@@ -252,77 +252,83 @@ const AdminHomework = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6">
       <Tabs defaultValue="create" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="create" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            {editingId ? 'Edit Assignment' : 'Create Assignment'}
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="create" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-center">{editingId ? 'Edit Assignment' : 'Create Assignment'}</span>
           </TabsTrigger>
-          <TabsTrigger value="manage" className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4" />
-            Manage Assignments
+          <TabsTrigger value="manage" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+            <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-center">Manage Assignments</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="create">
+        <TabsContent value="create" className="mt-4 sm:mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>{editingId ? 'Edit Homework Assignment' : 'Create New Homework Assignment'}</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">
+                {editingId ? 'Edit Homework Assignment' : 'Create New Homework Assignment'}
+              </CardTitle>
+              <CardDescription className="text-sm">
                 {editingId ? 'Update the homework assignment details' : 'Add a new homework assignment for students'}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="title">Assignment Title *</Label>
+            <CardContent className="p-4 sm:p-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="text-sm font-medium">Assignment Title *</Label>
                     <Input
                       id="title"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       placeholder="Enter assignment title"
                       required
+                      className="text-sm"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="subject">Subject *</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="subject" className="text-sm font-medium">Subject *</Label>
                     <Input
                       id="subject"
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       placeholder="Enter subject name"
                       required
+                      className="text-sm"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="description">Description</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-sm font-medium">Description</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Enter assignment description (optional)"
                     rows={3}
+                    className="text-sm resize-none"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="google_drive_link">Google Drive Link *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="google_drive_link" className="text-sm font-medium">Google Drive Link *</Label>
                   <Input
                     id="google_drive_link"
                     value={formData.google_drive_link}
                     onChange={(e) => setFormData({ ...formData, google_drive_link: e.target.value })}
                     placeholder="https://drive.google.com/..."
                     required
+                    className="text-sm"
                   />
                 </div>
 
-                <div>
-                  <Label>Assignment Type *</Label>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Assignment Type *</Label>
                   <Select
                     value={formData.assignment_type}
                     onValueChange={(value: 'class' | 'individual') => {
@@ -334,7 +340,7 @@ const AdminHomework = () => {
                       });
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select assignment type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -345,13 +351,13 @@ const AdminHomework = () => {
                 </div>
 
                 {formData.assignment_type === 'class' && (
-                  <div>
-                    <Label htmlFor="class">Select Class *</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="class" className="text-sm font-medium">Select Class *</Label>
                     <Select
                       value={formData.assigned_to_class}
                       onValueChange={(value) => setFormData({ ...formData, assigned_to_class: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Select a class" />
                       </SelectTrigger>
                       <SelectContent>
@@ -367,13 +373,13 @@ const AdminHomework = () => {
 
                 {formData.assignment_type === 'individual' && (
                   <>
-                    <div>
-                      <Label htmlFor="class">Select Class First *</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="class" className="text-sm font-medium">Select Class First *</Label>
                       <Select
                         value={formData.assigned_to_class}
                         onValueChange={(value) => setFormData({ ...formData, assigned_to_class: value, assigned_to_students: [] })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-sm">
                           <SelectValue placeholder="Select a class to filter students" />
                         </SelectTrigger>
                         <SelectContent>
@@ -387,9 +393,9 @@ const AdminHomework = () => {
                     </div>
 
                     {formData.assigned_to_class && (
-                      <div>
-                        <Label>Select Students *</Label>
-                        <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-2">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Select Students *</Label>
+                        <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">
                           {filteredStudents.map((student) => (
                             <div key={student.id} className="flex items-center space-x-2">
                               <input
@@ -411,7 +417,7 @@ const AdminHomework = () => {
                                 }}
                                 className="rounded"
                               />
-                              <Label htmlFor={student.id} className="text-sm">
+                              <Label htmlFor={student.id} className="text-sm flex-1">
                                 {student.full_name}
                               </Label>
                             </div>
@@ -422,8 +428,8 @@ const AdminHomework = () => {
                   </>
                 )}
 
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={isSubmitting} className="flex-1">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                  <Button type="submit" disabled={isSubmitting} className="flex-1 h-10 sm:h-11">
                     {isSubmitting ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Assignment' : 'Create Assignment')}
                   </Button>
                   {editingId && (
@@ -442,6 +448,7 @@ const AdminHomework = () => {
                           assignment_type: 'class'
                         });
                       }}
+                      className="flex-1 sm:flex-initial h-10 sm:h-11"
                     >
                       Cancel
                     </Button>
@@ -452,57 +459,79 @@ const AdminHomework = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="manage">
+        <TabsContent value="manage" className="mt-4 sm:mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Manage Homework Assignments</CardTitle>
-              <CardDescription>View, edit, or delete existing homework assignments</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Manage Homework Assignments</CardTitle>
+              <CardDescription className="text-sm">View, edit, or delete existing homework assignments</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               <div className="space-y-4">
                 {homework.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">No homework assignments found</p>
+                  <div className="text-center py-8 sm:py-12">
+                    <BookOpen className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">No homework assignments found</p>
+                    <p className="text-gray-400 text-sm mt-2">Create your first assignment using the form above</p>
+                  </div>
                 ) : (
-                  homework.map((item) => (
-                    <div key={item.id} className="border rounded-lg p-4 space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{item.title}</h3>
-                          <p className="text-sm text-gray-600">Subject: {item.subject}</p>
-                          {item.description && (
-                            <p className="text-sm text-gray-700 mt-1">{item.description}</p>
-                          )}
-                          <div className="mt-2 text-xs text-gray-500">
-                            <p>Assigned to: {item.assigned_to_class || `Students: ${getStudentNames(item.assigned_to_students || [])}`}</p>
-                            <p>Created: {new Date(item.created_at).toLocaleDateString()}</p>
+                  <div className="grid grid-cols-1 gap-4">
+                    {homework.map((item) => (
+                      <Card key={item.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
+                        <CardContent className="p-4 sm:p-6">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                            <div className="flex-1 space-y-2">
+                              <h3 className="font-semibold text-base sm:text-lg text-gray-900 break-words">{item.title}</h3>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Subject:</span> {item.subject}
+                              </p>
+                              {item.description && (
+                                <p className="text-sm text-gray-700 break-words">{item.description}</p>
+                              )}
+                              <div className="space-y-1 text-xs text-gray-500">
+                                <p>
+                                  <span className="font-medium">Assigned to:</span>{' '}
+                                  {item.assigned_to_class || `Students: ${getStudentNames(item.assigned_to_students || [])}`}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Created:</span>{' '}
+                                  {new Date(item.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-row sm:flex-col gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(item.google_drive_link, '_blank')}
+                                className="flex-1 sm:flex-initial"
+                              >
+                                <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-0" />
+                                <span className="sm:hidden">View</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(item)}
+                                className="flex-1 sm:flex-initial"
+                              >
+                                <Edit2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-0" />
+                                <span className="sm:hidden">Edit</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(item.id)}
+                                className="flex-1 sm:flex-initial"
+                              >
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-0" />
+                                <span className="sm:hidden">Delete</span>
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex gap-2 ml-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(item.google_drive_link, '_blank')}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 )}
               </div>
             </CardContent>
