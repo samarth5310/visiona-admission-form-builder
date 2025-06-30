@@ -68,6 +68,10 @@ const Landing = () => {
     window.open('https://docs.google.com/forms/d/e/1FAIpQLSdhepGfefCEKyaiHkGzuxMKMpWsoTIFnGdfoafgFlrYTOD_Ig/viewform', '_blank');
   };
 
+  const handleWhatsAppClick = (phoneNumber: string) => {
+    window.open(`https://wa.me/91${phoneNumber}`, '_blank');
+  };
+
   const toggleLanguage = () => {
     setLanguage(prev => prev === 'en' ? 'kn' : 'en');
   };
@@ -398,7 +402,20 @@ const Landing = () => {
                   <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-[#657a00]" />
                 </div>
                 <h4 className="font-semibold text-white mb-2 text-sm sm:text-base">{t.contact}</h4>
-                <p className="text-xs sm:text-sm text-gray-300">+91 8722189292<br />+91 73494 20496</p>
+                <div className="text-xs sm:text-sm text-gray-300 space-y-1">
+                  <button 
+                    onClick={() => handleWhatsAppClick('8722189292')}
+                    className="block hover:text-[#25D366] transition-colors duration-300 hover:underline"
+                  >
+                    +91 8722189292
+                  </button>
+                  <button 
+                    onClick={() => handleWhatsAppClick('7349420496')}
+                    className="block hover:text-[#25D366] transition-colors duration-300 hover:underline"
+                  >
+                    +91 73494 20496
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-col items-center">
