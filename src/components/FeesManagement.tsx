@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -471,7 +472,6 @@ const FeesManagement = () => {
                           <div className="text-center py-4">
                             <p className="text-gray-500 text-sm mb-4">No fee structure set for this student</p>
                             <StudentSelector
-                              student={student}
                               onFeesCreated={fetchStudents}
                               onCreateFees={createStudentFees}
                             />
@@ -498,7 +498,6 @@ const FeesManagement = () => {
               </DialogDescription>
             </DialogHeader>
             <PaymentForm
-              student={selectedStudent}
               onSuccess={() => {
                 setShowPaymentForm(false);
                 fetchStudents();
