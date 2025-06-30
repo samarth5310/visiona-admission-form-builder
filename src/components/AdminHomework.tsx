@@ -1,132 +1,172 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Calendar, User, ExternalLink, Trash2, Edit, Plus, Users } from 'lucide-react';
-import { Homework } from "@/types/homework";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, BookOpen, Eye, Edit2, Trash2 } from 'lucide-react';
+
+interface HomeworkFormData {
+  title: string;
+  subject: string;
+  description: string;
+  google_drive_link: string;
+  assigned_to_class: string;
+  assigned_to_students: string[];
+  assignment_type: 'class' | 'individual';
+}
+
+interface Student {
+  id: string;
+  full_name: string;
+  class: string;
+}
+
+interface HomeworkItem {
+  id: string;
+  title: string;
+  subject: string;
+  description: string;
+  google_drive_link: string;
+  assigned_to_class: string;
+  assigned_to_students: string[];
+  assigned_by: string;
+  created_at: string;
+}
 
 const AdminHomework = () => {
-  const [homework, setHomework] = useState<Homework[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
-  const [classes, setClasses] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingHomework, setEditingHomework] = useState<Homework | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<HomeworkFormData>({
     title: '',
     subject: '',
     description: '',
     google_drive_link: '',
     assigned_to_class: '',
-    assigned_to_students: [] as string[],
-    assignment_type: 'class' as 'class' | 'specific'
+    assigned_to_students: [],
+    assignment_type: 'class'
   });
 
+  const [homework, setHomework] = useState<HomeworkItem[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<string[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchData();
+    fetchHomework();
+    fetchStudentsAndClasses();
   }, []);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    if (formData.assignment_type === 'individual' && formData.assigned_to_class) {
+      const filtered = students.filter(student => student.class === formData.assigned_to_class);
+      setFilteredStudents(filtered);
+    }
+  }, [formData.assigned_to_class, formData.assignment_type, students]);
+
+  const fetchStudentsAndClasses = async () => {
     try {
-      setLoading(true);
+      const { data: studentsData, error } = await supabase
+        .from('applications')
+        .select('id, full_name, class')
+        .order('full_name');
+
+      if (error) throw error;
+
+      setStudents(studentsData || []);
       
-      // Fetch homework
-      const { data: homeworkData, error: homeworkError } = await supabase
+      // Extract unique classes
+      const uniqueClasses = [...new Set(studentsData?.map(s => s.class) || [])];
+      setClasses(uniqueClasses.sort());
+    } catch (error) {
+      console.error('Error fetching students and classes:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch students and classes",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchHomework = async () => {
+    try {
+      const { data, error } = await supabase
         .from('homework')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (homeworkError) throw homeworkError;
-      setHomework(homeworkData || []);
-
-      // Fetch students
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('applications')
-        .select('id, full_name, class, admission_number')
-        .order('full_name');
-
-      if (studentsError) throw studentsError;
-      setStudents(studentsData || []);
-
-      // Extract unique classes
-      const uniqueClasses = [...new Set(studentsData?.map(s => s.class) || [])];
-      setClasses(uniqueClasses);
-
+      if (error) throw error;
+      setHomework(data || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching homework:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch data. Please try again.",
+        description: "Failed to fetch homework assignments",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!formData.title.trim() || !formData.subject.trim() || !formData.google_drive_link.trim()) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields.",
+        title: "Validation Error",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
     }
 
-    // Validate assignment
     if (formData.assignment_type === 'class' && !formData.assigned_to_class) {
       toast({
-        title: "Error",
-        description: "Please select a class.",
+        title: "Validation Error",
+        description: "Please select a class",
         variant: "destructive",
       });
       return;
     }
 
-    if (formData.assignment_type === 'specific' && formData.assigned_to_students.length === 0) {
+    if (formData.assignment_type === 'individual' && formData.assigned_to_students.length === 0) {
       toast({
-        title: "Error",
-        description: "Please select at least one student.",
+        title: "Validation Error",
+        description: "Please select at least one student",
         variant: "destructive",
       });
       return;
     }
 
     setIsSubmitting(true);
+
     try {
       const homeworkData = {
         title: formData.title.trim(),
         subject: formData.subject.trim(),
         description: formData.description.trim(),
         google_drive_link: formData.google_drive_link.trim(),
-        assigned_by: 'Admin', // You can make this dynamic later
-        assigned_to_class: formData.assignment_type === 'class' ? formData.assigned_to_class : null,
-        assigned_to_students: formData.assignment_type === 'specific' ? formData.assigned_to_students : null
+        assigned_to_class: formData.assignment_type === 'class' ? formData.assigned_to_class : '',
+        assigned_to_students: formData.assignment_type === 'individual' ? formData.assigned_to_students : null,
+        assigned_by: 'Admin'
       };
 
-      if (editingHomework) {
+      if (editingId) {
         const { error } = await supabase
           .from('homework')
           .update(homeworkData)
-          .eq('id', editingHomework.id);
+          .eq('id', editingId);
 
         if (error) throw error;
 
         toast({
           title: "Success",
-          description: "Homework updated successfully!",
+          description: "Homework assignment updated successfully!",
         });
       } else {
         const { error } = await supabase
@@ -137,11 +177,11 @@ const AdminHomework = () => {
 
         toast({
           title: "Success",
-          description: "Homework assigned successfully!",
+          description: "Homework assignment created successfully!",
         });
       }
 
-      // Reset form and refresh data
+      // Reset form
       setFormData({
         title: '',
         subject: '',
@@ -151,15 +191,13 @@ const AdminHomework = () => {
         assigned_to_students: [],
         assignment_type: 'class'
       });
-      setEditingHomework(null);
-      setShowForm(false);
-      fetchData();
-
+      setEditingId(null);
+      fetchHomework();
     } catch (error) {
       console.error('Error saving homework:', error);
       toast({
         title: "Error",
-        description: "Failed to save homework. Please try again.",
+        description: "Failed to save homework assignment. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -167,21 +205,22 @@ const AdminHomework = () => {
     }
   };
 
-  const handleEdit = (hw: Homework) => {
-    setEditingHomework(hw);
+  const handleEdit = (homework: HomeworkItem) => {
     setFormData({
-      title: hw.title,
-      subject: hw.subject,
-      description: hw.description || '',
-      google_drive_link: hw.google_drive_link,
-      assigned_to_class: hw.assigned_to_class || '',
-      assigned_to_students: hw.assigned_to_students || [],
-      assignment_type: hw.assigned_to_class ? 'class' : 'specific'
+      title: homework.title,
+      subject: homework.subject,
+      description: homework.description || '',
+      google_drive_link: homework.google_drive_link,
+      assigned_to_class: homework.assigned_to_class,
+      assigned_to_students: homework.assigned_to_students || [],
+      assignment_type: homework.assigned_to_students && homework.assigned_to_students.length > 0 ? 'individual' : 'class'
     });
-    setShowForm(true);
+    setEditingId(homework.id);
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this homework assignment?')) return;
+
     try {
       const { error } = await supabase
         .from('homework')
@@ -192,28 +231,17 @@ const AdminHomework = () => {
 
       toast({
         title: "Success",
-        description: "Homework deleted successfully!",
+        description: "Homework assignment deleted successfully!",
       });
-      
-      fetchData();
+      fetchHomework();
     } catch (error) {
       console.error('Error deleting homework:', error);
       toast({
         title: "Error",
-        description: "Failed to delete homework. Please try again.",
+        description: "Failed to delete homework assignment",
         variant: "destructive",
       });
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   const getStudentNames = (studentIds: string[]) => {
@@ -223,338 +251,293 @@ const AdminHomework = () => {
     }).join(', ');
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh] px-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading homework...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* Header with responsive design */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Homework Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Create and manage student assignments</p>
-        </div>
-        <Button 
-          onClick={() => setShowForm(true)} 
-          className="flex items-center gap-2 w-full sm:w-auto"
-        >
-          <Plus className="h-4 w-4" />
-          Add New Homework
-        </Button>
-      </div>
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6">
+      <Tabs defaultValue="create" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="create" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-center">{editingId ? 'Edit Assignment' : 'Create Assignment'}</span>
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3 text-xs sm:text-sm">
+            <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-center">Manage Assignments</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Assignment Form */}
-      {showForm && (
-        <Card className="border-2 border-blue-200">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <BookOpen className="h-5 w-5" />
-              {editingHomework ? 'Edit Homework' : 'Create New Homework'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TabsContent value="create" className="mt-4 sm:mt-6">
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">
+                {editingId ? 'Edit Homework Assignment' : 'Create New Homework Assignment'}
+              </CardTitle>
+              <CardDescription className="text-sm">
+                {editingId ? 'Update the homework assignment details' : 'Add a new homework assignment for students'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="text-sm font-medium">Assignment Title *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Enter assignment title"
+                      required
+                      className="text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subject" className="text-sm font-medium">Subject *</Label>
+                    <Input
+                      id="subject"
+                      value={formData.subject}
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                      placeholder="Enter subject name"
+                      required
+                      className="text-sm"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    placeholder="e.g., Math Practice Set 1"
-                    required
-                    className="text-sm sm:text-base"
+                  <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Enter assignment description (optional)"
+                    rows={3}
+                    className="text-sm resize-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject">Subject *</Label>
+                  <Label htmlFor="google_drive_link" className="text-sm font-medium">Google Drive Link *</Label>
                   <Input
-                    id="subject"
-                    value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                    placeholder="e.g., Mathematics"
+                    id="google_drive_link"
+                    value={formData.google_drive_link}
+                    onChange={(e) => setFormData({ ...formData, google_drive_link: e.target.value })}
+                    placeholder="https://drive.google.com/..."
                     required
-                    className="text-sm sm:text-base"
+                    className="text-sm"
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Additional instructions or notes (optional)"
-                  rows={3}
-                  className="text-sm sm:text-base"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="google_drive_link">Google Drive Link *</Label>
-                <Input
-                  id="google_drive_link"
-                  value={formData.google_drive_link}
-                  onChange={(e) => setFormData({...formData, google_drive_link: e.target.value})}
-                  placeholder="https://drive.google.com/file/d/..."
-                  required
-                  className="text-sm sm:text-base"
-                />
-              </div>
-
-              {/* Assignment Type */}
-              <div className="space-y-4">
-                <Label>Assignment Type</Label>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="assignment_type"
-                      value="class"
-                      checked={formData.assignment_type === 'class'}
-                      onChange={(e) => setFormData({...formData, assignment_type: e.target.value as 'class' | 'specific'})}
-                      className="text-blue-600"
-                    />
-                    <span className="text-sm sm:text-base">Assign to entire class</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="assignment_type"
-                      value="specific"
-                      checked={formData.assignment_type === 'specific'}
-                      onChange={(e) => setFormData({...formData, assignment_type: e.target.value as 'class' | 'specific'})}
-                      className="text-blue-600"
-                    />
-                    <span className="text-sm sm:text-base">Assign to specific students</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Class Selection */}
-              {formData.assignment_type === 'class' && (
                 <div className="space-y-2">
-                  <Label>Select Class *</Label>
-                  <Select 
-                    value={formData.assigned_to_class} 
-                    onValueChange={(value) => setFormData({...formData, assigned_to_class: value})}
+                  <Label className="text-sm font-medium">Assignment Type *</Label>
+                  <Select
+                    value={formData.assignment_type}
+                    onValueChange={(value: 'class' | 'individual') => {
+                      setFormData({ 
+                        ...formData, 
+                        assignment_type: value, 
+                        assigned_to_class: '',
+                        assigned_to_students: []
+                      });
+                    }}
                   >
-                    <SelectTrigger className="text-sm sm:text-base">
-                      <SelectValue placeholder="Choose a class" />
+                    <SelectTrigger className="text-sm">
+                      <SelectValue placeholder="Select assignment type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {classes.map((cls) => (
-                        <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                      ))}
+                      <SelectItem value="class">Assign to Entire Class</SelectItem>
+                      <SelectItem value="individual">Assign to Specific Students</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              )}
 
-              {/* Student Selection */}
-              {formData.assignment_type === 'specific' && (
-                <div className="space-y-2">
-                  <Label>Select Students *</Label>
-                  <div className="border rounded-lg p-3 max-h-48 overflow-y-auto">
-                    {students.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No students available</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {students.map((student) => (
-                          <label key={student.id} className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={formData.assigned_to_students.includes(student.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setFormData({
-                                    ...formData,
-                                    assigned_to_students: [...formData.assigned_to_students, student.id]
-                                  });
-                                } else {
-                                  setFormData({
-                                    ...formData,
-                                    assigned_to_students: formData.assigned_to_students.filter(id => id !== student.id)
-                                  });
-                                }
-                              }}
-                              className="text-blue-600"
-                            />
-                            <span className="text-sm">
-                              {student.full_name} ({student.class}) - {student.admission_number}
-                            </span>
-                          </label>
+                {formData.assignment_type === 'class' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="class" className="text-sm font-medium">Select Class *</Label>
+                    <Select
+                      value={formData.assigned_to_class}
+                      onValueChange={(value) => setFormData({ ...formData, assigned_to_class: value })}
+                    >
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="Select a class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classes.map((className) => (
+                          <SelectItem key={className} value={className}>
+                            {className}
+                          </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {formData.assignment_type === 'individual' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="class" className="text-sm font-medium">Select Class First *</Label>
+                      <Select
+                        value={formData.assigned_to_class}
+                        onValueChange={(value) => setFormData({ ...formData, assigned_to_class: value, assigned_to_students: [] })}
+                      >
+                        <SelectTrigger className="text-sm">
+                          <SelectValue placeholder="Select a class to filter students" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {classes.map((className) => (
+                            <SelectItem key={className} value={className}>
+                              {className}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {formData.assigned_to_class && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Select Students *</Label>
+                        <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">
+                          {filteredStudents.map((student) => (
+                            <div key={student.id} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id={student.id}
+                                checked={formData.assigned_to_students.includes(student.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData({
+                                      ...formData,
+                                      assigned_to_students: [...formData.assigned_to_students, student.id]
+                                    });
+                                  } else {
+                                    setFormData({
+                                      ...formData,
+                                      assigned_to_students: formData.assigned_to_students.filter(id => id !== student.id)
+                                    });
+                                  }
+                                }}
+                                className="rounded"
+                              />
+                              <Label htmlFor={student.id} className="text-sm flex-1">
+                                {student.full_name}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
-                  </div>
-                  {formData.assigned_to_students.length > 0 && (
-                    <p className="text-sm text-gray-600">
-                      Selected: {formData.assigned_to_students.length} student(s)
-                    </p>
+                  </>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
+                  <Button type="submit" disabled={isSubmitting} className="flex-1 h-10 sm:h-11">
+                    {isSubmitting ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Assignment' : 'Create Assignment')}
+                  </Button>
+                  {editingId && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        setEditingId(null);
+                        setFormData({
+                          title: '',
+                          subject: '',
+                          description: '',
+                          google_drive_link: '',
+                          assigned_to_class: '',
+                          assigned_to_students: [],
+                          assignment_type: 'class'
+                        });
+                      }}
+                      className="flex-1 sm:flex-initial h-10 sm:h-11"
+                    >
+                      Cancel
+                    </Button>
                   )}
                 </div>
-              )}
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="flex-1 sm:flex-none"
-                >
-                  {isSubmitting ? 'Saving...' : (editingHomework ? 'Update Homework' : 'Create Homework')}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingHomework(null);
-                    setFormData({
-                      title: '',
-                      subject: '',
-                      description: '',
-                      google_drive_link: '',
-                      assigned_to_class: '',
-                      assigned_to_students: [],
-                      assignment_type: 'class'
-                    });
-                  }}
-                  className="flex-1 sm:flex-none"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Homework List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {homework.length === 0 ? (
-          <div className="col-span-full">
-            <Card>
-              <CardContent className="text-center py-12">
-                <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Homework Created</h3>
-                <p className="text-gray-600 mb-4">Start by creating your first homework assignment.</p>
-                <Button onClick={() => setShowForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Homework
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          homework.map((hw) => (
-            <Card key={hw.id} className="hover:shadow-lg transition-all duration-200">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-base sm:text-lg line-clamp-2">{hw.title}</CardTitle>
-                  <Badge variant="secondary" className="ml-2 text-xs shrink-0">
-                    {hw.subject}
-                  </Badge>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-3">
-                {hw.description && (
-                  <p className="text-sm text-gray-600 line-clamp-3">{hw.description}</p>
+        <TabsContent value="manage" className="mt-4 sm:mt-6">
+          <Card>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl">Manage Homework Assignments</CardTitle>
+              <CardDescription className="text-sm">View, edit, or delete existing homework assignments</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-4">
+                {homework.length === 0 ? (
+                  <div className="text-center py-8 sm:py-12">
+                    <BookOpen className="h-12 w-12 sm:h-16 sm:w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">No homework assignments found</p>
+                    <p className="text-gray-400 text-sm mt-2">Create your first assignment using the form above</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {homework.map((item) => (
+                      <Card key={item.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
+                        <CardContent className="p-4 sm:p-6">
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                            <div className="flex-1 space-y-2">
+                              <h3 className="font-semibold text-base sm:text-lg text-gray-900 break-words">{item.title}</h3>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Subject:</span> {item.subject}
+                              </p>
+                              {item.description && (
+                                <p className="text-sm text-gray-700 break-words">{item.description}</p>
+                              )}
+                              <div className="space-y-1 text-xs text-gray-500">
+                                <p>
+                                  <span className="font-medium">Assigned to:</span>{' '}
+                                  {item.assigned_to_class || `Students: ${getStudentNames(item.assigned_to_students || [])}`}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Created:</span>{' '}
+                                  {new Date(item.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-row sm:flex-col gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(item.google_drive_link, '_blank')}
+                                className="flex-1 sm:flex-initial"
+                              >
+                                <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-0" />
+                                <span className="sm:hidden">View</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(item)}
+                                className="flex-1 sm:flex-initial"
+                              >
+                                <Edit2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-0" />
+                                <span className="sm:hidden">Edit</span>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(item.id)}
+                                className="flex-1 sm:flex-initial"
+                              >
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-0" />
+                                <span className="sm:hidden">Delete</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 )}
-                
-                <div className="space-y-2 text-xs sm:text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <User className="h-3 w-3 mr-1 shrink-0" />
-                    <span className="truncate">By: {hw.assigned_by}</span>
-                  </div>
-                  
-                  <div className="flex items-center">
-                    <Calendar className="h-3 w-3 mr-1 shrink-0" />
-                    <span className="truncate">{formatDate(hw.created_at)}</span>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <Users className="h-3 w-3 mr-1 mt-0.5 shrink-0" />
-                    <span className="text-xs line-clamp-2">
-                      {hw.assigned_to_class 
-                        ? `Class: ${hw.assigned_to_class}` 
-                        : `Students: ${getStudentNames(hw.assigned_to_students || [])}`
-                      }
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-2 pt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(hw.google_drive_link, '_blank')}
-                    className="flex items-center gap-1 text-xs flex-1"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    View Document
-                  </Button>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(hw)}
-                      className="flex items-center gap-1 text-xs"
-                    >
-                      <Edit className="h-3 w-3" />
-                      Edit
-                    </Button>
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-1 text-xs text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Delete
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-sm sm:max-w-md">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle className="text-base sm:text-lg">Delete Homework</AlertDialogTitle>
-                          <AlertDialogDescription className="text-sm">
-                            Are you sure you want to delete "{hw.title}"? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                          <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={() => handleDelete(hw.id)}
-                            className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

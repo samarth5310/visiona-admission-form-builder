@@ -1,117 +1,105 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Search, RefreshCw, Users, CreditCard } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { IndianRupee, User, CreditCard, Calendar, Receipt, Users, TrendingUp } from 'lucide-react';
-import StudentSelector from './StudentSelector';
-import PaymentForm from './PaymentForm';
-import PaymentHistory from './PaymentHistory';
 import FeeDetailsModal from './FeeDetailsModal';
 import FeesDashboard from './FeesDashboard';
+import InstallPWAButton from './InstallPWAButton';
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 
-interface Student {
+interface StudentWithFees {
   id: string;
   full_name: string;
   class: string;
-  admission_number: string;
   contact_number: string;
-  student_fees?: StudentFee[];
-}
-
-interface StudentFee {
-  id: string;
+  created_at: string;
   total_fees: number;
   paid_amount: number;
   pending_amount: number;
-  payment_status: 'pending' | 'partial' | 'paid';
-  fee_category: string;
-  paid_date?: string;
+  payment_status: string;
+  paid_date: string | null;
+  fee_id?: string;
 }
 
 const FeesManagement = () => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<StudentWithFees[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<StudentWithFees[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [classFilter, setClassFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [showFeeDetails, setShowFeeDetails] = useState(false);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'students'>('dashboard');
+  const [loading, setLoading] = useState(true);
+  const [selectedStudent, setSelectedStudent] = useState<StudentWithFees | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  useEffect(() => {
-    filterStudents();
-  }, [students, searchTerm, classFilter, statusFilter]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
 
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      console.log('Fetching students with fees...');
-
+      console.log('Fetching students with fee information...');
+      
       const { data, error } = await supabase
         .from('applications')
         .select(`
           id,
           full_name,
           class,
-          admission_number,
           contact_number,
+          created_at,
           student_fees (
             id,
             total_fees,
             paid_amount,
             pending_amount,
             payment_status,
-            fee_category,
             paid_date
           )
         `)
-        .order('full_name');
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching students:', error);
         throw error;
       }
 
-      console.log('Students data fetched:', data);
-      
-      // Transform the data to match our Student interface with proper type casting
-      const transformedStudents: Student[] = data?.map(student => ({
-        id: student.id,
-        full_name: student.full_name,
-        class: student.class,
-        admission_number: student.admission_number,
-        contact_number: student.contact_number,
-        student_fees: student.student_fees ? [{
-          id: student.student_fees.id,
-          total_fees: student.student_fees.total_fees,
-          paid_amount: student.student_fees.paid_amount,
-          pending_amount: student.student_fees.pending_amount,
-          payment_status: student.student_fees.payment_status as 'pending' | 'partial' | 'paid',
-          fee_category: student.student_fees.fee_category,
-          paid_date: student.student_fees.paid_date || undefined
-        }] : []
-      })) || [];
-      
-      setStudents(transformedStudents);
-      
+      console.log('Raw data from database:', data);
+
+      const studentsWithFees: StudentWithFees[] = data.map(student => {
+        // Fix: Handle both array and single object response from Supabase
+        const studentFees = Array.isArray(student.student_fees) 
+          ? student.student_fees[0] 
+          : student.student_fees;
+
+        console.log('Processing student:', student.full_name, 'fees data:', studentFees);
+
+        return {
+          id: student.id,
+          full_name: student.full_name,
+          class: student.class || 'Not specified',
+          contact_number: student.contact_number || 'Not provided',
+          created_at: student.created_at,
+          total_fees: studentFees?.total_fees || 0,
+          paid_amount: studentFees?.paid_amount || 0,
+          pending_amount: studentFees?.pending_amount || 0,
+          payment_status: studentFees?.payment_status || 'not_set',
+          paid_date: studentFees?.paid_date || null,
+          fee_id: studentFees?.id
+        };
+      });
+
+      console.log('Processed students data:', studentsWithFees);
+      setStudents(studentsWithFees);
+      setFilteredStudents(studentsWithFees);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in fetchStudents:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch students data. Please try again.",
+        description: "Failed to fetch student data. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -119,146 +107,72 @@ const FeesManagement = () => {
     }
   };
 
-  const filterStudents = () => {
-    let filtered = [...students];
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(student =>
-        student.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.admission_number.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+  useEffect(() => {
+    let filtered = students.filter(student =>
+      student.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    // Class filter
-    if (classFilter !== 'all') {
-      filtered = filtered.filter(student => student.class === classFilter);
-    }
-
-    // Status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(student => {
-        const fees = Array.isArray(student.student_fees) ? student.student_fees[0] : student.student_fees;
-        if (!fees) return statusFilter === 'no_fees';
-        return fees.payment_status === statusFilter;
-      });
+      filtered = filtered.filter(student => student.payment_status === statusFilter);
     }
 
     setFilteredStudents(filtered);
-  };
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, students]);
 
-  const createStudentFees = async (studentId: string, totalFees: number, feeCategory: string = 'tuition') => {
-    try {
-      console.log('Creating fees for student:', studentId, 'Amount:', totalFees);
-      
-      const { data, error } = await supabase
-        .from('student_fees')
-        .insert([{
-          application_id: studentId,
-          total_fees: totalFees,
-          paid_amount: 0,
-          pending_amount: totalFees,
-          payment_status: 'pending',
-          fee_category: feeCategory
-        }])
-        .select()
-        .single();
+  const pageCount = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = filteredStudents.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
-      if (error) {
-        console.error('Error creating student fees:', error);
-        throw error;
-      }
-
-      console.log('Fees created successfully:', data);
-      
-      toast({
-        title: "Success",
-        description: "Fee structure created successfully!",
-      });
-      
-      fetchStudents();
-      return data;
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create fee structure. Please try again.",
-        variant: "destructive",
-      });
-      throw error;
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= pageCount) {
+      setCurrentPage(page);
     }
   };
 
-  const updateFeeStatus = async (studentId: string, newStatus: 'pending' | 'partial' | 'paid') => {
-    try {
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
-
-      const fees = Array.isArray(student.student_fees) ? student.student_fees[0] : student.student_fees;
-      if (!fees) return;
-
-      let updateData: any = {
-        payment_status: newStatus,
-        updated_at: new Date().toISOString()
-      };
-
-      // If marking as fully paid, ensure paid_amount equals total_fees and pending is 0
-      if (newStatus === 'paid') {
-        updateData.paid_amount = fees.total_fees;
-        updateData.pending_amount = 0;
-        updateData.paid_date = new Date().toISOString().split('T')[0];
-      }
-      // If marking as pending, reset to original state
-      else if (newStatus === 'pending') {
-        updateData.paid_amount = 0;
-        updateData.pending_amount = fees.total_fees;
-        updateData.paid_date = null;
-      }
-
-      console.log('Updating fee status:', updateData);
-
-      const { error } = await supabase
-        .from('student_fees')
-        .update(updateData)
-        .eq('id', fees.id);
-
-      if (error) {
-        console.error('Error updating fee status:', error);
-        throw error;
-      }
-
-      toast({
-        title: "Success",
-        description: `Fee status updated to ${newStatus}!`,
-      });
-      
-      fetchStudents();
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update fee status. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleManageFees = (student: StudentWithFees) => {
+    setSelectedStudent(student);
+    setShowModal(true);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid': return 'bg-green-500 hover:bg-green-600';
-      case 'partial': return 'bg-yellow-500 hover:bg-yellow-600';
-      case 'pending': return 'bg-red-500 hover:bg-red-600';
-      default: return 'bg-gray-500 hover:bg-gray-600';
-    }
+  const handleModalClose = () => {
+    setShowModal(false);
+    setSelectedStudent(null);
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'paid': return 'Paid';
-      case 'partial': return 'Partial';
-      case 'pending': return 'Pending';
-      default: return 'Unknown';
-    }
+  const handleModalUpdate = () => {
+    fetchStudents();
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      not_set: { label: 'Not Set', variant: 'secondary' as const, className: 'bg-gray-200 text-gray-800' },
+      pending: { label: 'Pending', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' },
+      partial: { label: 'Partial', variant: 'secondary' as const, className: 'bg-yellow-100 text-yellow-800' },
+      paid: { label: 'Paid', variant: 'secondary' as const, className: 'bg-green-100 text-green-800' }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.not_set;
+    
+    return (
+      <Badge variant={config.variant} className={config.className}>
+        {config.label}
+      </Badge>
+    );
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -270,261 +184,190 @@ const FeesManagement = () => {
     }).format(amount);
   };
 
-  const uniqueClasses = [...new Set(students.map(s => s.class))];
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading students...</p>
-        </div>
+      <div className="text-center py-8">
+        <RefreshCw className="animate-spin h-8 w-8 mx-auto mb-4 text-gray-600" />
+        <p className="text-gray-600">Loading student data...</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* Navigation Tabs - Responsive */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-        <Button
-          variant={currentView === 'dashboard' ? 'default' : 'outline'}
-          onClick={() => setCurrentView('dashboard')}
-          className="flex items-center gap-2 w-full sm:w-auto"
+    <div className="space-y-6">
+      {/* Dashboard */}
+      <FeesDashboard />
+
+      {/* Stats and Controls */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-gray-700">
+            <Users className="h-5 w-5" />
+            <span className="font-semibold">Total Students: {students.length}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-700">
+            <CreditCard className="h-5 w-5" />
+            <span className="font-semibold">Displayed: {filteredStudents.length}</span>
+          </div>
+        </div>
+        
+        <Button 
+          onClick={fetchStudents} 
+          variant="outline" 
+          className="flex items-center gap-2"
+          disabled={loading}
         >
-          <TrendingUp className="h-4 w-4" />
-          Dashboard
-        </Button>
-        <Button
-          variant={currentView === 'students' ? 'default' : 'outline'}
-          onClick={() => setCurrentView('students')}
-          className="flex items-center gap-2 w-full sm:w-auto"
-        >
-          <Users className="h-4 w-4" />
-          Student Fees
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
         </Button>
       </div>
 
-      {currentView === 'dashboard' ? (
-        <FeesDashboard />
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search students by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="not_set">Not Set</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="partial">Partial</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Students Grid */}
+      {filteredStudents.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          {students.length === 0 ? 'No students found' : 'No students match your search criteria'}
+        </div>
       ) : (
         <>
-          {/* Search and Filter Section - Mobile Responsive */}
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg sm:text-xl">Student Fee Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Search Input */}
-                <div className="w-full">
-                  <Label htmlFor="search">Search Students</Label>
-                  <Input
-                    id="search"
-                    placeholder="Search by name or admission number..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="mt-2"
-                  />
-                </div>
-
-                {/* Filters - Responsive Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label>Filter by Class</Label>
-                    <Select value={classFilter} onValueChange={setClassFilter}>
-                      <SelectTrigger className="mt-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Classes</SelectItem>
-                        {uniqueClasses.map((cls) => (
-                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {paginatedStudents.map((student) => (
+              <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg font-semibold text-gray-800 truncate">
+                      {student.full_name}
+                    </CardTitle>
+                    {getStatusBadge(student.payment_status)}
                   </div>
-
-                  <div>
-                    <Label>Filter by Status</Label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="mt-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="partial">Partial</SelectItem>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="no_fees">No Fees Set</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Students List - Mobile Responsive Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-            {filteredStudents.length === 0 ? (
-              <div className="col-span-full">
-                <Card>
-                  <CardContent className="text-center py-12">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Students Found</h3>
-                    <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              filteredStudents.map((student) => {
-                const fees = Array.isArray(student.student_fees) ? student.student_fees[0] : student.student_fees;
+                </CardHeader>
                 
-                return (
-                  <Card key={student.id} className="hover:shadow-lg transition-all duration-200">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="min-w-0 flex-1">
-                          <CardTitle className="text-base sm:text-lg line-clamp-2">{student.full_name}</CardTitle>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {student.class} • {student.admission_number}
-                          </p>
-                        </div>
-                        {fees && (
-                          <Badge className={`${getStatusColor(fees.payment_status)} text-white ml-2 text-xs shrink-0`}>
-                            {getStatusText(fees.payment_status)}
-                          </Badge>
-                        )}
-                      </div>
-                    </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Class:</span>
+                      <span className="font-medium">{student.class}</span>
+                    </div>
                     
-                    <CardContent className="space-y-4">
-                      {fees ? (
-                        <>
-                          {/* Fee Information */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Total Fees:</span>
-                              <span className="font-semibold">{formatCurrency(fees.total_fees)}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Paid:</span>
-                              <span className="font-semibold text-green-600">{formatCurrency(fees.paid_amount)}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Pending:</span>
-                              <span className="font-semibold text-red-600">{formatCurrency(fees.pending_amount)}</span>
-                            </div>
-                          </div>
-
-                          {/* Progress Bar */}
-                          <div className="space-y-2">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                                style={{ 
-                                  width: `${Math.min((fees.paid_amount / fees.total_fees) * 100, 100)}%` 
-                                }}
-                              />
-                            </div>
-                            <div className="flex justify-between text-xs text-gray-500">
-                              <span>{((fees.paid_amount / fees.total_fees) * 100).toFixed(1)}% paid</span>
-                              <span>{fees.fee_category}</span>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedStudent(student);
-                                setShowPaymentForm(true);
-                              }}
-                              className="flex items-center gap-1 text-xs flex-1"
-                            >
-                              <CreditCard className="h-3 w-3" />
-                              Add Payment
-                            </Button>
-                            
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="flex items-center gap-1 text-xs flex-1"
-                                >
-                                  <Receipt className="h-3 w-3" />
-                                  View Details
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                                <FeeDetailsModal student={student} onUpdate={fetchStudents} />
-                              </DialogContent>
-                            </Dialog>
-                          </div>
-
-                          {/* Quick Status Update */}
-                          <div className="pt-2 border-t">
-                            <Label className="text-xs text-gray-600 mb-2 block">Quick Status Update:</Label>
-                            <div className="flex gap-1">
-                              {['pending', 'partial', 'paid'].map((status) => (
-                                <Button
-                                  key={status}
-                                  variant={fees.payment_status === status ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => updateFeeStatus(student.id, status as any)}
-                                  className="text-xs flex-1"
-                                  disabled={fees.payment_status === status}
-                                >
-                                  {getStatusText(status)}
-                                </Button>
-                              ))}
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-center py-4">
-                            <p className="text-gray-500 text-sm mb-4">No fee structure set for this student</p>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => createStudentFees(student.id, 10000)}
-                              className="flex items-center gap-2"
-                            >
-                              <CreditCard className="h-4 w-4" />
-                              Create Fee Structure
-                            </Button>
-                          </div>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Phone:</span>
+                      <span className="font-medium">{student.contact_number}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Applied:</span>
+                      <span className="font-medium">{formatDate(student.created_at)}</span>
+                    </div>
+                    
+                    {student.paid_date && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Paid Date:</span>
+                        <span className="font-medium text-green-600">{formatDate(student.paid_date)}</span>
+                      </div>
+                    )}
+                    
+                    <div className="border-t pt-2 mt-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Fees:</span>
+                        <span className="font-medium text-blue-600">
+                          {student.total_fees > 0 ? formatCurrency(student.total_fees) : 'Not Set'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Paid:</span>
+                        <span className="font-medium text-green-600">
+                          {formatCurrency(student.paid_amount)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Pending:</span>
+                        <span className="font-medium text-red-600">
+                          {student.total_fees > 0 ? formatCurrency(student.pending_amount) : 'Not Set'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      className="w-full mt-3" 
+                      variant="outline"
+                      onClick={() => handleManageFees(student)}
+                    >
+                      Manage Fees
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+
+          {pageCount > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                      aria-disabled={currentPage === 1}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="px-4 py-2 text-sm font-medium">
+                      Page {currentPage} of {pageCount}
+                    </span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                      aria-disabled={currentPage === pageCount}
+                      className={currentPage === pageCount ? 'pointer-events-none opacity-50' : ''}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </>
       )}
 
-      {/* Payment Form Modal */}
-      {showPaymentForm && selectedStudent && selectedStudent.student_fees && selectedStudent.student_fees[0] && (
-        <PaymentForm
-          studentFeesId={selectedStudent.student_fees[0].id}
-          studentName={selectedStudent.full_name}
-          pendingAmount={selectedStudent.student_fees[0].pending_amount}
-          phoneNumber={selectedStudent.contact_number}
-          isOpen={showPaymentForm}
-          onClose={() => setShowPaymentForm(false)}
-          onSuccess={() => {
-            setShowPaymentForm(false);
-            fetchStudents();
-          }}
-        />
-      )}
+      {/* Fee Details Modal */}
+      <FeeDetailsModal
+        student={selectedStudent}
+        isOpen={showModal}
+        onClose={handleModalClose}
+        onUpdate={handleModalUpdate}
+      />
+      
+      <InstallPWAButton />
     </div>
   );
 };
