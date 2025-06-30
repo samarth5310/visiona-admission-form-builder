@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -87,7 +86,14 @@ const FeesManagement = () => {
       }
 
       console.log('Students data fetched:', data);
-      setStudents(data || []);
+      
+      // Transform the data to match our Student interface
+      const transformedStudents = data?.map(student => ({
+        ...student,
+        student_fees: student.student_fees ? [student.student_fees] : []
+      })) || [];
+      
+      setStudents(transformedStudents);
       
     } catch (error) {
       console.error('Error:', error);
@@ -471,10 +477,15 @@ const FeesManagement = () => {
                         <>
                           <div className="text-center py-4">
                             <p className="text-gray-500 text-sm mb-4">No fee structure set for this student</p>
-                            <StudentSelector
-                              onFeesCreated={fetchStudents}
-                              onCreateFees={createStudentFees}
-                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => createStudentFees(student.id, 10000)}
+                              className="flex items-center gap-2"
+                            >
+                              <CreditCard className="h-4 w-4" />
+                              Create Fee Structure
+                            </Button>
                           </div>
                         </>
                       )}
@@ -502,7 +513,6 @@ const FeesManagement = () => {
                 setShowPaymentForm(false);
                 fetchStudents();
               }}
-              onCancel={() => setShowPaymentForm(false)}
             />
           </DialogContent>
         </Dialog>
