@@ -87,10 +87,22 @@ const FeesManagement = () => {
 
       console.log('Students data fetched:', data);
       
-      // Transform the data to match our Student interface
-      const transformedStudents = data?.map(student => ({
-        ...student,
-        student_fees: student.student_fees ? [student.student_fees] : []
+      // Transform the data to match our Student interface with proper type casting
+      const transformedStudents: Student[] = data?.map(student => ({
+        id: student.id,
+        full_name: student.full_name,
+        class: student.class,
+        admission_number: student.admission_number,
+        contact_number: student.contact_number,
+        student_fees: student.student_fees ? [{
+          id: student.student_fees.id,
+          total_fees: student.student_fees.total_fees,
+          paid_amount: student.student_fees.paid_amount,
+          pending_amount: student.student_fees.pending_amount,
+          payment_status: student.student_fees.payment_status as 'pending' | 'partial' | 'paid',
+          fee_category: student.student_fees.fee_category,
+          paid_date: student.student_fees.paid_date || undefined
+        }] : []
       })) || [];
       
       setStudents(transformedStudents);
@@ -499,23 +511,19 @@ const FeesManagement = () => {
       )}
 
       {/* Payment Form Modal */}
-      {showPaymentForm && selectedStudent && (
-        <Dialog open={showPaymentForm} onOpenChange={setShowPaymentForm}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add Payment - {selectedStudent.full_name}</DialogTitle>
-              <DialogDescription>
-                Record a new fee payment for this student
-              </DialogDescription>
-            </DialogHeader>
-            <PaymentForm
-              onSuccess={() => {
-                setShowPaymentForm(false);
-                fetchStudents();
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+      {showPaymentForm && selectedStudent && selectedStudent.student_fees && selectedStudent.student_fees[0] && (
+        <PaymentForm
+          studentFeesId={selectedStudent.student_fees[0].id}
+          studentName={selectedStudent.full_name}
+          pendingAmount={selectedStudent.student_fees[0].pending_amount}
+          phoneNumber={selectedStudent.contact_number}
+          isOpen={showPaymentForm}
+          onClose={() => setShowPaymentForm(false)}
+          onSuccess={() => {
+            setShowPaymentForm(false);
+            fetchStudents();
+          }}
+        />
       )}
     </div>
   );
