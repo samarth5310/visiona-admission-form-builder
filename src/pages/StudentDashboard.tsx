@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, User, BookOpen, GraduationCap, CreditCard, Home, Trophy } from 'lucide-react';
+import { LogOut, User, BookOpen, GraduationCap, CreditCard, Home, Trophy, Gamepad2 } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import StudentMarks from '@/components/StudentMarks';
 import StudentFeeDetails from '@/components/StudentFeeDetails';
 import StudentLeaderboard from '@/components/StudentLeaderboard';
+import DinoGame from '@/components/DinoGame';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -161,7 +163,7 @@ const StudentDashboard = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-5 h-auto">
             <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3">
               <User className="h-4 w-4" />
               <span className="text-xs sm:text-sm">Profile</span>
@@ -177,6 +179,10 @@ const StudentDashboard = () => {
             <TabsTrigger value="fees" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3">
               <CreditCard className="h-4 w-4" />
               <span className="text-xs sm:text-sm">Fees</span>
+            </TabsTrigger>
+            <TabsTrigger value="games" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3">
+              <Gamepad2 className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Games</span>
             </TabsTrigger>
           </TabsList>
 
@@ -290,6 +296,10 @@ const StudentDashboard = () => {
 
           <TabsContent value="fees" className="mt-6">
             <StudentFeeDetails />
+          </TabsContent>
+
+          <TabsContent value="games" className="mt-6">
+            <DinoGame />
           </TabsContent>
         </Tabs>
 
