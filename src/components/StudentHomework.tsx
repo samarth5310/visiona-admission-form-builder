@@ -1,52 +1,100 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Calendar, User, ExternalLink, ChevronLeft } from 'lucide-react';
+import { BookOpen, ExternalLink, Calendar, User } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Homework } from "@/types/homework";
+
+interface HomeworkItem {
+  id: string;
+  title: string;
+  subject: string;
+  description: string;
+  google_drive_link: string;
+  assigned_by: string;
+  assigned_to_class: string;
+  assigned_to_students: string[];
+  created_at: string;
+}
 
 const StudentHomework = () => {
-  const [homework, setHomework] = useState<Homework[]>([]);
+  const [homework, setHomework] = useState<HomeworkItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedHomework, setSelectedHomework] = useState<Homework | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
-
-  // Get current student data
-  const studentData = JSON.parse(localStorage.getItem('visiona_student_data') || '{}');
 
   useEffect(() => {
     fetchHomework();
+    
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('homework-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'homework'
+        },
+        () => {
+          fetchHomework();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchHomework = async () => {
     try {
-      setLoading(true);
+      const studentData = localStorage.getItem('visiona_student_data');
+      if (!studentData) {
+        console.error('No student data found');
+        return;
+      }
+
+      const student = JSON.parse(studentData);
+      console.log('Student data:', student);
+
+      // Fetch all homework
       const { data, error } = await supabase
         .from('homework')
         .select('*')
-        .eq('assigned_to_class', studentData.class)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching homework:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch homework assignments.",
-          variant: "destructive",
-        });
-        return;
+        throw error;
       }
 
-      setHomework(data || []);
+      console.log('All homework from database:', data);
+
+      // Filter homework for this student
+      const studentHomework = data?.filter(hw => {
+        // Check if assigned to student's class
+        const isClassAssignment = hw.assigned_to_class === student.class;
+        
+        // Check if assigned to this specific student
+        const isIndividualAssignment = hw.assigned_to_students && 
+          Array.isArray(hw.assigned_to_students) && 
+          hw.assigned_to_students.includes(student.id);
+
+        console.log('Homework item:', hw.title);
+        console.log('Student class:', student.class, 'Assigned to class:', hw.assigned_to_class, 'Match:', isClassAssignment);
+        console.log('Student ID:', student.id, 'Assigned to students:', hw.assigned_to_students, 'Individual match:', isIndividualAssignment);
+        
+        return isClassAssignment || isIndividualAssignment;
+      }) || [];
+
+      console.log('Filtered homework for student:', studentHomework);
+      setHomework(studentHomework);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in fetchHomework:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: "Failed to fetch homework assignments",
         variant: "destructive",
       });
     } finally {
@@ -54,315 +102,112 @@ const StudentHomework = () => {
     }
   };
 
-  const extractFileId = (driveLink: string) => {
-    const patterns = [
-      /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
-      /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/
-    ];
+  const handleOpenLink = (link: string) => {
+    // Extract file ID from Google Drive link if needed
+    let finalLink = link;
     
-    for (const pattern of patterns) {
-      const match = driveLink.match(pattern);
-      if (match) return match[1];
+    // If it's a sharing link, convert to direct view link
+    if (link.includes('drive.google.com/file/d/')) {
+      const fileId = link.match(/file\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+      if (fileId) {
+        finalLink = `https://drive.google.com/file/d/${fileId}/view`;
+      }
     }
     
-    if (/^[a-zA-Z0-9_-]+$/.test(driveLink)) {
-      return driveLink;
-    }
-    
-    return null;
-  };
-
-  const getEmbedUrl = (driveLink: string) => {
-    const fileId = extractFileId(driveLink);
-    if (!fileId) return null;
-    return `https://drive.google.com/file/d/${fileId}/preview`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const handleHomeworkSelect = (hw: Homework) => {
-    setSelectedHomework(hw);
-    setShowPreview(true);
-  };
-
-  const handleBackToList = () => {
-    setShowPreview(false);
-    setSelectedHomework(null);
+    window.open(finalLink, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh] px-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading homework assignments...</p>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <BookOpen className="h-5 w-5" />
+            Homework Assignments
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 sm:py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-500 mt-2 text-sm sm:text-base">Loading homework...</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">My Homework</h1>
-        <p className="text-sm sm:text-base text-gray-600">Class: {studentData.class}</p>
-      </div>
-
-      {homework.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 sm:py-12">
-            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Homework Assigned</h3>
-            <p className="text-gray-600">Check back later for new assignments.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Mobile and Tablet View */}
-          <div className="lg:hidden">
-            {!showPreview ? (
-              <div className="space-y-3 sm:space-y-4">
-                {homework.map((hw) => (
-                  <Card 
-                    key={hw.id} 
-                    className="cursor-pointer transition-all hover:shadow-md active:scale-[0.98]"
-                    onClick={() => handleHomeworkSelect(hw)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex flex-col space-y-3">
-                        <div className="flex items-start justify-between">
-                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base flex-1 pr-2">{hw.title}</h3>
-                          <Badge variant="secondary" className="text-xs shrink-0">
-                            {hw.subject}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-600">
-                          <div className="flex items-center">
-                            <User className="h-3 w-3 mr-1 shrink-0" />
-                            <span className="truncate">{hw.assigned_by}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1 shrink-0" />
-                            <span className="truncate">{formatDate(hw.created_at)}</span>
-                          </div>
-                        </div>
-                        
-                        {hw.description && (
-                          <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
-                            {hw.description}
-                          </p>
-                        )}
-                        
-                        <div className="flex items-center justify-between pt-2">
-                          <span className="text-xs text-blue-600">Tap to view</span>
-                          <ExternalLink className="h-4 w-4 text-gray-400" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              selectedHomework && (
-                <Card className="h-full">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center mb-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleBackToList}
-                        className="mr-2 p-1"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <span className="text-sm text-gray-600">Back to list</span>
-                    </div>
-                    
-                    <CardTitle className="flex items-start gap-2 text-lg sm:text-xl">
-                      <BookOpen className="h-5 w-5 mt-0.5 shrink-0" />
-                      <span className="leading-tight">{selectedHomework.title}</span>
-                    </CardTitle>
-                    
-                    <div className="flex flex-wrap items-center gap-2 mt-3">
-                      <Badge variant="outline" className="text-xs">{selectedHomework.subject}</Badge>
-                      <span className="text-xs text-gray-600">By: {selectedHomework.assigned_by}</span>
-                      <span className="text-xs text-gray-600">{formatDate(selectedHomework.created_at)}</span>
-                    </div>
-                    
-                    {selectedHomework.description && (
-                      <p className="text-sm text-gray-600 mt-3 leading-relaxed">{selectedHomework.description}</p>
-                    )}
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(selectedHomework.google_drive_link, '_blank')}
-                      className="mt-3 w-full sm:w-auto"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Open in Drive
-                    </Button>
-                  </CardHeader>
-                  
-                  <CardContent className="pt-0">
-                    <div className="border rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 300px)', minHeight: '400px' }}>
-                      {getEmbedUrl(selectedHomework.google_drive_link) ? (
-                        <iframe
-                          src={getEmbedUrl(selectedHomework.google_drive_link)!}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          title={selectedHomework.title}
-                          allow="autoplay"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full bg-gray-50">
-                          <div className="text-center p-4">
-                            <ExternalLink className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Preview Not Available</h3>
-                            <p className="text-gray-600 mb-4 text-sm">Unable to preview this document format.</p>
-                            <Button
-                              onClick={() => window.open(selectedHomework.google_drive_link, '_blank')}
-                              className="w-full sm:w-auto"
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Open in Google Drive
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            )}
+    <Card>
+      <CardHeader className="pb-3 sm:pb-6">
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+          <BookOpen className="h-5 w-5" />
+          Homework Assignments
+        </CardTitle>
+        <CardDescription className="text-sm sm:text-base">Your assigned homework and study materials</CardDescription>
+      </CardHeader>
+      <CardContent className="p-3 sm:p-6">
+        {homework.length === 0 ? (
+          <div className="text-center py-8 sm:py-12">
+            <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-base sm:text-lg">No homework assignments found</p>
+            <p className="text-gray-400 text-sm sm:text-base mt-2">Check back later for new assignments</p>
           </div>
-
-          {/* Desktop View */}
-          <div className="hidden lg:grid lg:grid-cols-3 gap-6">
-            {/* Homework List */}
-            <div className="lg:col-span-1 space-y-4">
-              {homework.map((hw) => (
-                <Card 
-                  key={hw.id} 
-                  className={`cursor-pointer transition-all hover:shadow-md ${
-                    selectedHomework?.id === hw.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                  }`}
-                  onClick={() => setSelectedHomework(hw)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900 text-sm">{hw.title}</h3>
-                      <Badge variant="secondary" className="text-xs">
-                        {hw.subject}
-                      </Badge>
+        ) : (
+          <div className="space-y-3 sm:space-y-4">
+            {homework.map((item) => (
+              <Card key={item.id} className="border border-gray-200 hover:border-blue-300 transition-colors">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+                    <div className="flex-1 space-y-2">
+                      <h3 className="font-semibold text-base sm:text-lg text-gray-900 break-words">
+                        {item.title}
+                      </h3>
+                      
+                      <div className="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
+                          {item.subject}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                          {item.assigned_by}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                          {new Date(item.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      
+                      {item.description && (
+                        <p className="text-sm sm:text-base text-gray-700 break-words mt-2">
+                          {item.description}
+                        </p>
+                      )}
+                      
+                      <div className="text-xs text-gray-500">
+                        <span>
+                          Assigned to: {item.assigned_to_class ? `Class ${item.assigned_to_class}` : 'Individual Students'}
+                        </span>
+                      </div>
                     </div>
                     
-                    <div className="space-y-1 text-xs text-gray-600">
-                      <div className="flex items-center">
-                        <User className="h-3 w-3 mr-1" />
-                        <span>{hw.assigned_by}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        <span>{formatDate(hw.created_at)}</span>
-                      </div>
-                    </div>
-                    
-                    {hw.description && (
-                      <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                        {hw.description}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Document Preview */}
-            <div className="lg:col-span-2">
-              {selectedHomework ? (
-                <Card className="h-full">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <BookOpen className="h-5 w-5" />
-                          {selectedHomework.title}
-                        </CardTitle>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                          <Badge variant="outline">{selectedHomework.subject}</Badge>
-                          <span>By: {selectedHomework.assigned_by}</span>
-                          <span>{formatDate(selectedHomework.created_at)}</span>
-                        </div>
-                      </div>
+                    <div className="flex flex-col gap-2 sm:w-auto w-full">
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(selectedHomework.google_drive_link, '_blank')}
+                        onClick={() => handleOpenLink(item.google_drive_link)}
+                        className="flex items-center gap-2 w-full sm:w-auto"
                       >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Open in Drive
+                        <ExternalLink className="h-4 w-4" />
+                        <span>Open Assignment</span>
                       </Button>
                     </div>
-                    
-                    {selectedHomework.description && (
-                      <p className="text-gray-600 mt-2">{selectedHomework.description}</p>
-                    )}
-                  </CardHeader>
-                  
-                  <CardContent className="flex-1">
-                    <div className="h-[600px] border rounded-lg overflow-hidden">
-                      {getEmbedUrl(selectedHomework.google_drive_link) ? (
-                        <iframe
-                          src={getEmbedUrl(selectedHomework.google_drive_link)!}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          title={selectedHomework.title}
-                          allow="autoplay"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full bg-gray-50">
-                          <div className="text-center">
-                            <ExternalLink className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">Preview Not Available</h3>
-                            <p className="text-gray-600 mb-4">Unable to preview this document format.</p>
-                            <Button
-                              onClick={() => window.open(selectedHomework.google_drive_link, '_blank')}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Open in Google Drive
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="h-full">
-                  <CardContent className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Select Homework</h3>
-                      <p className="text-gray-600">Choose a homework assignment to view the document.</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

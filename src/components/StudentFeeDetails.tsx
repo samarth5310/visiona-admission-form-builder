@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,10 +87,40 @@ const StudentFeeDetails = () => {
         throw feeError;
       }
 
-      setFeeDetails(feeData);
-
-      // Fetch payment history if fee details exist
+      // Fix calculation issues by ensuring proper logic
       if (feeData) {
+        // Ensure pending amount is never negative
+        const correctedPendingAmount = Math.max(0, feeData.total_fees - feeData.paid_amount);
+        
+        // Update the local state with corrected values
+        const correctedFeeData = {
+          ...feeData,
+          pending_amount: correctedPendingAmount,
+          // Ensure paid amount doesn't exceed total fees
+          paid_amount: Math.min(feeData.paid_amount, feeData.total_fees)
+        };
+
+        setFeeDetails(correctedFeeData);
+
+        // If there's a calculation mismatch in the database, update it
+        if (feeData.pending_amount !== correctedPendingAmount || feeData.paid_amount > feeData.total_fees) {
+          console.log('Correcting fee calculation in database...');
+          const { error: updateError } = await supabase
+            .from('student_fees')
+            .update({
+              pending_amount: correctedPendingAmount,
+              paid_amount: Math.min(feeData.paid_amount, feeData.total_fees),
+              payment_status: correctedPendingAmount === 0 ? 'paid' : 
+                            feeData.paid_amount > 0 ? 'partial' : 'pending'
+            })
+            .eq('id', feeData.id);
+
+          if (updateError) {
+            console.error('Error updating fee calculation:', updateError);
+          }
+        }
+
+        // Fetch payment history if fee details exist
         const { data: paymentData, error: paymentError } = await supabase
           .from('fee_payments')
           .select('*')
@@ -98,6 +129,8 @@ const StudentFeeDetails = () => {
 
         if (paymentError) throw paymentError;
         setPaymentHistory(paymentData || []);
+      } else {
+        setFeeDetails(null);
       }
     } catch (error) {
       console.error('Error fetching fee details:', error);
@@ -130,6 +163,20 @@ const StudentFeeDetails = () => {
       default:
         return 'Unknown';
     }
+  };
+
+  // Calculate correct values to display
+  const getDisplayValues = (feeDetails: FeeDetails) => {
+    const totalFees = feeDetails.total_fees;
+    const paidAmount = Math.min(feeDetails.paid_amount, totalFees); // Ensure paid doesn't exceed total
+    const pendingAmount = Math.max(0, totalFees - paidAmount); // Ensure pending is never negative
+    
+    return {
+      totalFees,
+      paidAmount,
+      pendingAmount,
+      completionPercentage: totalFees > 0 ? (paidAmount / totalFees) * 100 : 0
+    };
   };
 
   if (loading) {
@@ -172,6 +219,8 @@ const StudentFeeDetails = () => {
     );
   }
 
+  const displayValues = getDisplayValues(feeDetails);
+
   return (
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
       {/* Fee Summary */}
@@ -191,7 +240,7 @@ const StudentFeeDetails = () => {
                 <span className="text-xs sm:text-sm font-medium text-blue-800">Total Fees</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-blue-900">
-                ₹{feeDetails.total_fees.toLocaleString()}
+                ₹{displayValues.totalFees.toLocaleString()}
               </p>
             </div>
 
@@ -201,7 +250,7 @@ const StudentFeeDetails = () => {
                 <span className="text-xs sm:text-sm font-medium text-green-800">Paid Amount</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-green-900">
-                ₹{feeDetails.paid_amount.toLocaleString()}
+                ₹{displayValues.paidAmount.toLocaleString()}
               </p>
             </div>
 
@@ -211,7 +260,7 @@ const StudentFeeDetails = () => {
                 <span className="text-xs sm:text-sm font-medium text-red-800">Pending Amount</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-red-900">
-                ₹{feeDetails.pending_amount.toLocaleString()}
+                ₹{displayValues.pendingAmount.toLocaleString()}
               </p>
             </div>
           </div>
@@ -295,19 +344,19 @@ const StudentFeeDetails = () => {
           <div className="space-y-2">
             <div className="flex justify-between text-xs sm:text-sm">
               <span>Payment Completion</span>
-              <span className="font-medium">{((feeDetails.paid_amount / feeDetails.total_fees) * 100).toFixed(1)}%</span>
+              <span className="font-medium">{displayValues.completionPercentage.toFixed(1)}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
               <div 
                 className="bg-green-500 h-2 sm:h-3 rounded-full transition-all duration-300"
                 style={{ 
-                  width: `${Math.min((feeDetails.paid_amount / feeDetails.total_fees) * 100, 100)}%` 
+                  width: `${Math.min(displayValues.completionPercentage, 100)}%` 
                 }}
               />
             </div>
             <div className="flex justify-between text-xs text-gray-500 pt-1">
-              <span>₹{feeDetails.paid_amount.toLocaleString()} paid</span>
-              <span>₹{feeDetails.total_fees.toLocaleString()} total</span>
+              <span>₹{displayValues.paidAmount.toLocaleString()} paid</span>
+              <span>₹{displayValues.totalFees.toLocaleString()} total</span>
             </div>
           </div>
         </CardContent>
