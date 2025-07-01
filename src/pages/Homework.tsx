@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { LogOut, BookOpen, Home } from 'lucide-react';
+import HamburgerNavigation from '@/components/HamburgerNavigation';
+import { BookOpen } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import AdminHomework from '@/components/AdminHomework';
 import { useAuth } from '@/contexts/AuthContext';
-import Navigation from '@/components/Navigation';
 
 const Homework = () => {
   const navigate = useNavigate();
@@ -56,18 +55,6 @@ const Homework = () => {
     }
   };
 
-  const handleBackToDashboard = () => {
-    if (userType === 'student') {
-      navigate('/student-dashboard');
-    } else if (userType === 'admin') {
-      navigate('/students');
-    }
-  };
-
-  const handleBackToHome = () => {
-    navigate('/', { replace: true });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -93,8 +80,8 @@ const Homework = () => {
   if (userType === 'admin') {
     return (
       <>
-        <Navigation activeSection="homework" onSectionChange={() => {}} />
-        <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+        <HamburgerNavigation userType="admin" />
+        <div className="page-with-hamburger-nav min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
           <div className="max-w-7xl mx-auto py-4 sm:py-6">
             <div className="bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
               <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-3 sm:p-6">
@@ -111,50 +98,22 @@ const Homework = () => {
     );
   }
 
-  // For student users, keep the existing layout
+  // For student users, keep the existing layout but with hamburger nav
   return (
     <div className="min-h-screen bg-gray-50">
+      <HamburgerNavigation userType="student" onLogout={handleLogout} />
+      
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <img 
-              src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-              alt="Logo" 
-              className="w-10 h-10 object-contain"
-            />
-            <div>
-              <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Homework Portal
-              </h1>
-              <p className="text-sm text-gray-600">
-                View your assignments
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="outline" 
-              onClick={handleBackToDashboard}
-              className="flex items-center space-x-2"
-            >
-              <Home className="h-4 w-4" />
-              <span>Back to Dashboard</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleBackToHome}
-              className="flex items-center space-x-2"
-            >
-              <Home className="h-4 w-4" />
-              <span>Home</span>
-            </Button>
-            <Button onClick={handleLogout} variant="outline" className="flex items-center space-x-2">
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
-            </Button>
+      <div className="page-with-hamburger-nav bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="text-center">
+            <h1 className="text-lg font-bold text-gray-900 flex items-center justify-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Homework Portal
+            </h1>
+            <p className="text-sm text-gray-600">
+              View your assignments
+            </p>
           </div>
         </div>
       </div>

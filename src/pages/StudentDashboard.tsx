@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
+import HamburgerNavigation from '@/components/HamburgerNavigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, User, BookOpen, GraduationCap, CreditCard, Home, Trophy, Gamepad2 } from 'lucide-react';
+import { User, BookOpen, GraduationCap, CreditCard, Trophy, Gamepad2 } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import StudentMarks from '@/components/StudentMarks';
 import StudentFeeDetails from '@/components/StudentFeeDetails';
@@ -40,10 +39,6 @@ const StudentDashboard = () => {
     navigate('/', { replace: true });
   };
 
-  const handleBackToHome = () => {
-    navigate('/', { replace: true });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -67,49 +62,11 @@ const StudentDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <HamburgerNavigation userType="student" onLogout={handleLogout} />
+      
       {/* Header with improved layout */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="page-with-hamburger-nav bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
-          {/* Top section with logo and action buttons */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-            {/* Logo and basic info */}
-            <div className="flex items-center space-x-3">
-              <img 
-                src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-                alt="Logo" 
-                className="w-12 h-12 sm:w-16 sm:h-16 object-contain flex-shrink-0"
-              />
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
-                  Student Dashboard
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Visiona Education Academy
-                </p>
-              </div>
-            </div>
-            
-            {/* Action buttons - positioned in top right */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-              <Button 
-                variant="outline" 
-                onClick={handleBackToHome}
-                className="flex items-center justify-center space-x-2 w-full sm:w-auto"
-              >
-                <Home className="h-4 w-4" />
-                <span>Back to Home</span>
-              </Button>
-              <Button 
-                onClick={handleLogout} 
-                variant="outline" 
-                className="flex items-center justify-center space-x-2 w-full sm:w-auto"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
-              </Button>
-            </div>
-          </div>
-
           {/* Welcome section with improved layout */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 sm:p-6 border border-blue-100">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
