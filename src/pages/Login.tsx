@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AnimatedButton } from "@/components/ui/animated-button";
 import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
@@ -38,7 +37,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4 font-montserrat">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 mx-2">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
@@ -79,14 +78,13 @@ const Login = () => {
             />
           </div>
 
-          <AnimatedButton
+          <Button
             type="submit"
-            variant="default"
-            className="w-full"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 sm:py-4 text-sm sm:text-base font-medium"
             disabled={isLoggingIn || !mobileNumber.trim() || !password.trim()}
           >
             {isLoggingIn ? 'Logging in...' : 'Login'}
-          </AnimatedButton>
+          </Button>
         </form>
 
         {/* Footer */}
@@ -94,13 +92,13 @@ const Login = () => {
           <p className="text-xs sm:text-sm text-gray-500 px-2">
             Authorized personnel only. Contact administrator for access.
           </p>
-          <AnimatedButton
-            variant="light"
+          <Button
+            variant="outline"
             onClick={() => navigate('/')}
-            className="mt-3"
+            className="mt-3 text-sm"
           >
             Back to Home
-          </AnimatedButton>
+          </Button>
         </div>
       </div>
     </div>
