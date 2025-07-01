@@ -27,8 +27,6 @@ const Navigation = ({ activeSection }: NavigationProps) => {
     setMobileMenuOpen(false);
   };
 
-  const adminName = user?.name || 'Admin';
-
   const navigationItems = [
     { path: '/admission', label: 'Admission', icon: FileText, section: 'admission' },
     { path: '/students', label: 'Students', icon: Users, section: 'students' },
@@ -42,18 +40,13 @@ const Navigation = ({ activeSection }: NavigationProps) => {
     <div className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* Logo and Title */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Logo Only */}
+          <div className="flex items-center">
             <img 
               src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
               alt="Logo" 
               className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
             />
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-gray-900">{adminName}</h1>
-              <p className="text-xs text-gray-600">Management System</p>
-            </div>
-            <h1 className="sm:hidden text-base font-bold text-gray-900">{adminName}</h1>
           </div>
 
           {/* Desktop Navigation Menu */}
@@ -88,18 +81,12 @@ const Navigation = ({ activeSection }: NavigationProps) => {
                 <div className="flex flex-col h-full">
                   {/* Mobile Menu Header */}
                   <div className="p-4 border-b">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <img 
-                          src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-                          alt="Logo" 
-                          className="w-8 h-8 object-contain"
-                        />
-                        <div>
-                          <h2 className="text-sm font-bold text-gray-900">{adminName}</h2>
-                          <p className="text-xs text-gray-600">Management System</p>
-                        </div>
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <img 
+                        src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
+                        alt="Logo" 
+                        className="w-8 h-8 object-contain"
+                      />
                     </div>
                   </div>
 
