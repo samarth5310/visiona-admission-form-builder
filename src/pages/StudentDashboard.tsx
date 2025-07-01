@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatedButton } from "@/components/ui/animated-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,7 +46,7 @@ const StudentDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center font-montserrat">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
@@ -57,7 +57,7 @@ const StudentDashboard = () => {
 
   if (!studentData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center font-montserrat">
         <div className="text-center">
           <p className="text-gray-600">Redirecting...</p>
         </div>
@@ -66,7 +66,7 @@ const StudentDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 font-montserrat">
       {/* Header with improved layout */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
@@ -91,22 +91,20 @@ const StudentDashboard = () => {
             
             {/* Action buttons - positioned in top right */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-              <Button 
-                variant="outline" 
+              <AnimatedButton 
+                variant="light" 
                 onClick={handleBackToHome}
-                className="flex items-center justify-center space-x-2 w-full sm:w-auto"
+                className="w-full sm:w-auto text-sm"
               >
-                <Home className="h-4 w-4" />
-                <span>Back to Home</span>
-              </Button>
-              <Button 
+                Back to Home
+              </AnimatedButton>
+              <AnimatedButton 
                 onClick={handleLogout} 
-                variant="outline" 
-                className="flex items-center justify-center space-x-2 w-full sm:w-auto"
+                variant="default" 
+                className="w-full sm:w-auto text-sm"
               >
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
-              </Button>
+                Logout
+              </AnimatedButton>
             </div>
           </div>
 
