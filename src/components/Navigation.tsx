@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { FileText, CreditCard, Upload, Users, LogOut, BookOpen, GraduationCap, Home, Menu, X } from 'lucide-react';
@@ -26,6 +27,8 @@ const Navigation = ({ activeSection }: NavigationProps) => {
     setMobileMenuOpen(false);
   };
 
+  const adminName = user?.name || 'Admin';
+
   const navigationItems = [
     { path: '/admission', label: 'Admission', icon: FileText, section: 'admission' },
     { path: '/students', label: 'Students', icon: Users, section: 'students' },
@@ -47,10 +50,10 @@ const Navigation = ({ activeSection }: NavigationProps) => {
               className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
             />
             <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-gray-900">Admin Dashboard</h1>
+              <h1 className="text-lg font-bold text-gray-900">{adminName}</h1>
               <p className="text-xs text-gray-600">Management System</p>
             </div>
-            <h1 className="sm:hidden text-base font-bold text-gray-900">Admin</h1>
+            <h1 className="sm:hidden text-base font-bold text-gray-900">{adminName}</h1>
           </div>
 
           {/* Desktop Navigation Menu */}
@@ -93,7 +96,7 @@ const Navigation = ({ activeSection }: NavigationProps) => {
                           className="w-8 h-8 object-contain"
                         />
                         <div>
-                          <h2 className="text-sm font-bold text-gray-900">Admin Dashboard</h2>
+                          <h2 className="text-sm font-bold text-gray-900">{adminName}</h2>
                           <p className="text-xs text-gray-600">Management System</p>
                         </div>
                       </div>
