@@ -178,13 +178,13 @@ const Landing = () => {
                   <span>{language === 'en' ? 'ಕನ್ನಡ' : 'English'}</span>
                 </Button>
                 <Button 
-                  onClick={() => navigate('/student-login')}
+                  onClick={() => navigate('/auth-landing')}
                   className="bg-[#657a00] hover:bg-[#beef00] hover:text-gray-900 text-white text-sm sm:text-base px-4 py-2 transition-all duration-300"
                 >
                   {t.studentLogin}
                 </Button>
                 <Button 
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/auth-landing')}
                   className="bg-[#1400c6] hover:bg-[#ff0028] text-white text-sm sm:text-base px-4 py-2 transition-all duration-300"
                 >
                   {t.adminLogin}
