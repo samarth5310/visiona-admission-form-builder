@@ -17,8 +17,6 @@ import Documents from "./pages/Documents";
 import Homework from "./pages/Homework";
 import Marks from "./pages/Marks";
 import NotFound from "./pages/NotFound";
-import AuthLanding from "./pages/AuthLanding";
-import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,8 +36,6 @@ const App: React.FC = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/auth-landing" element={<AuthLanding />} />
-            <Route path="/auth" element={<Auth />} />
             <Route path="/login" element={<Login />} />
             <Route path="/student-login" element={<StudentLogin />} />
             <Route path="/student-dashboard" element={<StudentDashboard />} />
