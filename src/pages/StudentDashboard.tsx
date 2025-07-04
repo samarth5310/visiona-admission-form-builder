@@ -180,7 +180,7 @@ const StudentDashboard = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 lg:ml-0">
         {/* Header with welcome section */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
