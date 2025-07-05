@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const StudentLogin = () => {
   const [mobileNumber, setMobileNumber] = useState('');
-  const [password, setPassword] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -28,11 +28,17 @@ const StudentLogin = () => {
     return mobileRegex.test(mobile);
   };
 
+  const formatDateForComparison = (dateString: string) => {
+    // Convert input date (YYYY-MM-DD) to match database format
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (!mobileNumber.trim() || !password.trim()) {
+    if (!mobileNumber.trim() || !dateOfBirth.trim()) {
       setError('Please fill in all fields');
       return;
     }
@@ -42,23 +48,22 @@ const StudentLogin = () => {
       return;
     }
 
-    if (password !== 'Visiona@1') {
-      setError('Invalid password');
-      return;
-    }
-
     setIsLoggingIn(true);
 
     try {
-      // Check if student exists in applications table
+      // Format the date for comparison
+      const formattedDOB = formatDateForComparison(dateOfBirth);
+      
+      // Check if student exists with matching mobile number and DOB
       const { data: studentData, error: fetchError } = await supabase
         .from('applications')
         .select('*')
         .eq('contact_number', mobileNumber)
+        .eq('date_of_birth', formattedDOB)
         .single();
 
       if (fetchError || !studentData) {
-        setError('Student not found. Please check your mobile number.');
+        setError('Invalid mobile number or date of birth. Please check your credentials.');
         return;
       }
 
@@ -110,16 +115,19 @@ const StudentLogin = () => {
           </div>
 
           <div>
-            <Label htmlFor="password" className="text-gray-700 text-sm sm:text-base">Password</Label>
+            <Label htmlFor="dob" className="text-gray-700 text-sm sm:text-base">Date of Birth</Label>
             <Input
-              id="password"
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              id="dob"
+              type="date"
+              placeholder="Select your date of birth"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
               className="mt-1 border-gray-300 text-sm sm:text-base h-10 sm:h-12"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter the same date of birth you provided during admission
+            </p>
           </div>
 
           {error && (
@@ -131,7 +139,7 @@ const StudentLogin = () => {
           <Button
             type="submit"
             className="w-full bg-green-600 hover:bg-green-700 text-white py-3 sm:py-4 text-sm sm:text-base font-medium"
-            disabled={isLoggingIn || !mobileNumber.trim() || !password.trim()}
+            disabled={isLoggingIn || !mobileNumber.trim() || !dateOfBirth.trim()}
           >
             {isLoggingIn ? 'Logging in...' : 'Login'}
           </Button>
@@ -139,6 +147,9 @@ const StudentLogin = () => {
 
         {/* Footer */}
         <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 text-center">
+          <p className="text-xs sm:text-sm text-gray-500 px-2 mb-3">
+            Use your registered mobile number and date of birth to login.
+          </p>
           <p className="text-xs sm:text-sm text-gray-500 px-2">
             Contact the academy if you have trouble logging in.
           </p>
