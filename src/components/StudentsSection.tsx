@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Search, Users, Phone, Mail, User, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Users, Phone, Mail, MapPin, Calendar, GraduationCap, User, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import WhatsAppMessaging from './WhatsAppMessaging';
@@ -36,7 +36,7 @@ const StudentsSection = () => {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20); // Increased to show more cards per page
+  const [itemsPerPage] = useState(12); // Desktop: 12 items, Mobile will show 4
   const { toast } = useToast();
 
   useEffect(() => {
@@ -280,70 +280,105 @@ const StudentsSection = () => {
             </div>
           ) : (
             <>
-              {/* Compact Student Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {/* Student Grid - Responsive */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {currentStudents.map((student) => (
-                  <Card key={student.id} className="overflow-hidden border hover:border-blue-300 transition-colors shadow-sm hover:shadow-md">
-                    <CardContent className="p-3">
-                      {/* Header with Photo and Basic Info */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <Avatar className="h-10 w-10 border border-blue-200 flex-shrink-0">
+                  <Card key={student.id} className="overflow-hidden border-2 hover:border-blue-300 transition-colors shadow-md">
+                    {/* ID Card Header */}
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 sm:p-4">
+                      <div className="text-center">
+                        <h3 className="font-bold text-xs sm:text-sm">STUDENT ID CARD</h3>
+                        <p className="text-xs opacity-90">Admission No: {student.admission_number}</p>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-3 sm:p-4">
+                      {/* Student Photo and Basic Info */}
+                      <div className="flex items-start gap-3 mb-4">
+                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-2 border-blue-200 flex-shrink-0">
                           <AvatarImage 
                             src={student.student_photo} 
                             alt={student.full_name}
                             className="object-cover"
                           />
-                          <AvatarFallback className="bg-blue-100 text-blue-600 text-xs font-bold">
+                          <AvatarFallback className="bg-blue-100 text-blue-600 text-sm sm:text-lg font-bold">
                             {getInitials(student.full_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm text-gray-900 line-clamp-1">
+                          <h3 className="font-bold text-sm sm:text-lg text-gray-900 line-clamp-2 leading-tight">
                             {student.full_name}
                           </h3>
-                          <p className="text-xs text-gray-500 truncate">
-                            {student.admission_number}
-                          </p>
+                          <div className="flex flex-col gap-1 mt-1">
+                            <Badge className={`${getCategoryColor(student.category)} text-xs w-fit`}>
+                              {student.category}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs w-fit">
+                              Class {student.class}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Badges */}
-                      <div className="flex gap-1 mb-2">
-                        <Badge className={`${getCategoryColor(student.category)} text-xs px-1.5 py-0.5`}>
-                          {student.category}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                          Class {student.class}
-                        </Badge>
-                      </div>
-
-                      {/* Essential Details */}
-                      <div className="space-y-1 text-xs text-gray-600 mb-3">
-                        <div className="flex items-center gap-1">
-                          <User className="h-3 w-3 flex-shrink-0" />
-                          <span>{student.gender}</span>
+                      {/* Student Details */}
+                      <div className="space-y-2 text-xs sm:text-sm">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                          <span className="truncate">DOB: {formatDate(student.date_of_birth)}</span>
                         </div>
                         
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-3 w-3 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <User className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                          <span>{student.gender}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Phone className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span className="truncate">{student.contact_number}</span>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                           <span className="truncate">{student.email}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                          <span className="truncate">{student.city}, {student.state}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                          <span className="truncate">{student.current_school}</span>
                         </div>
                       </div>
 
-                      {/* WhatsApp Button */}
-                      <Button
-                        onClick={() => handleWhatsAppMessage(student)}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-1 text-xs h-7"
-                        size="sm"
-                      >
-                        <MessageCircle className="h-3 w-3" />
-                        WhatsApp
-                      </Button>
+                      {/* Parent Information */}
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                        <h4 className="font-medium text-gray-900 mb-2 text-xs sm:text-sm">Parent Information</h4>
+                        <div className="text-xs text-gray-600 space-y-1">
+                          <p className="truncate"><span className="font-medium">Father:</span> {student.father_name}</p>
+                          <p className="truncate"><span className="font-medium">Mother:</span> {student.mother_name}</p>
+                        </div>
+                      </div>
+
+                      {/* WhatsApp Message Button */}
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                        <Button
+                          onClick={() => handleWhatsAppMessage(student)}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 text-xs sm:text-sm h-8 sm:h-9"
+                        >
+                          <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                          Send WhatsApp
+                        </Button>
+                      </div>
+
+                      {/* Admission Date */}
+                      <div className="mt-3 pt-2 border-t border-gray-100">
+                        <p className="text-xs text-gray-500">
+                          Admitted: {formatDate(student.created_at)}
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -351,7 +386,7 @@ const StudentsSection = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 bg-gray-50 rounded-lg">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 sm:mt-8 p-4 bg-gray-50 rounded-lg">
                   <div className="text-sm text-gray-600">
                     Page {currentPage} of {totalPages}
                   </div>
