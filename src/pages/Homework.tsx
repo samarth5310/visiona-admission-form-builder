@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { LogOut, BookOpen, Home } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import AdminHomework from '@/components/AdminHomework';
-import AdminLayout from '@/components/AdminLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import Navigation from '@/components/Navigation';
 
 const Homework = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const Homework = () => {
 
   useEffect(() => {
     const determineUserType = () => {
+      // First priority: Check if admin is logged in through auth context
       if (user) {
         console.log('Admin user detected:', user);
         setUserType('admin');
@@ -22,6 +23,7 @@ const Homework = () => {
         return;
       }
 
+      // Second priority: Check if student is logged in through localStorage
       const studentData = localStorage.getItem('visiona_student_data');
       if (studentData) {
         try {
@@ -36,6 +38,7 @@ const Homework = () => {
         }
       }
 
+      // If neither admin nor student is logged in, redirect to home
       console.log('No authenticated user found, redirecting to home');
       navigate('/', { replace: true });
     };
@@ -86,17 +89,25 @@ const Homework = () => {
     );
   }
 
+  // For admin users, use the same layout as other admin pages
   if (userType === 'admin') {
     return (
-      <AdminLayout 
-        activeSection="homework" 
-        title="HOMEWORK MANAGEMENT"
-        description="Create and Manage Student Assignments"
-      >
-        <div className="p-6">
-          <AdminHomework />
+      <>
+        <Navigation activeSection="homework" onSectionChange={() => {}} />
+        <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+          <div className="max-w-7xl mx-auto py-4 sm:py-6">
+            <div className="bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
+              <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-3 sm:p-6">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">HOMEWORK MANAGEMENT</h1>
+                <p className="text-sm sm:text-base lg:text-lg text-gray-700">Create and Manage Student Assignments</p>
+              </div>
+              <div className="p-2 sm:p-4 lg:p-6">
+                <AdminHomework />
+              </div>
+            </div>
+          </div>
         </div>
-      </AdminLayout>
+      </>
     );
   }
 
