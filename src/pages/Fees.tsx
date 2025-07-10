@@ -7,13 +7,21 @@ const Fees = () => {
   return (
     <>
       <Navigation activeSection="fees" onSectionChange={() => {}} />
-      <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
-        <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
-          <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-lg p-3 sm:p-6 mx-2 sm:mx-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">FEES MANAGEMENT</h1>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-700">Student Fee Tracking and Payment Management</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-6 sm:py-8">
+          <div className="bg-white border border-purple-100 rounded-2xl shadow-xl overflow-hidden admin-card-hover">
+            <div className="admin-gradient-primary p-6 sm:p-8 text-center">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
+                FEES MANAGEMENT
+              </h1>
+              <p className="text-base sm:text-lg text-purple-100">
+                Student Fee Tracking and Payment Management
+              </p>
+            </div>
+            <div className="p-6 sm:p-8 lg:p-12">
+              <FeesManagement />
+            </div>
           </div>
-          <FeesManagement />
         </div>
       </div>
     </>

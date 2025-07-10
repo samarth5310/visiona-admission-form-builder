@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload } from 'lucide-react';
+import { Upload, FileText, Check } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -187,175 +187,203 @@ const Documents = () => {
   return (
     <>
       <Navigation activeSection="documents" onSectionChange={() => {}} />
-      <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
-        <div className="max-w-4xl mx-auto py-4 sm:py-6 bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
-          <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-lg p-3 sm:p-6 mx-2 sm:mx-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">UPLOAD DOCUMENTS</h1>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-700">Document Upload and Management System</p>
-          </div>
-          
-          <div className="p-6 space-y-6">
-            {/* Student Selection */}
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <h3 className="text-lg font-semibold text-gray-700 mb-3">Select Student</h3>
-              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                <SelectTrigger className="border-gray-300 bg-white">
-                  <SelectValue placeholder={loadingStudents ? "Loading students..." : "Choose a student"} />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-300 shadow-lg z-50">
-                  {loadingStudents ? (
-                    <SelectItem value="loading" disabled>Loading students...</SelectItem>
-                  ) : students.length === 0 ? (
-                    <SelectItem value="no-students" disabled>No students found</SelectItem>
-                  ) : (
-                    students.map((student) => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.full_name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              {selectedStudent && (
-                <p className="text-sm text-green-600 mt-2">
-                  ✓ Selected: {students.find(s => s.id === selectedStudent)?.full_name}
-                </p>
-              )}
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto py-6 sm:py-8">
+          <div className="bg-white border border-purple-100 rounded-2xl shadow-xl overflow-hidden admin-card-hover">
+            <div className="admin-gradient-primary p-6 sm:p-8 text-center">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
+                UPLOAD DOCUMENTS
+              </h1>
+              <p className="text-base sm:text-lg text-purple-100">
+                Document Upload and Management System
+              </p>
             </div>
-
-            {/* Document Upload Sections - keep all existing upload UI from Index.tsx */}
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">Upload Documents</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Previous Marksheet */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Previous Marksheet</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload('previousMarksheet', e.target.files[0]);
-                      }
-                    }}
-                    className="border-gray-300"
-                    disabled={!selectedStudent}
-                  />
-                  {documents.previousMarksheet && (
-                    <p className="text-sm text-green-600 mt-1">✓ {documents.previousMarksheet.name}</p>
-                  )}
-                </div>
-
-                {/* Aadhaar Card */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Card</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload('aadhaarCard', e.target.files[0]);
-                      }
-                    }}
-                    className="border-gray-300"
-                    disabled={!selectedStudent}
-                  />
-                  {documents.aadhaarCard && (
-                    <p className="text-sm text-green-600 mt-1">✓ {documents.aadhaarCard.name}</p>
-                  )}
-                </div>
-
-                {/* Income Certificate */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Income Certificate</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload('incomeCertificate', e.target.files[0]);
-                      }
-                    }}
-                    className="border-gray-300"
-                    disabled={!selectedStudent}
-                  />
-                  {documents.incomeCertificate && (
-                    <p className="text-sm text-green-600 mt-1">✓ {documents.incomeCertificate.name}</p>
-                  )}
-                </div>
-
-                {/* Caste Certificate */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Caste Certificate</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload('casteCertificate', e.target.files[0]);
-                      }
-                    }}
-                    className="border-gray-300"
-                    disabled={!selectedStudent}
-                  />
-                  {documents.casteCertificate && (
-                    <p className="text-sm text-green-600 mt-1">✓ {documents.casteCertificate.name}</p>
-                  )}
-                </div>
+            
+            <div className="p-6 sm:p-8 space-y-8">
+              {/* Student Selection */}
+              <div className="bg-gradient-to-r from-purple-50 to-teal-50 p-6 rounded-xl border border-purple-100 admin-card-hover">
+                <h3 className="text-xl font-semibold admin-gradient-primary bg-clip-text text-transparent mb-4 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-admin-primary" />
+                  Select Student
+                </h3>
+                <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                  <SelectTrigger className="border-purple-200 bg-white hover:border-admin-primary focus:border-admin-primary focus:ring-admin-primary transition-all duration-200">
+                    <SelectValue placeholder={loadingStudents ? "Loading students..." : "Choose a student"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-purple-200 shadow-xl z-50">
+                    {loadingStudents ? (
+                      <SelectItem value="loading" disabled>Loading students...</SelectItem>
+                    ) : students.length === 0 ? (
+                      <SelectItem value="no-students" disabled>No students found</SelectItem>
+                    ) : (
+                      students.map((student) => (
+                        <SelectItem key={student.id} value={student.id} className="hover:bg-purple-50">
+                          {student.full_name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {selectedStudent && (
+                  <p className="text-sm text-green-600 mt-3 flex items-center gap-2">
+                    <Check className="h-4 w-4" />
+                    Selected: {students.find(s => s.id === selectedStudent)?.full_name}
+                  </p>
+                )}
               </div>
 
-              {/* Other Documents */}
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Other Documents</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileUpload('other', e.target.files[0]);
-                      e.target.value = ''; // Reset input to allow same file again
-                    }
-                  }}
-                  className="border-gray-300"
-                  disabled={!selectedStudent}
-                />
-                {!selectedStudent && (
-                  <p className="text-sm text-gray-500 mt-1">Please select a student first</p>
-                )}
-                {documents.otherDocuments.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <p className="text-sm font-medium text-gray-700">Other Documents Added:</p>
-                    {documents.otherDocuments.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-white p-2 rounded border">
-                        <span className="text-sm text-gray-600">{file.name}</span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeOtherDocument(index)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
+              {/* Document Upload Sections */}
+              <div className="bg-gradient-to-r from-purple-50 to-teal-50 p-6 rounded-xl border border-purple-100 admin-card-hover">
+                <h3 className="text-xl font-semibold admin-gradient-primary bg-clip-text text-transparent mb-6 flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-admin-primary" />
+                  Upload Documents
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Previous Marksheet */}
+                  <div className="bg-white p-4 rounded-lg border border-purple-100 hover:border-admin-primary transition-all duration-200 admin-card-hover">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Previous Marksheet</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileUpload('previousMarksheet', e.target.files[0]);
+                        }
+                      }}
+                      className="border-purple-200 focus:border-admin-primary focus:ring-admin-primary"
+                      disabled={!selectedStudent}
+                    />
+                    {documents.previousMarksheet && (
+                      <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        {documents.previousMarksheet.name}
+                      </p>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div className="mt-6">
-                <Button
-                  onClick={uploadDocuments}
-                  disabled={uploading || !selectedStudent}
-                  className="bg-gray-600 hover:bg-gray-700 text-white"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  {uploading ? "Uploading..." : "Upload Documents"}
-                </Button>
-                {!selectedStudent && (
-                  <p className="text-sm text-gray-500 mt-2">Please select a student to enable document upload</p>
-                )}
+                  {/* Aadhaar Card */}
+                  <div className="bg-white p-4 rounded-lg border border-purple-100 hover:border-admin-primary transition-all duration-200 admin-card-hover">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Aadhaar Card</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileUpload('aadhaarCard', e.target.files[0]);
+                        }
+                      }}
+                      className="border-purple-200 focus:border-admin-primary focus:ring-admin-primary"
+                      disabled={!selectedStudent}
+                    />
+                    {documents.aadhaarCard && (
+                      <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        {documents.aadhaarCard.name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Income Certificate */}
+                  <div className="bg-white p-4 rounded-lg border border-purple-100 hover:border-admin-primary transition-all duration-200 admin-card-hover">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Income Certificate</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileUpload('incomeCertificate', e.target.files[0]);
+                        }
+                      }}
+                      className="border-purple-200 focus:border-admin-primary focus:ring-admin-primary"
+                      disabled={!selectedStudent}
+                    />
+                    {documents.incomeCertificate && (
+                      <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        {documents.incomeCertificate.name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Caste Certificate */}
+                  <div className="bg-white p-4 rounded-lg border border-purple-100 hover:border-admin-primary transition-all duration-200 admin-card-hover">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Caste Certificate</label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileUpload('casteCertificate', e.target.files[0]);
+                        }
+                      }}
+                      className="border-purple-200 focus:border-admin-primary focus:ring-admin-primary"
+                      disabled={!selectedStudent}
+                    />
+                    {documents.casteCertificate && (
+                      <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        {documents.casteCertificate.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Other Documents */}
+                <div className="mt-8 bg-white p-6 rounded-lg border border-purple-100 hover:border-admin-primary transition-all duration-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Other Documents</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleFileUpload('other', e.target.files[0]);
+                        e.target.value = ''; // Reset input to allow same file again
+                      }
+                    }}
+                    className="border-purple-200 focus:border-admin-primary focus:ring-admin-primary"
+                    disabled={!selectedStudent}
+                  />
+                  {!selectedStudent && (
+                    <p className="text-sm text-gray-500 mt-2">Please select a student first</p>
+                  )}
+                  {documents.otherDocuments.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      <p className="text-sm font-medium text-gray-700">Other Documents Added:</p>
+                      {documents.otherDocuments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-purple-50 p-3 rounded-lg border border-purple-100">
+                          <span className="text-sm text-gray-600 flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-admin-primary" />
+                            {file.name}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeOtherDocument(index)}
+                            className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8">
+                  <Button
+                    onClick={uploadDocuments}
+                    disabled={uploading || !selectedStudent}
+                    className="admin-gradient-primary text-white hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 px-8 py-3 text-lg font-medium"
+                  >
+                    <Upload className="mr-2 h-5 w-5" />
+                    {uploading ? "Uploading..." : "Upload Documents"}
+                  </Button>
+                  {!selectedStudent && (
+                    <p className="text-sm text-gray-500 mt-3">Please select a student to enable document upload</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>

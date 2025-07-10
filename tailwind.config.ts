@@ -78,7 +78,20 @@ export default {
 				'student-on-secondary': 'hsl(var(--student-on-secondary))',
 				'student-on-background': 'hsl(var(--student-on-background))',
 				'student-on-surface': 'hsl(var(--student-on-surface))',
-				'student-on-error': 'hsl(var(--student-on-error))'
+				'student-on-error': 'hsl(var(--student-on-error))',
+				// Admin theme colors (same as student theme for consistency)
+				'admin-primary': 'hsl(var(--admin-primary))',
+				'admin-primary-variant': 'hsl(var(--admin-primary-variant))',
+				'admin-secondary': 'hsl(var(--admin-secondary))',
+				'admin-secondary-variant': 'hsl(var(--admin-secondary-variant))',
+				'admin-background': 'hsl(var(--admin-background))',
+				'admin-surface': 'hsl(var(--admin-surface))',
+				'admin-error': 'hsl(var(--admin-error))',
+				'admin-on-primary': 'hsl(var(--admin-on-primary))',
+				'admin-on-secondary': 'hsl(var(--admin-on-secondary))',
+				'admin-on-background': 'hsl(var(--admin-on-background))',
+				'admin-on-surface': 'hsl(var(--admin-on-surface))',
+				'admin-on-error': 'hsl(var(--admin-on-error))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
