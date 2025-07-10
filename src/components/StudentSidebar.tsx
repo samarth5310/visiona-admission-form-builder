@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { User, BookOpen, GraduationCap, CreditCard, Home, LogOut, Gamepad2, X } from 'lucide-react';
+import { User, BookOpen, GraduationCap, CreditCard, Home, LogOut, X } from 'lucide-react';
 
 interface StudentSidebarProps {
   isOpen: boolean;
@@ -28,7 +28,6 @@ const StudentSidebar = ({
     { id: 'homework', label: 'Homework', icon: BookOpen },
     { id: 'marks', label: 'Marks', icon: GraduationCap },
     { id: 'fees', label: 'Fees', icon: CreditCard },
-    { id: 'games', label: 'Games', icon: Gamepad2 },
   ];
 
   const handleItemClick = (itemId: string) => {
@@ -51,25 +50,25 @@ const StudentSidebar = ({
       
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50
+        fixed top-0 left-0 h-full w-64 bg-student-surface shadow-xl transform transition-transform duration-300 ease-in-out z-50 border-r border-student-primary/10
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:relative md:translate-x-0 md:shadow-none md:border-r md:border-gray-200
+        md:relative md:translate-x-0 md:shadow-lg
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-student-primary/10 student-gradient-primary">
           <div className="flex items-center space-x-3">
             <img 
               src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
               alt="Logo" 
               className="w-8 h-8 object-contain"
             />
-            <h2 className="text-lg font-semibold text-gray-900">Navigation</h2>
+            <h2 className="text-lg font-semibold text-student-on-primary">Navigation</h2>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="md:hidden"
+            className="md:hidden text-student-on-primary hover:bg-student-on-primary/20"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -87,14 +86,14 @@ const StudentSidebar = ({
                   key={item.id}
                   onClick={() => handleItemClick(item.id)}
                   className={`
-                    w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors
+                    w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 student-card-hover
                     ${isActive 
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-student-primary text-student-on-primary shadow-md border border-student-primary/20' 
+                      : 'text-student-on-surface hover:bg-student-primary/10 hover:text-student-primary border border-transparent hover:border-student-primary/10'
                     }
                   `}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-700' : 'text-gray-500'}`} />
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-student-on-primary' : 'text-student-primary'}`} />
                   <span className="font-medium">{item.label}</span>
                 </button>
               );
@@ -103,11 +102,11 @@ const StudentSidebar = ({
         </nav>
 
         {/* Footer Actions */}
-        <div className="border-t border-gray-200 p-4 space-y-2">
+        <div className="border-t border-student-primary/10 p-4 space-y-3 bg-student-primary/5">
           <Button
             variant="outline"
             onClick={onBackToHome}
-            className="w-full flex items-center justify-center space-x-2"
+            className="w-full flex items-center justify-center space-x-2 border-student-primary/20 text-student-primary hover:bg-student-primary/10 hover:border-student-primary/30 transition-all duration-200"
           >
             <Home className="h-4 w-4" />
             <span>Back to Home</span>
@@ -115,7 +114,7 @@ const StudentSidebar = ({
           <Button
             variant="outline"
             onClick={onLogout}
-            className="w-full flex items-center justify-center space-x-2 text-red-600 border-red-200 hover:bg-red-50"
+            className="w-full flex items-center justify-center space-x-2 text-student-error border-student-error/20 hover:bg-student-error/10 hover:border-student-error/30 transition-all duration-200"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
