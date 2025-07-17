@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -71,10 +70,10 @@ const Homework = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-teal-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-admin-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -82,31 +81,27 @@ const Homework = () => {
 
   if (!userType) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-teal-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 text-lg">Redirecting...</p>
+          <p className="text-gray-600">Redirecting...</p>
         </div>
       </div>
     );
   }
 
-  // For admin users, use the admin theme layout
+  // For admin users, use the same layout as other admin pages
   if (userType === 'admin') {
     return (
       <>
         <Navigation activeSection="homework" onSectionChange={() => {}} />
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-teal-50 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto py-6 sm:py-8">
-            <div className="bg-white border border-purple-100 rounded-2xl shadow-xl overflow-hidden">
-              <div className="admin-gradient-primary p-6 sm:p-8 text-center">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
-                  HOMEWORK MANAGEMENT
-                </h1>
-                <p className="text-base sm:text-lg text-purple-100">
-                  Create and Manage Student Assignments
-                </p>
+        <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
+          <div className="max-w-7xl mx-auto py-4 sm:py-6">
+            <div className="bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
+              <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-3 sm:p-6">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">HOMEWORK MANAGEMENT</h1>
+                <p className="text-sm sm:text-base lg:text-lg text-gray-700">Create and Manage Student Assignments</p>
               </div>
-              <div className="p-6 sm:p-8 lg:p-12">
+              <div className="p-2 sm:p-4 lg:p-6">
                 <AdminHomework />
               </div>
             </div>
@@ -118,7 +113,7 @@ const Homework = () => {
 
   // For student users, keep the existing layout
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-teal-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">

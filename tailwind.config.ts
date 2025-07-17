@@ -65,33 +65,7 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// Student theme colors
-				'student-primary': 'hsl(var(--student-primary))',
-				'student-primary-variant': 'hsl(var(--student-primary-variant))',
-				'student-secondary': 'hsl(var(--student-secondary))',
-				'student-secondary-variant': 'hsl(var(--student-secondary-variant))',
-				'student-background': 'hsl(var(--student-background))',
-				'student-surface': 'hsl(var(--student-surface))',
-				'student-error': 'hsl(var(--student-error))',
-				'student-on-primary': 'hsl(var(--student-on-primary))',
-				'student-on-secondary': 'hsl(var(--student-on-secondary))',
-				'student-on-background': 'hsl(var(--student-on-background))',
-				'student-on-surface': 'hsl(var(--student-on-surface))',
-				'student-on-error': 'hsl(var(--student-on-error))',
-				// Admin theme colors (same as student theme for consistency)
-				'admin-primary': 'hsl(var(--admin-primary))',
-				'admin-primary-variant': 'hsl(var(--admin-primary-variant))',
-				'admin-secondary': 'hsl(var(--admin-secondary))',
-				'admin-secondary-variant': 'hsl(var(--admin-secondary-variant))',
-				'admin-background': 'hsl(var(--admin-background))',
-				'admin-surface': 'hsl(var(--admin-surface))',
-				'admin-error': 'hsl(var(--admin-error))',
-				'admin-on-primary': 'hsl(var(--admin-on-primary))',
-				'admin-on-secondary': 'hsl(var(--admin-on-secondary))',
-				'admin-on-background': 'hsl(var(--admin-on-background))',
-				'admin-on-surface': 'hsl(var(--admin-on-surface))',
-				'admin-on-error': 'hsl(var(--admin-on-error))'
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -138,16 +112,6 @@ export default {
 					'100%': {
 						transform: 'translateX(-100%)'
 					}
-				},
-				'fade-in': {
-					'0%': {
-						opacity: '0',
-						transform: 'translateY(10px)'
-					},
-					'100%': {
-						opacity: '1',
-						transform: 'translateY(0)'
-					}
 				}
 			},
 			animation: {
@@ -155,8 +119,7 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				marquee: 'marquee 40s linear infinite',
 				'marquee-slow': 'marquee-slow 60s linear infinite',
-				'marquee-fast': 'marquee-fast 30s linear infinite',
-				'fade-in': 'fade-in 0.3s ease-out'
+				'marquee-fast': 'marquee-fast 30s linear infinite'
 			}
 		}
 	},

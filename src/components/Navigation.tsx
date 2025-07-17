@@ -1,20 +1,10 @@
 
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { 
-  LogOut, 
-  Users, 
-  BookOpen, 
-  DollarSign, 
-  BarChart3, 
-  FileText, 
-  Upload,
-  Menu,
-  X
-} from 'lucide-react';
+import { FileText, CreditCard, Upload, Users, LogOut, BookOpen, GraduationCap, Home, Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface NavigationProps {
   activeSection: string;
@@ -23,112 +13,151 @@ interface NavigationProps {
 
 const Navigation = ({ activeSection }: NavigationProps) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { logout, user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
+  };
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+    setMobileMenuOpen(false);
   };
 
   const navigationItems = [
-    { id: 'students', label: 'Students', icon: Users, path: '/students' },
-    { id: 'homework', label: 'Homework', icon: BookOpen, path: '/homework' },
-    { id: 'marks', label: 'Marks', icon: BarChart3, path: '/marks' },
-    { id: 'fees', label: 'Fees', icon: DollarSign, path: '/fees' },
-    { id: 'documents', label: 'Documents', icon: Upload, path: '/documents' },
-    { id: 'admission', label: 'Admission', icon: FileText, path: '/admission' },
+    { path: '/admission', label: 'Admission', icon: FileText, section: 'admission' },
+    { path: '/students', label: 'Students', icon: Users, section: 'students' },
+    { path: '/homework', label: 'Homework', icon: BookOpen, section: 'homework' },
+    { path: '/marks', label: 'Marks', icon: GraduationCap, section: 'marks' },
+    { path: '/fees', label: 'Fees', icon: CreditCard, section: 'fees' },
+    { path: '/documents', label: 'Documents', icon: Upload, section: 'documents' },
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo and Brand */}
-          <div className="flex items-center space-x-3">
+    <div className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16">
+          {/* Logo Only */}
+          <div className="flex items-center">
             <img 
               src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
               alt="Logo" 
-              className="w-10 h-10 object-contain"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
             />
-            <div className="hidden sm:block">
-              <h1 className="text-xl font-bold admin-gradient-primary bg-clip-text text-transparent">
-                Admin Panel
-              </h1>
-              <p className="text-sm text-gray-600">Student Management System</p>
-            </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeSection === item.id;
-              return (
-                <Link
-                  key={item.id}
-                  to={item.path}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? 'admin-gradient-primary text-white shadow-lg transform scale-105'
-                      : 'text-gray-600 hover:bg-gradient-to-r hover:from-purple-50 hover:to-teal-50 hover:text-admin-primary'
+          {/* Desktop Navigation Menu */}
+          <div className="hidden md:flex flex-1 mx-4 sm:mx-6">
+            <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto scrollbar-hide">
+              {navigationItems.map((item) => (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigation(item.path)}
+                  className={`flex items-center space-x-1 whitespace-nowrap px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm ${
+                    activeSection === item.section ? 'bg-blue-100 text-blue-700' : ''
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Mobile menu button and logout */}
-          <div className="flex items-center space-x-3">
-            <Button 
-              onClick={handleLogout} 
-              variant="outline" 
-              className="border-admin-primary text-admin-primary hover:bg-admin-primary hover:text-white transition-all duration-200"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
-            
-            <button
-              className="lg:hidden p-2 rounded-md text-gray-600 hover:text-admin-primary hover:bg-gray-100 transition-colors"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200 bg-gradient-to-r from-purple-50 to-teal-50">
-            <div className="space-y-2">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeSection === item.id;
-                return (
-                  <Link
-                    key={item.id}
-                    to={item.path}
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg mx-2 transition-all duration-200 ${
-                      isActive
-                        ? 'admin-gradient-primary text-white shadow-lg'
-                        : 'text-gray-700 hover:bg-white hover:text-admin-primary hover:shadow-md'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
-                );
-              })}
+                  <item.icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </Button>
+              ))}
             </div>
           </div>
-        )}
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-64 p-0">
+                <div className="flex flex-col h-full">
+                  {/* Mobile Menu Header */}
+                  <div className="p-4 border-b">
+                    <div className="flex items-center space-x-2">
+                      <img 
+                        src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
+                        alt="Logo" 
+                        className="w-8 h-8 object-contain"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mobile Navigation Items */}
+                  <div className="flex-1 py-4">
+                    <nav className="space-y-1 px-2">
+                      {navigationItems.map((item) => (
+                        <Button
+                          key={item.path}
+                          variant="ghost"
+                          onClick={() => handleNavigation(item.path)}
+                          className={`w-full justify-start text-left px-3 py-2 ${
+                            activeSection === item.section ? 'bg-blue-100 text-blue-700' : ''
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4 mr-3" />
+                          {item.label}
+                        </Button>
+                      ))}
+                    </nav>
+                  </div>
+
+                  {/* Mobile Menu Footer */}
+                  <div className="border-t p-4 space-y-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleNavigation('/')}
+                      className="w-full justify-start text-left px-3 py-2"
+                    >
+                      <Home className="h-4 w-4 mr-3" />
+                      Home
+                    </Button>
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="w-full justify-start text-left px-3 py-2"
+                    >
+                      <LogOut className="h-4 w-4 mr-3" />
+                      Logout
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Desktop User Actions */}
+          <div className="hidden md:flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleNavigation('/')}
+              className="flex items-center space-x-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
+            >
+              <Home className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Home</span>
+            </Button>
+            
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
+            >
+              <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
+          </div>
+        </div>
       </div>
-    </nav>
+    </div>
   );
 };
 

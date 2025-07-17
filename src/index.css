@@ -13,10 +13,10 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 259 100% 65%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 174 100% 50%;
-    --secondary-foreground: 0 0% 0%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
     --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 210 40% 96%;
@@ -25,41 +25,13 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 259 100% 65%;
+    --ring: 221.2 83.2% 53.3%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-
-    /* Material Design color system for both student and admin */
-    --student-primary: 259 100% 65%;
-    --student-primary-variant: 248 100% 70%;
-    --student-secondary: 174 100% 50%;
-    --student-secondary-variant: 191 100% 25%;
-    --student-background: 0 0% 100%;
-    --student-surface: 0 0% 100%;
-    --student-error: 0 70% 35%;
-    --student-on-primary: 0 0% 100%;
-    --student-on-secondary: 0 0% 0%;
-    --student-on-background: 0 0% 0%;
-    --student-on-surface: 0 0% 0%;
-    --student-on-error: 0 0% 100%;
-
-    /* Admin theme using same colors */
-    --admin-primary: 259 100% 65%;
-    --admin-primary-variant: 248 100% 70%;
-    --admin-secondary: 174 100% 50%;
-    --admin-secondary-variant: 191 100% 25%;
-    --admin-background: 0 0% 100%;
-    --admin-surface: 0 0% 100%;
-    --admin-error: 185 100% 35%;
-    --admin-on-primary: 0 0% 100%;
-    --admin-on-secondary: 0 0% 0%;
-    --admin-on-background: 0 0% 0%;
-    --admin-on-surface: 0 0% 0%;
-    --admin-on-error: 0 0% 100%;
   }
 
   .dark {
@@ -69,10 +41,10 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 259 100% 65%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 174 100% 50%;
-    --secondary-foreground: 0 0% 0%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
@@ -81,7 +53,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 259 100% 65%;
+    --ring: 224.3 76.3% 94.1%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -100,17 +72,6 @@
   }
 }
 
-/* Material Design theme specific styles */
-.student-theme {
-  --background: var(--student-background);
-  --foreground: var(--student-on-background);
-}
-
-.admin-theme {
-  --background: var(--admin-background);
-  --foreground: var(--admin-on-background);
-}
-
 /* Custom utility classes */
 @layer utilities {
   .scrollbar-hide {
@@ -126,41 +87,5 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-  }
-
-  /* Material Design gradient utilities for student theme */
-  .student-gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--student-primary)), hsl(var(--student-primary-variant)));
-  }
-  
-  .student-gradient-secondary {
-    background: linear-gradient(135deg, hsl(var(--student-secondary)), hsl(var(--student-secondary-variant)));
-  }
-
-  /* Material Design gradient utilities for admin theme */
-  .admin-gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--admin-primary)), hsl(var(--admin-primary-variant)));
-  }
-  
-  .admin-gradient-secondary {
-    background: linear-gradient(135deg, hsl(var(--admin-secondary)), hsl(var(--admin-secondary-variant)));
-  }
-
-  .student-card-hover {
-    transition: all 0.3s ease;
-  }
-  
-  .student-card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  }
-
-  .admin-card-hover {
-    transition: all 0.3s ease;
-  }
-  
-  .admin-card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(98, 0, 238, 0.15);
   }
 }
