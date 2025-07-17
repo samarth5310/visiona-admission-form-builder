@@ -28,7 +28,6 @@ const Navigation = ({ activeSection }: NavigationProps) => {
   };
 
   const navigationItems = [
-    { path: '/', label: 'Home', icon: Home, section: 'home' },
     { path: '/admission', label: 'Admission', icon: FileText, section: 'admission' },
     { path: '/students', label: 'Students', icon: Users, section: 'students' },
     { path: '/homework', label: 'Homework', icon: BookOpen, section: 'homework' },
@@ -113,6 +112,14 @@ const Navigation = ({ activeSection }: NavigationProps) => {
                   {/* Mobile Menu Footer */}
                   <div className="border-t p-4 space-y-2">
                     <Button
+                      variant="ghost"
+                      onClick={() => handleNavigation('/')}
+                      className="w-full justify-start text-left px-3 py-2"
+                    >
+                      <Home className="h-4 w-4 mr-3" />
+                      Home
+                    </Button>
+                    <Button
                       onClick={handleLogout}
                       variant="outline"
                       className="w-full justify-start text-left px-3 py-2"
@@ -128,6 +135,16 @@ const Navigation = ({ activeSection }: NavigationProps) => {
 
           {/* Desktop User Actions */}
           <div className="hidden md:flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleNavigation('/')}
+              className="flex items-center space-x-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
+            >
+              <Home className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Home</span>
+            </Button>
+            
             <Button
               onClick={handleLogout}
               variant="outline"
