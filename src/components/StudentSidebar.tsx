@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { User, BookOpen, GraduationCap, CreditCard, Home, LogOut, Gamepad2, X } from 'lucide-react';
+import { User, BookOpen, GraduationCap, CreditCard, Home, LogOut, X } from 'lucide-react';
 
 interface StudentSidebarProps {
   isOpen: boolean;
@@ -28,7 +28,6 @@ const StudentSidebar = ({
     { id: 'homework', label: 'Homework', icon: BookOpen },
     { id: 'marks', label: 'Marks', icon: GraduationCap },
     { id: 'fees', label: 'Fees', icon: CreditCard },
-    { id: 'games', label: 'Games', icon: Gamepad2 },
   ];
 
   const handleItemClick = (itemId: string) => {

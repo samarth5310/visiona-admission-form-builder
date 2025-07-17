@@ -8,7 +8,6 @@ import StudentHomework from '@/components/StudentHomework';
 import StudentMarks from '@/components/StudentMarks';
 import StudentFeeDetails from '@/components/StudentFeeDetails';
 import StudentLeaderboard from '@/components/StudentLeaderboard';
-import DinoGame from '@/components/DinoGame';
 import StudentSidebar from '@/components/StudentSidebar';
 
 const StudentDashboard = () => {
@@ -183,8 +182,6 @@ const StudentDashboard = () => {
         return <StudentMarks />;
       case 'fees':
         return <StudentFeeDetails />;
-      case 'games':
-        return <DinoGame />;
       default:
         return null;
     }
