@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -89,19 +90,35 @@ const Homework = () => {
     );
   }
 
-  // For admin users, use the same layout as other admin pages
+  // For admin users, use the full screen layout
   if (userType === 'admin') {
     return (
       <>
         <Navigation activeSection="homework" onSectionChange={() => {}} />
-        <div className="min-h-screen bg-gray-50 px-2 sm:px-4 lg:px-6">
-          <div className="max-w-7xl mx-auto py-4 sm:py-6">
-            <div className="bg-white border-2 sm:border-4 border-gray-300 rounded-lg shadow-lg">
-              <div className="text-center border-b-2 border-gray-500 pb-4 sm:pb-6 mb-6 sm:mb-8 bg-gray-200 rounded-t-lg p-3 sm:p-6">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">HOMEWORK MANAGEMENT</h1>
-                <p className="text-sm sm:text-base lg:text-lg text-gray-700">Create and Manage Student Assignments</p>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+          <div className="w-full">
+            {/* Welcome Section */}
+            <div className="bg-white/80 backdrop-blur-sm shadow-lg border-b border-gray-200/50">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-full">
+                      <BookOpen className="h-8 w-8 text-white" />
+                    </div>
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                    Homework Management
+                  </h1>
+                  <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Create, assign, and manage homework assignments for your students
+                  </p>
+                </div>
               </div>
-              <div className="p-2 sm:p-4 lg:p-6">
+            </div>
+
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
                 <AdminHomework />
               </div>
             </div>
