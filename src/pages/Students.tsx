@@ -37,7 +37,28 @@ const Students = () => {
           {/* Main Content */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-              <StudentsSection />
+              {/* Header with logo */}
+              <div className="bg-gradient-to-r from-gray-100 to-gray-200 border-b border-gray-300 p-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <img 
+                    src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
+                    alt="Visiona Education Academy Logo" 
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain flex-shrink-0"
+                  />
+                  <div className="text-center">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-700 mb-2">
+                      STUDENT MANAGEMENT
+                    </h2>
+                    <p className="text-sm sm:text-base lg:text-lg text-gray-600">
+                      Manage student records and database efficiently
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <StudentsSection />
+              </div>
             </div>
           </div>
         </div>
