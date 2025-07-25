@@ -2,9 +2,13 @@
 import React from 'react';
 import Navigation from '@/components/Navigation';
 import MarksManagement from '@/components/MarksManagement';
+import { useAuth } from '@/contexts/AuthContext';
 import { GraduationCap } from 'lucide-react';
 
 const Marks = () => {
+  const { user } = useAuth();
+  const adminName = user?.name || 'Admin';
+
   return (
     <>
       <Navigation activeSection="marks" onSectionChange={() => {}} />
@@ -20,10 +24,10 @@ const Marks = () => {
                   </div>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                  Marks Management
+                  Welcome, {adminName}
                 </h1>
                 <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                  Track and manage student test scores and performance evaluations
+                  Marks Management - Track and manage student test scores and performance evaluations
                 </p>
               </div>
             </div>

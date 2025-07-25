@@ -92,6 +92,8 @@ const Homework = () => {
 
   // For admin users, use the full screen layout
   if (userType === 'admin') {
+    const adminName = user?.name || 'Admin';
+    
     return (
       <>
         <Navigation activeSection="homework" onSectionChange={() => {}} />
@@ -107,10 +109,10 @@ const Homework = () => {
                     </div>
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                    Homework Management
+                    Welcome, {adminName}
                   </h1>
                   <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Create, assign, and manage homework assignments for your students
+                    Homework Management - Create, assign, and manage homework assignments for your students
                   </p>
                 </div>
               </div>
