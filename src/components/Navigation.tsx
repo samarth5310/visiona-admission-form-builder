@@ -1,135 +1,163 @@
+
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { FileText, CreditCard, Upload, Users, LogOut, BookOpen, GraduationCap, Home, Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Users,
-  FileText,
-  BookOpen,
-  DollarSign,
-  Folder,
-  Menu,
-  X,
-  Calendar,
-} from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface NavigationProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
 }
 
-const Navigation = ({ activeSection, onSectionChange }: NavigationProps) => {
-  const { logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+const Navigation = ({ activeSection }: NavigationProps) => {
   const navigate = useNavigate();
+  const { logout, user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems = [
-    { id: 'students', label: 'Students', icon: Users, path: '/students' },
-    { id: 'admission', label: 'Admission', icon: FileText, path: '/admission' },
-    { id: 'marks', label: 'Marks', icon: BookOpen, path: '/marks' },
-    { id: 'fees', label: 'Fees', icon: DollarSign, path: '/fees' },
-    { id: 'documents', label: 'Documents', icon: Folder, path: '/documents' },
-    { id: 'attendance', label: 'Attendance', icon: Calendar, path: '/attendance' },
-  ];
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setMobileMenuOpen(false);
+  };
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+    setMobileMenuOpen(false);
   };
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
+  const navigationItems = [
+    { path: '/admission', label: 'Admission', icon: FileText, section: 'admission' },
+    { path: '/students', label: 'Students', icon: Users, section: 'students' },
+    { path: '/homework', label: 'Homework', icon: BookOpen, section: 'homework' },
+    { path: '/marks', label: 'Marks', icon: GraduationCap, section: 'marks' },
+    { path: '/fees', label: 'Fees', icon: CreditCard, section: 'fees' },
+    { path: '/documents', label: 'Documents', icon: Upload, section: 'documents' },
+  ];
 
   return (
-    <nav className="bg-white shadow-lg border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <div className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16">
+          {/* Logo Only */}
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center space-x-3">
-              <img 
-                src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-                alt="Visiona Education Academy Logo" 
-                className="h-10 w-10 object-contain"
-              />
-              <span className="text-xl font-bold text-gray-900 hidden sm:block">
-                Visiona Education Academy
-              </span>
-            </Link>
+            <img 
+              src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
+              alt="Logo" 
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+            />
           </div>
 
-          <div className="hidden md:flex items-center space-x-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.id}
-                to={item.path}
-                className={`px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  activeSection === item.id ? 'bg-gray-100 text-gray-900' : ''
-                }`}
-                onClick={() => {
-                  onSectionChange(item.id);
-                }}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <button
+          {/* Desktop Navigation Menu */}
+          <div className="hidden md:flex flex-1 mx-4 sm:mx-6">
+            <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto scrollbar-hide">
+              {navigationItems.map((item) => (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleNavigation(item.path)}
+                  className={`flex items-center space-x-1 whitespace-nowrap px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm ${
+                    activeSection === item.section ? 'bg-blue-100 text-blue-700' : ''
+                  }`}
+                >
+                  <item.icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="p-2">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-64 p-0">
+                <div className="flex flex-col h-full">
+                  {/* Mobile Menu Header */}
+                  <div className="p-4 border-b">
+                    <div className="flex items-center space-x-2">
+                      <img 
+                        src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
+                        alt="Logo" 
+                        className="w-8 h-8 object-contain"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mobile Navigation Items */}
+                  <div className="flex-1 py-4">
+                    <nav className="space-y-1 px-2">
+                      {navigationItems.map((item) => (
+                        <Button
+                          key={item.path}
+                          variant="ghost"
+                          onClick={() => handleNavigation(item.path)}
+                          className={`w-full justify-start text-left px-3 py-2 ${
+                            activeSection === item.section ? 'bg-blue-100 text-blue-700' : ''
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4 mr-3" />
+                          {item.label}
+                        </Button>
+                      ))}
+                    </nav>
+                  </div>
+
+                  {/* Mobile Menu Footer */}
+                  <div className="border-t p-4 space-y-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleNavigation('/')}
+                      className="w-full justify-start text-left px-3 py-2"
+                    >
+                      <Home className="h-4 w-4 mr-3" />
+                      Home
+                    </Button>
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="w-full justify-start text-left px-3 py-2"
+                    >
+                      <LogOut className="h-4 w-4 mr-3" />
+                      Logout
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          {/* Desktop User Actions */}
+          <div className="hidden md:flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleNavigation('/')}
+              className="flex items-center space-x-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
+            >
+              <Home className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Home</span>
+            </Button>
+            
+            <Button
               onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-1 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
             >
-              Logout
-            </button>
-          </div>
-
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
-              aria-expanded="false"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <X className="h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="h-6 w-6" aria-hidden="true" />
-              )}
-            </button>
+              <LogOut className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
           </div>
         </div>
       </div>
-
-      <div className={`md:hidden ${isMenuOpen ? 'block' : 'hidden'}`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {navItems.map((item) => (
-            <Link
-              key={item.id}
-              to={item.path}
-              className={`block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                activeSection === item.id ? 'bg-gray-100 text-gray-900' : ''
-              }`}
-              onClick={() => {
-                onSectionChange(item.id);
-                closeMenu();
-              }}
-            >
-              {item.label}
-            </Link>
-          ))}
-          <button
-            onClick={() => {
-              handleLogout();
-              closeMenu();
-            }}
-            className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    </nav>
+    </div>
   );
 };
 

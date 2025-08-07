@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,7 +16,6 @@ import Fees from "./pages/Fees";
 import Documents from "./pages/Documents";
 import Homework from "./pages/Homework";
 import Marks from "./pages/Marks";
-import Attendance from "./pages/Attendance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -65,11 +63,6 @@ const App: React.FC = () => (
             <Route path="/documents" element={
               <ProtectedRoute>
                 <Documents />
-              </ProtectedRoute>
-            } />
-            <Route path="/attendance" element={
-              <ProtectedRoute>
-                <Attendance />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
