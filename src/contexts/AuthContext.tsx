@@ -41,15 +41,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setIsLoading(true);
       
+      // Use the secure authentication function instead of direct table access
       const { data, error } = await supabase
-        .from('authorized_users')
-        .select('*')
-        .eq('mobile_number', mobileNumber)
-        .eq('password', password)
-        .eq('is_active', true)
-        .single();
+        .rpc('authenticate_user', {
+          input_mobile_number: mobileNumber,
+          input_password: password
+        });
 
-      if (error || !data) {
+      if (error || !data || data.length === 0) {
         toast({
           title: "Login Failed",
           description: "Invalid mobile number or password",
@@ -58,11 +57,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return false;
       }
 
+      const userData = data[0];
       const authUser: AuthUser = {
-        id: data.id,
-        name: data.name || 'Admin',
-        mobile_number: data.mobile_number,
-        role: data.role || 'admin'
+        id: userData.user_id,
+        name: userData.user_name || 'Admin',
+        mobile_number: userData.mobile_number,
+        role: userData.user_role || 'admin'
       };
 
       setUser(authUser);
