@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ExternalLink, Calendar, User } from 'lucide-react';
+import { BookOpen, ExternalLink, Calendar, User, FileText } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,7 +24,7 @@ const StudentHomework = () => {
 
   useEffect(() => {
     fetchHomework();
-    
+
     // Set up real-time subscription
     const channel = supabase
       .channel('homework-changes')
@@ -56,7 +55,6 @@ const StudentHomework = () => {
       }
 
       const student = JSON.parse(studentData);
-      console.log('Student data:', student);
 
       // Fetch all homework
       const { data, error } = await supabase
@@ -69,26 +67,19 @@ const StudentHomework = () => {
         throw error;
       }
 
-      console.log('All homework from database:', data);
-
       // Filter homework for this student
       const studentHomework = data?.filter(hw => {
         // Check if assigned to student's class
         const isClassAssignment = hw.assigned_to_class === student.class;
-        
+
         // Check if assigned to this specific student
-        const isIndividualAssignment = hw.assigned_to_students && 
-          Array.isArray(hw.assigned_to_students) && 
+        const isIndividualAssignment = hw.assigned_to_students &&
+          Array.isArray(hw.assigned_to_students) &&
           hw.assigned_to_students.includes(student.id);
 
-        console.log('Homework item:', hw.title);
-        console.log('Student class:', student.class, 'Assigned to class:', hw.assigned_to_class, 'Match:', isClassAssignment);
-        console.log('Student ID:', student.id, 'Assigned to students:', hw.assigned_to_students, 'Individual match:', isIndividualAssignment);
-        
         return isClassAssignment || isIndividualAssignment;
       }) || [];
 
-      console.log('Filtered homework for student:', studentHomework);
       setHomework(studentHomework);
     } catch (error) {
       console.error('Error in fetchHomework:', error);
@@ -105,7 +96,7 @@ const StudentHomework = () => {
   const handleOpenLink = (link: string) => {
     // Extract file ID from Google Drive link if needed
     let finalLink = link;
-    
+
     // If it's a sharing link, convert to direct view link
     if (link.includes('drive.google.com/file/d/')) {
       const fileId = link.match(/file\/d\/([a-zA-Z0-9_-]+)/)?.[1];
@@ -113,101 +104,86 @@ const StudentHomework = () => {
         finalLink = `https://drive.google.com/file/d/${fileId}/view`;
       }
     }
-    
+
     window.open(finalLink, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <BookOpen className="h-5 w-5" />
-            Homework Assignments
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 sm:py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-500 mt-2 text-sm sm:text-base">Loading homework...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3 sm:pb-6">
-        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-          <BookOpen className="h-5 w-5" />
-          Homework Assignments
-        </CardTitle>
-        <CardDescription className="text-sm sm:text-base">Your assigned homework and study materials</CardDescription>
-      </CardHeader>
-      <CardContent className="p-3 sm:p-6">
-        {homework.length === 0 ? (
-          <div className="text-center py-8 sm:py-12">
-            <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-base sm:text-lg">No homework assignments found</p>
-            <p className="text-gray-400 text-sm sm:text-base mt-2">Check back later for new assignments</p>
-          </div>
-        ) : (
-          <div className="space-y-3 sm:space-y-4">
-            {homework.map((item) => (
-              <Card key={item.id} className="border border-gray-200 hover:border-blue-300 transition-colors">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
-                    <div className="flex-1 space-y-2">
-                      <h3 className="font-semibold text-base sm:text-lg text-gray-900 break-words">
-                        {item.title}
-                      </h3>
-                      
-                      <div className="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-600">
-                        <span className="flex items-center gap-1">
-                          <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />
-                          {item.subject}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                          {item.assigned_by}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                          {new Date(item.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      
-                      {item.description && (
-                        <p className="text-sm sm:text-base text-gray-700 break-words mt-2">
-                          {item.description}
-                        </p>
-                      )}
-                      
-                      <div className="text-xs text-gray-500">
-                        <span>
-                          Assigned to: {item.assigned_to_class ? `Class ${item.assigned_to_class}` : 'Individual Students'}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2 sm:w-auto w-full">
-                      <Button
-                        onClick={() => handleOpenLink(item.google_drive_link)}
-                        className="flex items-center gap-2 w-full sm:w-auto"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>Open Assignment</span>
-                      </Button>
-                    </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Homework Assignments</h2>
+          <p className="text-gray-500 dark:text-gray-400">View and submit your assignments</p>
+        </div>
+      </div>
+
+      {homework.length === 0 ? (
+        <Card className="border-dashed border-2 bg-gray-50 dark:bg-white/5 dark:border-white/10">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="p-4 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
+              <BookOpen className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No Assignments Yet</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mt-2">
+              You're all caught up! Check back later for new homework assignments.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {homework.map((item) => (
+            <Card key={item.id} className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-white dark:bg-[#0B1121] dark:text-white overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-500" />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                    <FileText className="h-6 w-6" />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300">
+                    {item.subject}
+                  </span>
+                </div>
+
+                <h3 className="font-bold text-lg mb-2 line-clamp-1 group-hover:text-blue-500 transition-colors">
+                  {item.title}
+                </h3>
+
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 h-10">
+                  {item.description || "No description provided."}
+                </p>
+
+                <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-6">
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>{item.assigned_by}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => handleOpenLink(item.google_drive_link)}
+                  className="w-full bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Assignment
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

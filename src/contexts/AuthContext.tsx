@@ -2,17 +2,15 @@
 /**
  * Authentication Context for Visiona Admin System
  * 
- * This context provides secure authentication functionality using Supabase
- * with bcrypt password hashing and RLS-protected database access.
+ * This context provides secure authentication functionality using Supabase Auth.
  * 
  * Security Features:
- * - Passwords are hashed using bcrypt before storage
- * - Database access is restricted via Row Level Security (RLS)
- * - Authentication uses a secure server-side function (authenticate_user)
- * - Session persistence via localStorage
+ * - Uses native Supabase Authentication (Email/Password)
+ * - Session persistence handled by Supabase client
+ * - Real-time auth state changes
  * 
  * @author Lovable AI Assistant
- * @version 1.0.0 - Security Enhanced
+ * @version 2.0.0 - Supabase Auth Integration
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -24,8 +22,8 @@ import { useToast } from "@/hooks/use-toast";
  */
 interface AuthUser {
   id: string;
+  email?: string;
   name: string;
-  mobile_number: string;
   role: string;
 }
 
@@ -34,13 +32,10 @@ interface AuthUser {
  */
 interface AuthContextType {
   user: AuthUser | null;
-  login: (mobileNumber: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
-
-// Local storage key for session persistence
-const SESSION_STORAGE_KEY = 'visiona_auth_user';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -56,84 +51,74 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   /**
-   * Initialize authentication state from localStorage on app load
+   * Initialize authentication state from Supabase session
    */
   useEffect(() => {
-    const initializeAuth = () => {
-      try {
-        const storedUser = localStorage.getItem(SESSION_STORAGE_KEY);
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-        }
-      } catch (error) {
-        console.error('Failed to parse stored user session:', error);
-        localStorage.removeItem(SESSION_STORAGE_KEY);
-      } finally {
-        setIsLoading(false);
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.user_metadata?.name || 'Admin',
+          role: 'admin' // Default role for now, can be fetched from metadata or profile
+        });
       }
-    };
+      setIsLoading(false);
+    });
 
-    initializeAuth();
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.user_metadata?.name || 'Admin',
+          role: 'admin'
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   /**
-   * Secure login function using Supabase RPC with bcrypt password verification
-   * 
-   * @param mobileNumber - User's mobile number
-   * @param password - Plain text password (will be hashed server-side)
-   * @returns Promise<boolean> - Success status
+   * Secure login function using Supabase Auth
    */
-  const login = async (mobileNumber: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
-      
-      // Call secure authentication function (server-side password verification)
-      const { data, error } = await supabase
-        .rpc('authenticate_user', {
-          input_mobile_number: mobileNumber,
-          input_password: password
-        });
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
         console.error('Authentication error:', error);
         toast({
           title: "Login Failed",
-          description: "Authentication service error. Please try again.",
+          description: error.message || "Invalid email or password",
           variant: "destructive",
         });
         return false;
       }
 
-      if (!data || data.length === 0) {
+      if (data.user) {
         toast({
-          title: "Login Failed",
-          description: "Invalid mobile number or password",
-          variant: "destructive",
+          title: "Login Successful",
+          description: "Welcome back!",
         });
-        return false;
+        return true;
       }
 
-      // Extract user data from secure response
-      const userData = data[0];
-      const authUser: AuthUser = {
-        id: userData.user_id,
-        name: userData.user_name || 'Admin',
-        mobile_number: userData.mobile_number,
-        role: userData.user_role || 'admin'
-      };
-
-      // Update state and persist session
-      setUser(authUser);
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(authUser));
-
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${authUser.name}!`,
-      });
-
-      return true;
-    } catch (error) {
+      return false;
+    } catch (error: any) {
       console.error('Unexpected login error:', error);
       toast({
         title: "Login Error",
@@ -147,15 +132,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   /**
-   * Logout function - clears user state and session storage
+   * Logout function
    */
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem(SESSION_STORAGE_KEY);
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -167,9 +156,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 /**
  * Hook to access authentication context
- * 
- * @throws Error if used outside AuthProvider
- * @returns AuthContextType
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);

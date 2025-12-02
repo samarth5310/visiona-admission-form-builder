@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -58,7 +58,7 @@ const WhatsAppMessaging = ({
 📍 16th Cross, Vidyagiri, Bagalkot
 📞 ಸಂಪರ್ಕಿಸಿ: 7349420496, 8722189292`;
     }
-    
+
     return `ನಮಸ್ಕಾರ 🙏
 ನಿಮ್ಮ ಮಗ/ಮಗುವಿನ ಫೀಸ್ ಪಾವತಿಯನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ ✅
 
@@ -79,7 +79,7 @@ const WhatsAppMessaging = ({
     const encodedMessage = encodeURIComponent(message);
     const cleanPhoneNumber = phoneNumber.replace(/[^0-9]/g, '');
     const whatsappUrl = `https://wa.me/91${cleanPhoneNumber}?text=${encodedMessage}`;
-    
+
     window.open(whatsappUrl, '_blank');
     onClose();
   };
@@ -97,6 +97,9 @@ const WhatsAppMessaging = ({
             <MessageCircle className="h-5 w-5 text-green-600" />
             Send WhatsApp Message
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Compose and send a WhatsApp message to the student.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -121,7 +124,7 @@ const WhatsAppMessaging = ({
                 </Button>
               )}
             </div>
-            
+
             {isEditing ? (
               <Textarea
                 value={customMessage}
@@ -138,15 +141,15 @@ const WhatsAppMessaging = ({
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose} 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
               className="w-full sm:flex-1 border-blue-200 text-blue-700 hover:bg-blue-50 text-sm"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSendWhatsApp}
               className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2 text-sm"
             >

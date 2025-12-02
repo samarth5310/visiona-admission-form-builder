@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -80,7 +81,7 @@ const AdminHomework = () => {
       if (error) throw error;
 
       setStudents(studentsData || []);
-      
+
       // Extract unique classes
       const uniqueClasses = [...new Set(studentsData?.map(s => s.class) || [])];
       setClasses(uniqueClasses.sort());
@@ -115,7 +116,7 @@ const AdminHomework = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim() || !formData.subject.trim() || !formData.google_drive_link.trim()) {
       toast({
         title: "Validation Error",
@@ -332,9 +333,9 @@ const AdminHomework = () => {
                   <Select
                     value={formData.assignment_type}
                     onValueChange={(value: 'class' | 'individual') => {
-                      setFormData({ 
-                        ...formData, 
-                        assignment_type: value, 
+                      setFormData({
+                        ...formData,
+                        assignment_type: value,
                         assigned_to_class: '',
                         assigned_to_students: []
                       });
@@ -395,15 +396,14 @@ const AdminHomework = () => {
                     {formData.assigned_to_class && (
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Select Students *</Label>
-                        <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50">
+                        <div className="max-h-40 overflow-y-auto border rounded-md p-3 space-y-2 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
                           {filteredStudents.map((student) => (
                             <div key={student.id} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
+                              <Checkbox
                                 id={student.id}
                                 checked={formData.assigned_to_students.includes(student.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
                                     setFormData({
                                       ...formData,
                                       assigned_to_students: [...formData.assigned_to_students, student.id]
@@ -415,9 +415,8 @@ const AdminHomework = () => {
                                     });
                                   }
                                 }}
-                                className="rounded"
                               />
-                              <Label htmlFor={student.id} className="text-sm flex-1">
+                              <Label htmlFor={student.id} className="text-sm flex-1 cursor-pointer text-gray-900 dark:text-gray-100">
                                 {student.full_name}
                               </Label>
                             </div>
@@ -433,9 +432,9 @@ const AdminHomework = () => {
                     {isSubmitting ? (editingId ? 'Updating...' : 'Creating...') : (editingId ? 'Update Assignment' : 'Create Assignment')}
                   </Button>
                   {editingId && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       onClick={() => {
                         setEditingId(null);
                         setFormData({

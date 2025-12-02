@@ -180,6 +180,14 @@ export default {
 					'50%': {
 						opacity: '0.8'
 					}
+				},
+				'scroll': {
+					'0%': {
+						transform: 'translateX(0)'
+					},
+					'100%': {
+						transform: 'translateX(-50%)'
+					}
 				}
 			},
 			animation: {
@@ -193,6 +201,7 @@ export default {
 				'scale-in': 'scale-in 0.2s ease-out',
 				'float': 'float 3s ease-in-out infinite',
 				'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+				'scroll': 'scroll 40s linear infinite',
 			}
 		}
 	},

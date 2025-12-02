@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +57,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
 
   const loadFeeDetails = async () => {
     if (!student) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('student_fees')
@@ -98,8 +98,8 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
   };
 
   const calculateAcademicSubtotal = () => {
-    return feeStructure.admission_fee + feeStructure.tuition_fee + 
-           feeStructure.exam_fee;
+    return feeStructure.admission_fee + feeStructure.tuition_fee +
+      feeStructure.exam_fee;
   };
 
   const calculateAdditionalSubtotal = () => {
@@ -116,7 +116,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
     try {
       setLoading(true);
       const grandTotal = calculateGrandTotal();
-      
+
       if (grandTotal <= 0) {
         toast({
           title: "Invalid Amount",
@@ -126,9 +126,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
         return;
       }
 
-      console.log('Saving fee structure for student:', student.id);
-      console.log('Grand total:', grandTotal);
-      console.log('Current paid amount:', student.paid_amount);
+
 
       // Calculate correct pending amount
       const pendingAmount = grandTotal - (student.paid_amount || 0);
@@ -138,18 +136,18 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
         total_fees: grandTotal,
         paid_amount: student.paid_amount || 0, // Keep existing paid amount
         pending_amount: pendingAmount,
-        payment_status: (student.paid_amount || 0) > 0 ? 
-          ((student.paid_amount || 0) >= grandTotal ? 'paid' : 'partial') : 
+        payment_status: (student.paid_amount || 0) > 0 ?
+          ((student.paid_amount || 0) >= grandTotal ? 'paid' : 'partial') :
           'pending'
       };
 
-      console.log('Fee data to save:', feeData);
+
 
       const { data, error } = await supabase
         .from('student_fees')
-        .upsert(feeData, { 
+        .upsert(feeData, {
           onConflict: 'application_id',
-          ignoreDuplicates: false 
+          ignoreDuplicates: false
         })
         .select()
         .single();
@@ -159,13 +157,13 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
         throw error;
       }
 
-      console.log('Fee structure saved successfully:', data);
+
 
       toast({
         title: "Success",
         description: "Fee structure saved successfully.",
       });
-      
+
       onUpdate();
     } catch (error) {
       console.error('Error saving fee structure:', error);
@@ -212,7 +210,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
         title: "Success",
         description: "Fee structure and all payments deleted successfully.",
       });
-      
+
       onUpdate();
       onClose();
     } catch (error) {
@@ -250,7 +248,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
         title: "Success",
         description: "Student marked as fully paid.",
       });
-      
+
       onUpdate();
     } catch (error) {
       console.error('Error marking as fully paid:', error);
@@ -273,7 +271,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.not_set;
-    
+
     return (
       <Badge className={config.className}>
         {config.label}
@@ -302,6 +300,9 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Manage fees and view payment history for {student.full_name}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 overflow-y-auto p-6 sm:p-0 flex-1">
@@ -335,10 +336,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card >
 
           {/* Current Fee Status */}
-          <Card>
+          < Card >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
@@ -367,10 +368,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card >
 
           {/* Fee Setup Form - Split Layout */}
-          <Card>
+          < Card >
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Fee Structure Setup</span>
@@ -393,7 +394,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 {/* LEFT SIDE - Academic Fees */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-blue-600 border-b pb-2">Academic Fees</h3>
-                  
+
                   <div>
                     <Label htmlFor="admission_fee">Admission Fee</Label>
                     <Input
@@ -449,7 +450,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 {/* RIGHT SIDE - Additional Fees */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-green-600 border-b pb-2">Additional Fees</h3>
-                  
+
                   <div>
                     <Label htmlFor="books_materials">Books & Materials</Label>
                     <Input
@@ -463,7 +464,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                       placeholder="0"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="other_fees">Other Fees</Label>
                     <Input
@@ -491,7 +492,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
 
               {/* BOTTOM SECTION */}
               <Separator />
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border-2 border-dashed border-gray-300">
                   <span className="text-xl font-bold">Grand Total Fees:</span>
@@ -500,8 +501,8 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                   </span>
                 </div>
 
-                <Button 
-                  onClick={handleSaveFeeStructure} 
+                <Button
+                  onClick={handleSaveFeeStructure}
                   disabled={loading}
                   className="w-full text-lg py-6"
                   size="lg"
@@ -510,10 +511,10 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </Card >
 
           {/* Quick Actions */}
-          <Card>
+          < Card >
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
@@ -528,7 +529,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                   <DollarSign className="h-4 w-4" />
                   Add Payment
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   onClick={handleMarkFullyPaid}
@@ -538,7 +539,7 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                   <Receipt className="h-4 w-4" />
                   Mark Fully Paid
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   onClick={() => setShowPaymentHistory(!showPaymentHistory)}
@@ -547,42 +548,46 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
                   <History className="h-4 w-4" />
                   Payment History
                 </Button>
-                
-                <ReceiptGenerator 
+
+                <ReceiptGenerator
                   student={student}
                   disabled={loading}
                 />
               </div>
             </CardContent>
-          </Card>
+          </Card >
 
           {/* Payment History Section */}
-          {showPaymentHistory && student.fee_id && (
-            <PaymentHistory 
-              studentFeesId={student.fee_id}
-              studentData={student}
-              onUpdate={onUpdate}
-            />
-          )}
-        </div>
+          {
+            showPaymentHistory && student.fee_id && (
+              <PaymentHistory
+                studentFeesId={student.fee_id}
+                studentData={student}
+                onUpdate={onUpdate}
+              />
+            )
+          }
+        </div >
 
         {/* Payment Form Modal */}
-        {showPaymentForm && student.fee_id && (
-          <PaymentForm
-            studentFeesId={student.fee_id}
-            studentName={student.full_name}
-            phoneNumber={student.contact_number}
-            pendingAmount={Math.max(0, student.total_fees - student.paid_amount)}
-            isOpen={showPaymentForm}
-            onClose={() => setShowPaymentForm(false)}
-            onSuccess={() => {
-              setShowPaymentForm(false);
-              onUpdate();
-            }}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+        {
+          showPaymentForm && student.fee_id && (
+            <PaymentForm
+              studentFeesId={student.fee_id}
+              studentName={student.full_name}
+              phoneNumber={student.contact_number}
+              pendingAmount={Math.max(0, student.total_fees - student.paid_amount)}
+              isOpen={showPaymentForm}
+              onClose={() => setShowPaymentForm(false)}
+              onSuccess={() => {
+                setShowPaymentForm(false);
+                onUpdate();
+              }}
+            />
+          )
+        }
+      </DialogContent >
+    </Dialog >
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trophy, Crown, Medal, Award, RefreshCw } from 'lucide-react';
+import { Trophy, Crown, Medal, Award, RefreshCw, Star } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,7 +29,7 @@ const StudentLeaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch all student marks
       const { data: marksData, error: marksError } = await supabase
         .from('student_marks')
@@ -51,14 +51,14 @@ const StudentLeaderboard = () => {
       marksData?.forEach((mark) => {
         const studentId = mark.student_id;
         const student = mark.applications;
-        
+
         if (!studentScores[studentId]) {
           studentScores[studentId] = {
             student,
             total_score: 0
           };
         }
-        
+
         studentScores[studentId].total_score += mark.marks_obtained;
       });
 
@@ -85,7 +85,7 @@ const StudentLeaderboard = () => {
 
       // Prepare display rankings (top 10 with current student always visible)
       let displayRankings = sortedStudents.slice(0, 10);
-      
+
       // If current student is not in top 10, replace the 10th position
       if (currentStudent && currentStudent.rank > 10) {
         displayRankings[9] = currentStudent;
@@ -113,15 +113,15 @@ const StudentLeaderboard = () => {
       case 3:
         return <Award className="h-5 w-5 text-amber-600" />;
       default:
-        return <Trophy className="h-5 w-5 text-blue-500" />;
+        return <Star className="h-5 w-5 text-blue-500" />;
     }
   };
 
   const getRankBadgeColor = (rank: number, isCurrentStudent: boolean) => {
     if (isCurrentStudent) {
-      return 'bg-blue-500 text-white';
+      return 'bg-blue-600 text-white';
     }
-    
+
     switch (rank) {
       case 1:
         return 'bg-yellow-500 text-white';
@@ -130,7 +130,7 @@ const StudentLeaderboard = () => {
       case 3:
         return 'bg-amber-600 text-white';
       default:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300';
     }
   };
 
@@ -138,149 +138,108 @@ const StudentLeaderboard = () => {
     if (student.rank === 1 || student.is_current_student) {
       return student.full_name;
     }
-    return 'XXXXX';
+    return 'Student ' + student.id.slice(0, 4);
   };
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Trophy className="h-5 w-5" />
-            Student Leaderboard
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 sm:py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-500 mt-2 text-sm sm:text-base">Loading rankings...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   if (rankings.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Trophy className="h-5 w-5" />
-            Student Leaderboard
-          </CardTitle>
-          <CardDescription className="text-sm sm:text-base">Top performing students based on total marks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 sm:py-12">
-            <Trophy className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm sm:text-base">No rankings available yet</p>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">Rankings will appear once marks are uploaded</p>
+      <Card className="border-dashed border-2 bg-gray-50 dark:bg-white/5 dark:border-white/10">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <div className="p-4 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
+            <Trophy className="h-8 w-8 text-blue-600 dark:text-blue-400" />
           </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No Rankings Yet</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mt-2">
+            Leaderboard will update once marks are uploaded.
+          </p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3 sm:pb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <Card className="border-0 shadow-lg bg-white dark:bg-[#0B1121] dark:text-white overflow-hidden">
+      <CardHeader className="border-b border-gray-100 dark:border-white/5 pb-4">
+        <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <Trophy className="h-5 w-5" />
-              Student Leaderboard
+            <CardTitle className="flex items-center gap-2 text-lg font-bold">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              Top Performers
             </CardTitle>
-            <CardDescription className="text-sm sm:text-base">Top performing students based on total marks</CardDescription>
+            <CardDescription className="text-gray-500 dark:text-gray-400">Based on total academic score</CardDescription>
           </div>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={fetchLeaderboard}
             disabled={loading}
-            className="w-full sm:w-auto"
+            className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-3 sm:p-6">
-        <div className="space-y-2 sm:space-y-3">
+      <CardContent className="p-0">
+        <div className="divide-y divide-gray-100 dark:divide-white/5">
           {rankings.map((student) => (
             <div
               key={student.id}
-              className={`flex items-center justify-between p-3 sm:p-4 rounded-lg border transition-colors ${
-                student.is_current_student
-                  ? 'bg-blue-50 border-blue-200 shadow-sm'
-                  : 'bg-gray-50 hover:bg-gray-100'
-              }`}
+              className={`flex items-center justify-between p-4 transition-colors ${student.is_current_student
+                  ? 'bg-blue-50/50 dark:bg-blue-900/10'
+                  : 'hover:bg-gray-50 dark:hover:bg-white/5'
+                }`}
             >
-              <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-8 h-8">
                   {getRankIcon(student.rank)}
-                  <span
-                    className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-bold ${getRankBadgeColor(
-                      student.rank,
-                      student.is_current_student
-                    )}`}
-                  >
-                    #{student.rank}
-                  </span>
                 </div>
-                
-                <div className="flex-1 min-w-0">
+
+                <div>
                   <div className="flex items-center gap-2">
-                    <p className={`font-semibold text-sm sm:text-base truncate ${
-                      student.is_current_student ? 'text-blue-700' : 'text-gray-900'
-                    }`}>
+                    <p className={`font-semibold text-sm ${student.is_current_student ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
+                      }`}>
                       {getDisplayName(student)}
                     </p>
                     {student.is_current_student && (
-                      <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium shrink-0">
+                      <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide">
                         You
                       </span>
                     )}
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-600">Class: {student.class}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Class {student.class}</p>
                 </div>
               </div>
 
-              <div className="text-right shrink-0">
-                <p className={`font-bold text-sm sm:text-lg ${
-                  student.is_current_student ? 'text-blue-700' : 'text-gray-900'
-                }`}>
-                  {student.total_score}
+              <div className="text-right">
+                <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${getRankBadgeColor(student.rank, student.is_current_student)}`}>
+                  #{student.rank}
+                </div>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
+                  {student.total_score} pts
                 </p>
-                <p className="text-xs text-gray-500">points</p>
               </div>
             </div>
           ))}
         </div>
 
         {currentStudentRank && (
-          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-blue-100 rounded-lg border border-blue-200">
-            <div className="text-center">
-              <p className="text-sm sm:text-base text-blue-800 font-medium">
-                Your Current Ranking
-              </p>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <Trophy className="h-5 w-5 text-blue-600" />
-                <span className="text-lg sm:text-xl font-bold text-blue-700">
-                  #{currentStudentRank.rank} out of {rankings.length} students
-                </span>
-              </div>
-              <p className="text-sm text-blue-600 mt-1">
-                Total Score: {currentStudentRank.total_score} points
-              </p>
+          <div className="p-4 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/5">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-500 dark:text-gray-400">Your Position</span>
+              <span className="font-bold text-gray-900 dark:text-white">
+                Top {Math.ceil((currentStudentRank.rank / rankings.length) * 100)}%
+              </span>
             </div>
           </div>
         )}
-
-        <div className="mt-4 sm:mt-6 text-center">
-          <p className="text-xs sm:text-sm text-gray-500">
-            Rankings are updated automatically when new marks are added
-          </p>
-        </div>
       </CardContent>
     </Card>
   );

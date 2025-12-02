@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react';
+import { GraduationCap, TrendingUp, TrendingDown, Minus, ChevronRight, BarChart3, Calendar } from 'lucide-react';
 import type { StudentMark } from '@/types/marks';
 
 const StudentMarks = () => {
@@ -12,7 +11,7 @@ const StudentMarks = () => {
 
   useEffect(() => {
     fetchStudentMarks();
-    
+
     // Set up real-time subscription
     const channel = supabase
       .channel('student-marks-changes')
@@ -40,7 +39,7 @@ const StudentMarks = () => {
       if (!studentData) return;
 
       const student = JSON.parse(studentData);
-      
+
       const { data, error } = await supabase
         .from('student_marks')
         .select('*')
@@ -80,14 +79,14 @@ const StudentMarks = () => {
   };
 
   const getTrendIcon = (marks: StudentMark[], index: number) => {
-    if (index === marks.length - 1) return <Minus className="h-3 w-3 sm:h-4 sm:w-4" />;
-    
+    if (index === marks.length - 1) return <Minus className="h-4 w-4 text-gray-400" />;
+
     const current = (marks[index].marks_obtained / marks[index].total_marks) * 100;
     const previous = (marks[index + 1].marks_obtained / marks[index + 1].total_marks) * 100;
-    
-    if (current > previous) return <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />;
-    if (current < previous) return <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />;
-    return <Minus className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />;
+
+    if (current > previous) return <TrendingUp className="h-4 w-4 text-green-500" />;
+    if (current < previous) return <TrendingDown className="h-4 w-4 text-red-500" />;
+    return <Minus className="h-4 w-4 text-gray-400" />;
   };
 
   const groupMarksBySubject = () => {
@@ -103,170 +102,113 @@ const StudentMarks = () => {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <GraduationCap className="h-5 w-5" />
-            Your Marks
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 sm:py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-500 mt-2 text-sm sm:text-base">Loading marks...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (marks.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <GraduationCap className="h-5 w-5" />
-            Your Marks
-          </CardTitle>
-          <CardDescription className="text-sm sm:text-base">View your test results and performance</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 sm:py-12">
-            <GraduationCap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-sm sm:text-base">No marks available yet</p>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">Your test results will appear here once uploaded by the admin</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   const groupedMarks = groupMarksBySubject();
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
-      <Card>
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <GraduationCap className="h-5 w-5" />
-            Your Marks
-          </CardTitle>
-          <CardDescription className="text-sm sm:text-base">Your test results and performance overview</CardDescription>
-        </CardHeader>
-      </Card>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Academic Performance</h2>
+          <p className="text-gray-500 dark:text-gray-400">Track your progress and test results</p>
+        </div>
+      </div>
 
-      {/* Recent Marks */}
-      <Card>
-        <CardHeader className="pb-3 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg">Recent Test Results</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          <div className="space-y-3 sm:space-y-4">
-            {marks.slice(0, 5).map((mark, index) => {
-              const percentage = parseFloat(getPercentage(mark.marks_obtained, mark.total_marks));
-              return (
-                <div key={mark.id} className="flex items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium text-sm sm:text-base truncate">{mark.test_name}</h4>
-                      <div className="shrink-0">
-                        {getTrendIcon(marks, index)}
-                      </div>
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600 truncate">{mark.subject}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {new Date(mark.test_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right ml-4 shrink-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-sm sm:text-base">
-                        {mark.marks_obtained}/{mark.total_marks}
-                      </span>
-                      <Badge className={`${getGradeColor(percentage)} text-white text-xs`}>
-                        {getGrade(percentage)}
-                      </Badge>
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600">{percentage}%</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Subject-wise Performance */}
-      <Card>
-        <CardHeader className="pb-3 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg">Subject-wise Performance</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6">
-          <div className="space-y-3 sm:space-y-4">
-            {Object.entries(groupedMarks).map(([subject, subjectMarks]) => {
-              const totalObtained = subjectMarks.reduce((sum, mark) => sum + mark.marks_obtained, 0);
-              const totalMaximum = subjectMarks.reduce((sum, mark) => sum + mark.total_marks, 0);
-              const averagePercentage = ((totalObtained / totalMaximum) * 100).toFixed(1);
-              
-              return (
-                <div key={subject} className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 gap-2">
-                    <h4 className="font-medium text-sm sm:text-base">{subject}</h4>
-                    <Badge variant="outline" className="text-xs w-fit">
-                      {subjectMarks.length} test{subjectMarks.length !== 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-1">
-                    <span className="text-xs sm:text-sm text-gray-600">Overall Performance</span>
-                    <span className="font-semibold text-sm sm:text-base">{averagePercentage}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-300 ${getGradeColor(parseFloat(averagePercentage))}`}
-                      style={{ width: `${Math.min(parseFloat(averagePercentage), 100)}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Total: {totalObtained}/{totalMaximum} marks
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* All Marks History */}
-      {marks.length > 5 && (
-        <Card>
-          <CardHeader className="pb-3 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg">Complete Marks History</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 sm:p-6">
-            <div className="space-y-2 sm:space-y-3">
-              {marks.slice(5).map((mark) => {
+      {marks.length === 0 ? (
+        <Card className="border-dashed border-2 bg-gray-50 dark:bg-white/5 dark:border-white/10">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="p-4 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-4">
+              <BarChart3 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No Marks Available</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mt-2">
+              Your test results will appear here once they are published.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Marks List */}
+          <Card className="lg:col-span-2 border-0 shadow-lg bg-white dark:bg-[#0B1121] dark:text-white">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Recent Test Results</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {marks.slice(0, 5).map((mark, index) => {
                 const percentage = parseFloat(getPercentage(mark.marks_obtained, mark.total_marks));
                 return (
-                  <div key={mark.id} className="flex items-center justify-between p-3 border rounded hover:bg-gray-50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-xs sm:text-sm truncate">{mark.test_name}</p>
-                      <p className="text-xs text-gray-600 truncate">{mark.subject}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {new Date(mark.test_date).toLocaleDateString()}
-                      </p>
+                  <div key={mark.id} className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-lg ${percentage >= 75 ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400' : 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'}`}>
+                        <GraduationCap className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm sm:text-base">{mark.test_name}</h4>
+                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                          <span>{mark.subject}</span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(mark.test_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-right ml-4 shrink-0">
-                      <p className="font-semibold text-xs sm:text-sm">
-                        {mark.marks_obtained}/{mark.total_marks}
-                      </p>
-                      <p className="text-xs text-gray-600">{percentage}%</p>
+
+                    <div className="text-right">
+                      <div className="flex items-center justify-end gap-2 mb-1">
+                        <span className="font-bold text-lg">{mark.marks_obtained}/{mark.total_marks}</span>
+                        {getTrendIcon(marks, index)}
+                      </div>
+                      <Badge className={`${getGradeColor(percentage)} text-white border-0`}>
+                        Grade {getGrade(percentage)}
+                      </Badge>
                     </div>
                   </div>
                 );
               })}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Subject Performance Summary */}
+          <div className="space-y-6">
+            <Card className="border-0 shadow-lg bg-white dark:bg-[#0B1121] dark:text-white">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold">Subject Performance</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {Object.entries(groupedMarks).map(([subject, subjectMarks]) => {
+                  const totalObtained = subjectMarks.reduce((sum, mark) => sum + mark.marks_obtained, 0);
+                  const totalMaximum = subjectMarks.reduce((sum, mark) => sum + mark.total_marks, 0);
+                  const averagePercentage = ((totalObtained / totalMaximum) * 100).toFixed(1);
+
+                  return (
+                    <div key={subject}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium text-sm">{subject}</span>
+                        <span className="text-sm font-bold text-blue-500">{averagePercentage}%</span>
+                      </div>
+                      <div className="h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${getGradeColor(parseFloat(averagePercentage))}`}
+                          style={{ width: `${Math.min(parseFloat(averagePercentage), 100)}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-right">
+                        {subjectMarks.length} tests taken
+                      </p>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       )}
     </div>
   );

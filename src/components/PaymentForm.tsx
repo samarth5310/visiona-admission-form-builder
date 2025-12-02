@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,14 +20,14 @@ interface PaymentFormProps {
   onSuccess: () => void;
 }
 
-const PaymentForm = ({ 
-  studentFeesId, 
-  studentName, 
+const PaymentForm = ({
+  studentFeesId,
+  studentName,
   pendingAmount,
   phoneNumber = '',
-  isOpen, 
-  onClose, 
-  onSuccess 
+  isOpen,
+  onClose,
+  onSuccess
 }: PaymentFormProps) => {
   const [payment, setPayment] = useState({
     amount: '',
@@ -48,7 +48,7 @@ const PaymentForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const amount = Number(payment.amount);
     if (amount <= 0) {
       toast({
@@ -70,7 +70,7 @@ const PaymentForm = ({
 
     try {
       setLoading(true);
-      
+
       const { error } = await supabase
         .from('fee_payments')
         .insert({
@@ -92,12 +92,12 @@ const PaymentForm = ({
       });
 
       setPaymentSuccess(true);
-      
+
       toast({
         title: "Success",
         description: `Payment of ₹${amount.toLocaleString()} added successfully.`,
       });
-      
+
       onSuccess();
     } catch (error) {
       console.error('Error adding payment:', error);
@@ -158,6 +158,9 @@ const PaymentForm = ({
             <DialogTitle>
               {paymentSuccess ? 'Payment Successful!' : `Add Payment - ${studentName}`}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              {paymentSuccess ? 'Payment confirmation details' : 'Form to record a new payment'}
+            </DialogDescription>
           </DialogHeader>
 
           {paymentSuccess ? (
@@ -173,8 +176,8 @@ const PaymentForm = ({
               </div>
 
               <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleClose}
                   className="flex-1"
                 >
@@ -217,8 +220,8 @@ const PaymentForm = ({
 
               <div>
                 <Label htmlFor="method">Payment Method *</Label>
-                <Select 
-                  value={payment.method} 
+                <Select
+                  value={payment.method}
                   onValueChange={(value) => setPayment(prev => ({ ...prev, method: value }))}
                 >
                   <SelectTrigger>

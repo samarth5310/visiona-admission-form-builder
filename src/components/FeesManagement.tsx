@@ -41,8 +41,8 @@ const FeesManagement = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      console.log('Fetching students with fee information...');
-      
+
+
       const { data, error } = await supabase
         .from('applications')
         .select(`
@@ -67,15 +67,15 @@ const FeesManagement = () => {
         throw error;
       }
 
-      console.log('Raw data from database:', data);
+
 
       const studentsWithFees: StudentWithFees[] = data.map(student => {
         // Fix: Handle both array and single object response from Supabase
-        const studentFees = Array.isArray(student.student_fees) 
-          ? student.student_fees[0] 
+        const studentFees = Array.isArray(student.student_fees)
+          ? student.student_fees[0]
           : student.student_fees;
 
-        console.log('Processing student:', student.full_name, 'fees data:', studentFees);
+
 
         return {
           id: student.id,
@@ -92,7 +92,7 @@ const FeesManagement = () => {
         };
       });
 
-      console.log('Processed students data:', studentsWithFees);
+
       setStudents(studentsWithFees);
       setFilteredStudents(studentsWithFees);
     } catch (error) {
@@ -159,7 +159,7 @@ const FeesManagement = () => {
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.not_set;
-    
+
     return (
       <Badge variant={config.variant} className={config.className}>
         {config.label}
@@ -201,19 +201,19 @@ const FeesManagement = () => {
       {/* Stats and Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-gray-700">
+          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
             <Users className="h-5 w-5" />
             <span className="font-semibold">Total Students: {students.length}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-700">
+          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
             <CreditCard className="h-5 w-5" />
             <span className="font-semibold">Displayed: {filteredStudents.length}</span>
           </div>
         </div>
-        
-        <Button 
-          onClick={fetchStudents} 
-          variant="outline" 
+
+        <Button
+          onClick={fetchStudents}
+          variant="outline"
           className="flex items-center gap-2"
           disabled={loading}
         >
@@ -230,10 +230,10 @@ const FeesManagement = () => {
             placeholder="Search students by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 dark:text-gray-200"
           />
         </div>
-        
+
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by status" />
@@ -257,65 +257,65 @@ const FeesManagement = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {paginatedStudents.map((student) => (
-              <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200">
+              <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-semibold text-gray-800 truncate">
+                    <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white truncate">
                       {student.full_name}
                     </CardTitle>
                     {getStatusBadge(student.payment_status)}
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="pt-0">
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Class:</span>
-                      <span className="font-medium">{student.class}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Class:</span>
+                      <span className="font-medium dark:text-gray-200">{student.class}</span>
                     </div>
-                    
+
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Phone:</span>
-                      <span className="font-medium">{student.contact_number}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Phone:</span>
+                      <span className="font-medium dark:text-gray-200">{student.contact_number}</span>
                     </div>
-                    
+
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Applied:</span>
-                      <span className="font-medium">{formatDate(student.created_at)}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Applied:</span>
+                      <span className="font-medium dark:text-gray-200">{formatDate(student.created_at)}</span>
                     </div>
-                    
+
                     {student.paid_date && (
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Paid Date:</span>
-                        <span className="font-medium text-green-600">{formatDate(student.paid_date)}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Paid Date:</span>
+                        <span className="font-medium text-green-600 dark:text-green-400">{formatDate(student.paid_date)}</span>
                       </div>
                     )}
-                    
-                    <div className="border-t pt-2 mt-2">
+
+                    <div className="border-t pt-2 mt-2 dark:border-gray-700">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Total Fees:</span>
-                        <span className="font-medium text-blue-600">
+                        <span className="text-gray-600 dark:text-gray-400">Total Fees:</span>
+                        <span className="font-medium text-blue-600 dark:text-blue-400">
                           {student.total_fees > 0 ? formatCurrency(student.total_fees) : 'Not Set'}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Paid:</span>
-                        <span className="font-medium text-green-600">
+                        <span className="text-gray-600 dark:text-gray-400">Paid:</span>
+                        <span className="font-medium text-green-600 dark:text-green-400">
                           {formatCurrency(student.paid_amount)}
                         </span>
                       </div>
-                      
+
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Pending:</span>
-                        <span className="font-medium text-red-600">
+                        <span className="text-gray-600 dark:text-gray-400">Pending:</span>
+                        <span className="font-medium text-red-600 dark:text-red-400">
                           {student.total_fees > 0 ? formatCurrency(student.pending_amount) : 'Not Set'}
                         </span>
                       </div>
                     </div>
-                    
-                    <Button 
-                      className="w-full mt-3" 
+
+                    <Button
+                      className="w-full mt-3"
                       variant="outline"
                       onClick={() => handleManageFees(student)}
                     >
@@ -366,7 +366,7 @@ const FeesManagement = () => {
         onClose={handleModalClose}
         onUpdate={handleModalUpdate}
       />
-      
+
       <InstallPWAButton />
     </div>
   );

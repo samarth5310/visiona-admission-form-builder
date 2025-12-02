@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MessageCircle } from 'lucide-react';
@@ -67,8 +67,8 @@ const StudentSelector = ({ isOpen, onClose, onSelectStudent }: StudentSelectorPr
       if (error) throw error;
 
       const studentsWithFees: Student[] = data.map(student => {
-        const studentFees = Array.isArray(student.student_fees) 
-          ? student.student_fees[0] 
+        const studentFees = Array.isArray(student.student_fees)
+          ? student.student_fees[0]
           : student.student_fees;
 
         return {
@@ -136,6 +136,9 @@ const StudentSelector = ({ isOpen, onClose, onSelectStudent }: StudentSelectorPr
             <MessageCircle className="h-5 w-5 text-green-600" />
             Select Student for WhatsApp
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Search and select a student to send a WhatsApp message.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-hidden">

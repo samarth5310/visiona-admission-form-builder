@@ -56,8 +56,8 @@ const StudentsSection = () => {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      console.log('Fetching students data...');
-      
+
+
       // Test connection first
       const { data: testData, error: testError } = await supabase
         .from('applications')
@@ -69,7 +69,7 @@ const StudentsSection = () => {
         throw new Error(`Database connection failed: ${testError.message}`);
       }
 
-      console.log('Connection test successful');
+
 
       // Fetch applications first
       const { data: applications, error: applicationsError } = await supabase
@@ -82,7 +82,7 @@ const StudentsSection = () => {
         throw new Error(`Failed to fetch applications: ${applicationsError.message}`);
       }
 
-      console.log('Applications fetched:', applications?.length || 0);
+
 
       // Fetch documents separately to avoid join issues
       const { data: documents, error: documentsError } = await supabase
@@ -94,7 +94,7 @@ const StudentsSection = () => {
         console.warn('Error fetching documents (non-critical):', documentsError);
       }
 
-      console.log('Documents fetched:', documents?.length || 0);
+
 
       // Create a map of application_id to photo document
       const photoMap = new Map();
@@ -106,7 +106,7 @@ const StudentsSection = () => {
 
       const studentsWithPhotos: Student[] = (applications || []).map(app => {
         const photoDoc = photoMap.get(app.id);
-        
+
         return {
           id: app.id,
           admission_number: app.admission_number || '',
@@ -127,19 +127,19 @@ const StudentsSection = () => {
         };
       });
 
-      console.log('Processed students data:', studentsWithPhotos.length);
+
       setStudents(studentsWithPhotos);
       setFilteredStudents(studentsWithPhotos);
-      
+
       toast({
         title: "Success",
         description: `Loaded ${studentsWithPhotos.length} students successfully.`,
       });
     } catch (error) {
       console.error('Error fetching students:', error);
-      
+
       let errorMessage = "Failed to fetch students data. Please try again.";
-      
+
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
           errorMessage = "Network connection failed. Please check your internet connection and try again.";
@@ -149,13 +149,13 @@ const StudentsSection = () => {
           errorMessage = error.message;
         }
       }
-      
+
       toast({
         title: "Error",
         description: errorMessage,
         variant: "destructive",
       });
-      
+
       // Set empty arrays to prevent UI issues
       setStudents([]);
       setFilteredStudents([]);
@@ -244,7 +244,7 @@ const StudentsSection = () => {
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                 }}
-                className="pl-10 text-sm"
+                className="pl-10 text-sm dark:text-gray-200"
               />
             </div>
             <Button onClick={fetchStudents} disabled={loading} className="w-full sm:w-auto">
@@ -253,7 +253,7 @@ const StudentsSection = () => {
           </div>
 
           {/* Results Count */}
-          <div className="mb-4 text-sm text-gray-600">
+          <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
             Showing {currentStudents.length} of {filteredStudents.length} students
             {totalPages > 1 && (
               <span className="ml-2">
@@ -272,7 +272,7 @@ const StudentsSection = () => {
               <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600 text-lg">No students found</p>
               <p className="text-gray-500 text-sm">
-                {students.length === 0 
+                {students.length === 0
                   ? "No students have been added yet or there was an error loading data."
                   : "Try adjusting your search criteria"
                 }
@@ -281,104 +281,87 @@ const StudentsSection = () => {
           ) : (
             <>
               {/* Student Grid - Responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {currentStudents.map((student) => (
-                  <Card key={student.id} className="overflow-hidden border-2 hover:border-blue-300 transition-colors shadow-md">
+                  <Card key={student.id} className="overflow-hidden border hover:border-blue-300 transition-colors shadow-sm dark:bg-gray-800 dark:border-gray-700">
                     {/* ID Card Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 sm:p-4">
-                      <div className="text-center">
-                        <h3 className="font-bold text-xs sm:text-sm">STUDENT ID CARD</h3>
-                        <p className="text-xs opacity-90">Admission No: {student.admission_number}</p>
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-xs">ID CARD</h3>
+                        <p className="text-[10px] opacity-90 font-mono">{student.admission_number}</p>
                       </div>
                     </div>
 
-                    <CardContent className="p-3 sm:p-4">
+                    <CardContent className="p-3">
                       {/* Student Photo and Basic Info */}
-                      <div className="flex items-start gap-3 mb-4">
-                        <Avatar className="h-16 w-16 sm:h-20 sm:w-20 border-2 border-blue-200 flex-shrink-0">
-                          <AvatarImage 
-                            src={student.student_photo} 
+                      <div className="flex items-center gap-3 mb-3">
+                        <Avatar className="h-12 w-12 border border-blue-200 flex-shrink-0">
+                          <AvatarImage
+                            src={student.student_photo}
                             alt={student.full_name}
                             className="object-cover"
                           />
-                          <AvatarFallback className="bg-blue-100 text-blue-600 text-sm sm:text-lg font-bold">
+                          <AvatarFallback className="bg-blue-100 text-blue-600 text-xs font-bold">
                             {getInitials(student.full_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-sm sm:text-lg text-gray-900 line-clamp-2 leading-tight">
+                          <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate" title={student.full_name}>
                             {student.full_name}
                           </h3>
-                          <div className="flex flex-col gap-1 mt-1">
-                            <Badge className={`${getCategoryColor(student.category)} text-xs w-fit`}>
+                          <div className="flex flex-wrap gap-1 mt-0.5">
+                            <Badge className={`${getCategoryColor(student.category)} text-[10px] px-1.5 py-0 h-4`}>
                               {student.category}
                             </Badge>
-                            <Badge variant="outline" className="text-xs w-fit">
-                              Class {student.class}
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                              Cl: {student.class}
                             </Badge>
                           </div>
                         </div>
                       </div>
 
-                      {/* Student Details */}
-                      <div className="space-y-2 text-xs sm:text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="truncate">DOB: {formatDate(student.date_of_birth)}</span>
+                      {/* Student Details - Compact Grid */}
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[10px] text-gray-600 dark:text-gray-400 mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3 w-3 flex-shrink-0 text-gray-400" />
+                          <span className="truncate">{formatDate(student.date_of_birth)}</span>
                         </div>
-                        
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <User className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+
+                        <div className="flex items-center gap-1.5">
+                          <User className="h-3 w-3 flex-shrink-0 text-gray-400" />
                           <span>{student.gender}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Phone className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 col-span-2">
+                          <Phone className="h-3 w-3 flex-shrink-0 text-gray-400" />
                           <span className="truncate">{student.contact_number}</span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="truncate">{student.email}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="truncate">{student.city}, {student.state}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                          <span className="truncate">{student.current_school}</span>
+                        <div className="flex items-center gap-1.5 col-span-2">
+                          <MapPin className="h-3 w-3 flex-shrink-0 text-gray-400" />
+                          <span className="truncate" title={`${student.city}, ${student.state}`}>
+                            {student.city}, {student.state}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Parent Information */}
-                      <div className="mt-4 pt-3 border-t border-gray-200">
-                        <h4 className="font-medium text-gray-900 mb-2 text-xs sm:text-sm">Parent Information</h4>
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <p className="truncate"><span className="font-medium">Father:</span> {student.father_name}</p>
-                          <p className="truncate"><span className="font-medium">Mother:</span> {student.mother_name}</p>
+                      {/* Parent Information - Compact */}
+                      <div className="pt-2 border-t border-gray-100 dark:border-gray-700 mb-3">
+                        <div className="text-[10px] text-gray-600 dark:text-gray-400 flex justify-between">
+                          <span className="truncate max-w-[48%]"><span className="font-medium">F:</span> {student.father_name}</span>
+                          <span className="truncate max-w-[48%]"><span className="font-medium">M:</span> {student.mother_name}</span>
                         </div>
                       </div>
 
-                      {/* WhatsApp Message Button */}
-                      <div className="mt-4 pt-3 border-t border-gray-200">
-                        <Button
-                          onClick={() => handleWhatsAppMessage(student)}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 text-xs sm:text-sm h-8 sm:h-9"
-                        >
-                          <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                          Send WhatsApp
-                        </Button>
-                      </div>
-
-                      {/* Admission Date */}
-                      <div className="mt-3 pt-2 border-t border-gray-100">
-                        <p className="text-xs text-gray-500">
-                          Admitted: {formatDate(student.created_at)}
-                        </p>
-                      </div>
+                      {/* Actions */}
+                      <Button
+                        onClick={() => handleWhatsAppMessage(student)}
+                        size="sm"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-1.5 text-[10px] h-7"
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                        WhatsApp
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -386,11 +369,11 @@ const StudentsSection = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 sm:mt-8 p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 sm:mt-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     Page {currentPage} of {totalPages}
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -402,7 +385,7 @@ const StudentsSection = () => {
                       <ChevronLeft className="h-4 w-4" />
                       <span className="hidden sm:inline">Previous</span>
                     </Button>
-                    
+
                     {/* Page Numbers */}
                     <div className="flex items-center gap-1">
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -416,7 +399,7 @@ const StudentsSection = () => {
                         } else {
                           pageNum = currentPage - 2 + i;
                         }
-                        
+
                         return (
                           <Button
                             key={pageNum}
@@ -430,7 +413,7 @@ const StudentsSection = () => {
                         );
                       })}
                     </div>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, Plus, Search, MessageCircle, Edit, Trash2, Users, User } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
@@ -33,7 +33,7 @@ const MarksManagement = () => {
   const [whatsappData, setWhatsappData] = useState<any>(null);
   const [showWhatsApp, setShowWhatsApp] = useState(false);
   const [selectedEntryType, setSelectedEntryType] = useState<'individual' | 'bulk'>('individual');
-  
+
   // Form states
   const [formData, setFormData] = useState({
     student_id: '',
@@ -52,8 +52,8 @@ const MarksManagement = () => {
     test_date: new Date().toISOString().split('T')[0],
     class_filter: 'all'
   });
-  
-  const [bulkMarks, setBulkMarks] = useState<{[key: string]: string}>({});
+
+  const [bulkMarks, setBulkMarks] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -63,7 +63,7 @@ const MarksManagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       const [marksResponse, studentsResponse] = await Promise.all([
         supabase.from('student_marks').select('*').order('created_at', { ascending: false }),
         supabase.from('applications').select('id, full_name, class, contact_number').order('full_name')
@@ -88,7 +88,7 @@ const MarksManagement = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const markData = {
         student_id: formData.student_id,
@@ -133,9 +133,9 @@ const MarksManagement = () => {
 
   const handleBulkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const filteredStudents = students.filter(student => 
+      const filteredStudents = students.filter(student =>
         bulkData.class_filter === 'all' || student.class === bulkData.class_filter
       );
 
@@ -199,7 +199,7 @@ const MarksManagement = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this mark?')) return;
-    
+
     try {
       const { error } = await supabase
         .from('student_marks')
@@ -264,14 +264,14 @@ const MarksManagement = () => {
 
   const filteredMarks = marks.filter(mark => {
     const student = students.find(s => s.id === mark.student_id);
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       (student && student.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       mark.test_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mark.subject.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesSubject = filterSubject === 'all' || mark.subject === filterSubject;
     const matchesClass = filterClass === 'all' || (student && student.class === filterClass);
-    
+
     return matchesSearch && matchesSubject && matchesClass;
   });
 
@@ -283,7 +283,7 @@ const MarksManagement = () => {
   };
 
   const getBulkStudents = () => {
-    return students.filter(student => 
+    return students.filter(student =>
       bulkData.class_filter === 'all' || student.class === bulkData.class_filter
     );
   };
@@ -303,10 +303,10 @@ const MarksManagement = () => {
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Marks Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Manage student test scores and performance</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">Marks Management</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage student test scores and performance</p>
         </div>
-        <Button 
+        <Button
           onClick={() => {
             resetForm();
             resetBulkForm();
@@ -327,7 +327,7 @@ const MarksManagement = () => {
         <CardContent className="p-3 sm:p-6 space-y-3 sm:space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div className="space-y-1 sm:space-y-2">
-              <Label className="text-xs sm:text-sm">Search</Label>
+              <Label className="text-xs sm:text-sm dark:text-gray-300">Search</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -340,7 +340,7 @@ const MarksManagement = () => {
             </div>
 
             <div className="space-y-1 sm:space-y-2">
-              <Label className="text-xs sm:text-sm">Subject</Label>
+              <Label className="text-xs sm:text-sm dark:text-gray-300">Subject</Label>
               <Select value={filterSubject} onValueChange={setFilterSubject}>
                 <SelectTrigger className="text-sm">
                   <SelectValue placeholder="All Subjects" />
@@ -355,7 +355,7 @@ const MarksManagement = () => {
             </div>
 
             <div className="space-y-1 sm:space-y-2">
-              <Label className="text-xs sm:text-sm">Class</Label>
+              <Label className="text-xs sm:text-sm dark:text-gray-300">Class</Label>
               <Select value={filterClass} onValueChange={setFilterClass}>
                 <SelectTrigger className="text-sm">
                   <SelectValue placeholder="All Classes" />
@@ -370,8 +370,8 @@ const MarksManagement = () => {
             </div>
 
             <div className="flex items-end">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setSearchTerm('');
                   setFilterSubject('all');
@@ -397,34 +397,34 @@ const MarksManagement = () => {
             {filteredMarks.map((mark) => {
               const student = students.find(s => s.id === mark.student_id);
               const percentage = ((mark.marks_obtained / mark.total_marks) * 100).toFixed(1);
-              
+
               return (
                 <Card key={mark.id} className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate">{student?.full_name}</h4>
-                      <p className="text-xs text-gray-600">{student?.class}</p>
+                      <h4 className="font-medium text-sm truncate dark:text-white">{student?.full_name}</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">{student?.class}</p>
                     </div>
                     <Badge variant="outline" className="text-xs ml-2">
                       {mark.subject}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2 mb-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Test:</span>
-                      <span className="font-medium">{mark.test_name}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Test:</span>
+                      <span className="font-medium dark:text-gray-200">{mark.test_name}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Score:</span>
-                      <span className="font-medium">{mark.marks_obtained}/{mark.total_marks} ({percentage}%)</span>
+                      <span className="text-gray-600 dark:text-gray-400">Score:</span>
+                      <span className="font-medium dark:text-gray-200">{mark.marks_obtained}/{mark.total_marks} ({percentage}%)</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Date:</span>
-                      <span>{new Date(mark.test_date).toLocaleDateString()}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Date:</span>
+                      <span className="dark:text-gray-200">{new Date(mark.test_date).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => handleEdit(mark)} className="flex-1">
                       <Edit className="h-3 w-3 mr-1" />
@@ -462,10 +462,10 @@ const MarksManagement = () => {
                 {filteredMarks.map((mark) => {
                   const student = students.find(s => s.id === mark.student_id);
                   const percentage = ((mark.marks_obtained / mark.total_marks) * 100).toFixed(1);
-                  
+
                   return (
-                    <TableRow key={mark.id} className="hover:bg-gray-50">
-                      <TableCell className="font-medium text-xs sm:text-sm">
+                    <TableRow key={mark.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <TableCell className="font-medium text-xs sm:text-sm dark:text-gray-200">
                         {student?.full_name || 'Unknown Student'}
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm">
@@ -473,27 +473,26 @@ const MarksManagement = () => {
                           {student?.class}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs sm:text-sm">{mark.test_name}</TableCell>
+                      <TableCell className="text-xs sm:text-sm dark:text-gray-300">{mark.test_name}</TableCell>
                       <TableCell className="text-xs sm:text-sm">
                         <Badge variant="secondary" className="text-xs">
                           {mark.subject}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs sm:text-sm font-medium">
+                      <TableCell className="text-xs sm:text-sm font-medium dark:text-gray-200">
                         {mark.marks_obtained}/{mark.total_marks}
                       </TableCell>
                       <TableCell className="text-xs sm:text-sm">
-                        <Badge 
-                          className={`text-xs ${
-                            parseFloat(percentage) >= 80 ? 'bg-green-500' :
+                        <Badge
+                          className={`text-xs ${parseFloat(percentage) >= 80 ? 'bg-green-500' :
                             parseFloat(percentage) >= 60 ? 'bg-blue-500' :
-                            parseFloat(percentage) >= 40 ? 'bg-yellow-500' : 'bg-red-500'
-                          } text-white`}
+                              parseFloat(percentage) >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                            } text-white`}
                         >
                           {percentage}%
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs sm:text-sm">
+                      <TableCell className="text-xs sm:text-sm dark:text-gray-300">
                         {new Date(mark.test_date).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
@@ -514,7 +513,7 @@ const MarksManagement = () => {
                 })}
               </TableBody>
             </Table>
-            
+
             {filteredMarks.length === 0 && (
               <div className="text-center py-8 sm:py-12">
                 <GraduationCap className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -528,11 +527,14 @@ const MarksManagement = () => {
 
       {/* Add/Edit Form Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto dark:bg-gray-900 dark:border-gray-800">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">
+            <DialogTitle className="text-lg sm:text-xl dark:text-white">
               {editingMark ? 'Edit Mark' : 'Add Marks'}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Form to add or edit student marks
+            </DialogDescription>
           </DialogHeader>
 
           <Tabs value={selectedEntryType} onValueChange={(v) => setSelectedEntryType(v as 'individual' | 'bulk')} className="w-full">
@@ -551,8 +553,8 @@ const MarksManagement = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm">Student</Label>
-                    <Select value={formData.student_id} onValueChange={(value) => setFormData({...formData, student_id: value})}>
+                    <Label className="text-sm dark:text-gray-300">Student</Label>
+                    <Select value={formData.student_id} onValueChange={(value) => setFormData({ ...formData, student_id: value })}>
                       <SelectTrigger className="text-sm">
                         <SelectValue placeholder="Select student" />
                       </SelectTrigger>
@@ -567,10 +569,10 @@ const MarksManagement = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Test Name</Label>
+                    <Label className="text-sm dark:text-gray-300">Test Name</Label>
                     <Input
                       value={formData.test_name}
-                      onChange={(e) => setFormData({...formData, test_name: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, test_name: e.target.value })}
                       placeholder="Unit Test 1, Mid-term, etc."
                       required
                       className="text-sm"
@@ -578,10 +580,10 @@ const MarksManagement = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Subject</Label>
+                    <Label className="text-sm dark:text-gray-300">Subject</Label>
                     <Input
                       value={formData.subject}
-                      onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       placeholder="Mathematics, Science, etc."
                       required
                       className="text-sm"
@@ -589,22 +591,22 @@ const MarksManagement = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Test Date</Label>
+                    <Label className="text-sm dark:text-gray-300">Test Date</Label>
                     <Input
                       type="date"
                       value={formData.test_date}
-                      onChange={(e) => setFormData({...formData, test_date: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
                       required
                       className="text-sm"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Marks Obtained</Label>
+                    <Label className="text-sm dark:text-gray-300">Marks Obtained</Label>
                     <Input
                       type="number"
                       value={formData.marks_obtained}
-                      onChange={(e) => setFormData({...formData, marks_obtained: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, marks_obtained: e.target.value })}
                       placeholder="85"
                       required
                       min="0"
@@ -613,11 +615,11 @@ const MarksManagement = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Total Marks</Label>
+                    <Label className="text-sm dark:text-gray-300">Total Marks</Label>
                     <Input
                       type="number"
                       value={formData.total_marks}
-                      onChange={(e) => setFormData({...formData, total_marks: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, total_marks: e.target.value })}
                       placeholder="100"
                       required
                       min="1"
@@ -641,10 +643,10 @@ const MarksManagement = () => {
               <form onSubmit={handleBulkSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm">Test Name</Label>
+                    <Label className="text-sm dark:text-gray-300">Test Name</Label>
                     <Input
                       value={bulkData.test_name}
-                      onChange={(e) => setBulkData({...bulkData, test_name: e.target.value})}
+                      onChange={(e) => setBulkData({ ...bulkData, test_name: e.target.value })}
                       placeholder="Unit Test 1, Mid-term, etc."
                       required
                       className="text-sm"
@@ -652,10 +654,10 @@ const MarksManagement = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Subject</Label>
+                    <Label className="text-sm dark:text-gray-300">Subject</Label>
                     <Input
                       value={bulkData.subject}
-                      onChange={(e) => setBulkData({...bulkData, subject: e.target.value})}
+                      onChange={(e) => setBulkData({ ...bulkData, subject: e.target.value })}
                       placeholder="Mathematics, Science, etc."
                       required
                       className="text-sm"
@@ -663,11 +665,11 @@ const MarksManagement = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Total Marks</Label>
+                    <Label className="text-sm dark:text-gray-300">Total Marks</Label>
                     <Input
                       type="number"
                       value={bulkData.total_marks}
-                      onChange={(e) => setBulkData({...bulkData, total_marks: e.target.value})}
+                      onChange={(e) => setBulkData({ ...bulkData, total_marks: e.target.value })}
                       placeholder="100"
                       required
                       min="1"
@@ -676,19 +678,19 @@ const MarksManagement = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-sm">Test Date</Label>
+                    <Label className="text-sm dark:text-gray-300">Test Date</Label>
                     <Input
                       type="date"
                       value={bulkData.test_date}
-                      onChange={(e) => setBulkData({...bulkData, test_date: e.target.value})}
+                      onChange={(e) => setBulkData({ ...bulkData, test_date: e.target.value })}
                       required
                       className="text-sm"
                     />
                   </div>
 
                   <div className="space-y-2 sm:col-span-2">
-                    <Label className="text-sm">Filter by Class (Optional)</Label>
-                    <Select value={bulkData.class_filter} onValueChange={(value) => setBulkData({...bulkData, class_filter: value})}>
+                    <Label className="text-sm dark:text-gray-300">Filter by Class (Optional)</Label>
+                    <Select value={bulkData.class_filter} onValueChange={(value) => setBulkData({ ...bulkData, class_filter: value })}>
                       <SelectTrigger className="text-sm">
                         <SelectValue placeholder="All classes" />
                       </SelectTrigger>
@@ -703,20 +705,20 @@ const MarksManagement = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Enter Marks for Students</Label>
-                  <div className="max-h-60 overflow-y-auto border rounded-lg p-2 space-y-2">
+                  <Label className="text-sm font-medium dark:text-gray-300">Enter Marks for Students</Label>
+                  <div className="max-h-60 overflow-y-auto border rounded-lg p-2 space-y-2 dark:border-gray-700">
                     {getBulkStudents().map(student => (
-                      <div key={student.id} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 border rounded">
+                      <div key={student.id} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 border rounded dark:border-gray-700">
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{student.full_name}</p>
-                          <p className="text-xs text-gray-600">{student.class}</p>
+                          <p className="font-medium text-sm truncate dark:text-gray-200">{student.full_name}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">{student.class}</p>
                         </div>
                         <div className="w-full sm:w-24">
                           <Input
                             type="number"
                             placeholder="Marks"
                             value={bulkMarks[student.id] || ''}
-                            onChange={(e) => setBulkMarks({...bulkMarks, [student.id]: e.target.value})}
+                            onChange={(e) => setBulkMarks({ ...bulkMarks, [student.id]: e.target.value })}
                             min="0"
                             max={bulkData.total_marks}
                             className="text-sm"

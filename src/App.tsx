@@ -5,7 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminLayout from "@/components/AdminLayout";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import StudentLogin from "./pages/StudentLogin";
@@ -17,6 +19,7 @@ import Documents from "./pages/Documents";
 import Homework from "./pages/Homework";
 import Marks from "./pages/Marks";
 import NotFound from "./pages/NotFound";
+import AdminDashboardHome from "./pages/AdminDashboardHome";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,42 +36,34 @@ const App: React.FC = () => (
       <Toaster />
       <Sonner />
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/student-login" element={<StudentLogin />} />
-            <Route path="/student-dashboard" element={<StudentDashboard />} />
-            <Route path="/homework" element={<Homework />} />
-            <Route path="/students" element={
-              <ProtectedRoute>
-                <Students />
-              </ProtectedRoute>
-            } />
-            <Route path="/admission" element={
-              <ProtectedRoute>
-                <Admission />
-              </ProtectedRoute>
-            } />
-            <Route path="/marks" element={
-              <ProtectedRoute>
-                <Marks />
-              </ProtectedRoute>
-            } />
-            <Route path="/fees" element={
-              <ProtectedRoute>
-                <Fees />
-              </ProtectedRoute>
-            } />
-            <Route path="/documents" element={
-              <ProtectedRoute>
-                <Documents />
-              </ProtectedRoute>
-            } />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <NotificationProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/student-login" element={<StudentLogin />} />
+              <Route path="/student-dashboard" element={<StudentDashboard />} />
+
+              {/* Admin Routes */}
+              <Route element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }>
+                <Route path="/admin-dashboard" element={<AdminDashboardHome />} />
+                <Route path="/students" element={<Students />} />
+                <Route path="/admission" element={<Admission />} />
+                <Route path="/marks" element={<Marks />} />
+                <Route path="/fees" element={<Fees />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/homework" element={<Homework />} />
+              </Route>
+
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </NotificationProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

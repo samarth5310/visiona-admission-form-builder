@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,7 +27,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
     }
 
     console.log('Starting PDF generation...');
-    
+
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
@@ -56,37 +56,37 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       // Multiple pages
       let yPosition = 0;
       const pageContentHeight = pageHeight - (margin * 2);
-      
+
       while (yPosition < imgHeight) {
         const sourceY = (yPosition / imgHeight) * formCanvas.height;
         const sourceHeight = Math.min(
           (pageContentHeight / imgHeight) * formCanvas.height,
           formCanvas.height - sourceY
         );
-        
+
         if (yPosition > 0) {
           pdf.addPage();
         }
-        
+
         // Create a canvas for this page section
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = formCanvas.width;
         pageCanvas.height = sourceHeight;
         const pageCtx = pageCanvas.getContext('2d');
-        
+
         if (pageCtx) {
           pageCtx.drawImage(
             formCanvas,
             0, sourceY, formCanvas.width, sourceHeight,
             0, 0, formCanvas.width, sourceHeight
           );
-          
+
           const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
           const pageImgHeight = (sourceHeight * imgWidth) / formCanvas.width;
-          
+
           pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, pageImgHeight);
         }
-        
+
         yPosition += pageContentHeight;
       }
     }
@@ -104,7 +104,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       if (doc.file && doc.file instanceof File) {
         try {
           const imageUrl = URL.createObjectURL(doc.file);
-          
+
           // Create an image element to get dimensions
           const img = new Image();
           await new Promise((resolve, reject) => {
@@ -115,7 +115,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           // Add new page for each document
           pdf.addPage();
-          
+
           // Add title
           pdf.setFontSize(16);
           pdf.setFont('helvetica', 'bold');
@@ -132,7 +132,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
           // Add image to PDF
           pdf.addImage(imageUrl, 'JPEG', imgX, imgY, docImgWidth, docImgHeight);
-          
+
           // Clean up
           URL.revokeObjectURL(imageUrl);
         } catch (error) {
@@ -144,7 +144,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
     // Convert to blob
     const pdfBlob = pdf.output('blob');
     console.log(`PDF size: ${(pdfBlob.size / 1024).toFixed(2)} KB`);
-    
+
     return pdfBlob;
   };
 
@@ -153,7 +153,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
     const filePath = `applications/${fileName}`;
 
     console.log('Uploading PDF to Supabase Storage...');
-    
+
     const { data, error } = await supabase.storage
       .from('application-documents')
       .upload(filePath, pdfBlob, {
@@ -184,7 +184,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
   const downloadPDF = async () => {
     try {
       setIsGeneratingPDF(true);
-      
+
       // Check if required fields are filled
       if (!formData.fullName.trim()) {
         toast({
@@ -196,15 +196,15 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       }
 
       console.log('PDF download requested for:', formData.fullName);
-      
+
       // Generate PDF
       const pdfBlob = await generatePDF();
       const fileSizeKB = pdfBlob.size / 1024;
-      
+
       // Save to Supabase Storage
       const publicUrl = await savePDFToStorage(pdfBlob);
       setPdfUrl(publicUrl);
-      
+
       // Also trigger download
       const fileName = `${formData.fullName || 'Student'}_Application_Form.pdf`;
       const url = URL.createObjectURL(pdfBlob);
@@ -215,18 +215,19 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Success!",
         description: `PDF generated (${fileSizeKB.toFixed(1)}KB) and saved to cloud storage. Ready for WhatsApp sharing!`,
       });
-      
+
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to generate PDF. Please try again.",
         variant: "destructive",
+
       });
     } finally {
       setIsGeneratingPDF(false);
@@ -254,7 +255,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
     // Clean the phone number (remove non-digits)
     const cleanNumber = whatsappNumber.replace(/\D/g, '');
-    
+
     if (cleanNumber.length < 10) {
       toast({
         title: "Invalid Number",
@@ -266,9 +267,9 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
     const message = `Hi! Here's the application form for ${formData.fullName || 'the student'}: ${pdfUrl}`;
     const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
-    
+
     window.open(whatsappUrl, '_blank');
-    
+
     toast({
       title: "WhatsApp Opened",
       description: "WhatsApp has been opened with the PDF link ready to send.",
@@ -290,190 +291,177 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
 
   const generateFormContent = () => {
     return (
-      <div ref={formContentRef} className="max-w-4xl mx-auto p-8 bg-white text-black">
-        {/* Header */}
-        <div className="text-center border-b-2 border-gray-600 pb-6 mb-8">
-          <div className="flex items-center justify-center gap-6 mb-4">
-            <img 
-              src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-              alt="Visiona Education Academy Logo" 
-              className="w-16 h-16 object-contain"
-            />
+      <div ref={formContentRef} className="max-w-4xl mx-auto bg-white text-black">
+        <div className="border-2 border-gray-800 m-2 p-6 min-h-[1000px] relative">
+          {/* Header */}
+          <div className="flex items-start justify-between border-b-2 border-gray-800 pb-4 mb-4">
+            <div className="flex items-center gap-4">
+              <img
+                src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png"
+                alt="Logo"
+                className="w-16 h-16 object-contain"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 uppercase tracking-wide">Visiona Education Academy</h1>
+                <p className="text-sm text-gray-600 font-medium mt-1">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
+                <p className="text-xs text-gray-500 mt-1">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
+                <p className="text-xs text-gray-500 mt-1">21st Cross Vidyagiri Bagalkot | +91 73494 20496</p>
+              </div>
+            </div>
+            {/* Photo Box */}
+            <div className="w-24 h-32 border-2 border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden shrink-0">
+              {formData.studentPhoto && createSafeObjectURL(formData.studentPhoto) ? (
+                <img
+                  src={createSafeObjectURL(formData.studentPhoto)}
+                  alt="Student"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-[10px] text-gray-400 text-center px-1">Passport Size Photo</span>
+              )}
+            </div>
+          </div>
+
+          {/* Application Title & Admission Info */}
+          <div className="text-center mb-6">
+            <h2 className="text-lg font-bold text-gray-800 uppercase underline decoration-2 underline-offset-4 mb-3">Admission Application Form</h2>
+            <div className="flex justify-between items-center px-8 text-sm border-y border-gray-200 py-1.5 bg-gray-50">
+              <div>
+                <span className="font-semibold text-gray-600">Academic Year:</span>
+                <span className="ml-2 font-bold text-gray-900">2025-2026</span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-600">Admission No:</span>
+                <span className="ml-2 font-bold text-gray-900">{formData.admissionNumber || '_________'}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-600">Type:</span>
+                <span className="ml-2 font-bold text-gray-900">{formData.admissionType || '_________'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Grid */}
+          <div className="space-y-4">
+            {/* Section: Student Details */}
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 uppercase bg-gray-100 p-1.5 mb-2 border-l-4 border-blue-600">Student Details</h3>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3 px-2">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Full Name</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.fullName || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Date of Birth</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-GB') : '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Gender</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.gender || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Class</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.class || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Aadhaar Number</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.aadhaarNumber || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">SATS Number</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.satsNumber || '-'}</span>
+                </div>
+                <div className="col-span-2 flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Current School</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.currentSchool || '-'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Parent Details */}
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 uppercase bg-gray-100 p-1.5 mb-2 border-l-4 border-blue-600">Parent / Guardian Details</h3>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-3 px-2">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Father's Name</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.fatherName || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Father's Occupation</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.fatherOccupation || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Mother's Name</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.motherName || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Mother's Occupation</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.motherOccupation || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Contact Number</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.contactNumber || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Email Address</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.email || '-'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Address */}
+            <div>
+              <h3 className="text-xs font-bold text-gray-900 uppercase bg-gray-100 p-1.5 mb-2 border-l-4 border-blue-600">Address Details</h3>
+              <div className="px-2">
+                <div className="flex flex-col mb-3">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Street Address</span>
+                  <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.streetAddress || '-'}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">Landmark</span>
+                    <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.landmark || '-'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">City</span>
+                    <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.city || '-'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">State</span>
+                    <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.state || '-'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">PIN Code</span>
+                    <span className="font-medium text-gray-900 border-b border-gray-200 pb-0.5 text-sm">{formData.pinCode || '-'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+
+          {/* Footer */}
+          <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+            <div className="text-left">
+              <p className="text-xs text-gray-600 mb-1">Place: <span className="font-medium text-gray-900">{formData.place || '_________________'}</span></p>
+              <p className="text-xs text-gray-600">Date: <span className="font-medium text-gray-900">{formData.declarationDate ? new Date(formData.declarationDate).toLocaleDateString('en-GB') : '_________________'}</span></p>
+            </div>
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-700 mb-2">VISIONA EDUCATION ACADEMY</h1>
-              <p className="text-lg text-gray-700">Coaching Centre for 3rd-5th Standard Competitive Exams</p>
-              <p className="text-sm text-gray-600">Navodaya | Sainik | Morarji | Kittur | Alvas</p>
-              <p className="text-sm text-gray-600 font-medium mt-1">16th Cross Vidyagiri Bagalkot</p>
+              <div className="h-10 w-40 border-b border-gray-400 mb-1"></div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Parent's Signature</p>
             </div>
-          </div>
-        </div>
-
-        {/* Form Content */}
-        <div className="space-y-6">
-          {/* General Information with Photo Display */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">General Information</h2>
-            <div className="flex gap-6">
-              <div className="flex-1 grid grid-cols-2 gap-4">
-                <div><strong>Admission Number:</strong> {formData.admissionNumber || 'N/A'}</div>
-                <div><strong>Admission Type:</strong> {formData.admissionType || 'N/A'}</div>
-              </div>
-              
-              {/* Student Photo Display Box */}
-              <div className="flex-shrink-0">
-                <div className="w-24 h-24 border-2 border-gray-300 flex items-center justify-center bg-gray-100 overflow-hidden">
-                  {formData.studentPhoto && createSafeObjectURL(formData.studentPhoto) ? (
-                    <img 
-                      src={createSafeObjectURL(formData.studentPhoto)} 
-                      alt="Student"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-gray-400 text-xs text-center p-1">
-                      Student Photo
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Student Information */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Student Information</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div><strong>Full Name:</strong> {formData.fullName || 'N/A'}</div>
-              <div><strong>Date of Birth:</strong> {formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('en-GB') : 'N/A'}</div>
-              <div><strong>Gender:</strong> {formData.gender || 'N/A'}</div>
-              <div><strong>Class:</strong> {formData.class || 'N/A'}</div>
-              <div><strong>Current School:</strong> {formData.currentSchool || 'N/A'}</div>
-              <div><strong>Aadhaar Number:</strong> {formData.aadhaarNumber || 'N/A'}</div>
-            </div>
-          </div>
-
-          {/* Parent Information */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Parent/Guardian Information</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div><strong>Father's Name:</strong> {formData.fatherName || 'N/A'}</div>
-              <div><strong>Mother's Name:</strong> {formData.motherName || 'N/A'}</div>
-              <div><strong>Father's Occupation:</strong> {formData.fatherOccupation || 'N/A'}</div>
-              <div><strong>Mother's Occupation:</strong> {formData.motherOccupation || 'N/A'}</div>
-              <div><strong>Contact Number:</strong> {formData.contactNumber || 'N/A'}</div>
-              <div><strong>Email:</strong> {formData.email || 'N/A'}</div>
-              <div><strong>SATS Number:</strong> {formData.satsNumber || 'N/A'}</div>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Address</h2>
-            <div className="grid grid-cols-1 gap-2">
-              <div><strong>Street Address:</strong> {formData.streetAddress || 'N/A'}</div>
-              <div className="grid grid-cols-3 gap-4">
-                <div><strong>City:</strong> {formData.city || 'N/A'}</div>
-                <div><strong>State:</strong> {formData.state || 'N/A'}</div>
-                <div><strong>PIN Code:</strong> {formData.pinCode || 'N/A'}</div>
-              </div>
-              {formData.landmark && <div><strong>Landmark:</strong> {formData.landmark}</div>}
-            </div>
-          </div>
-
-          {/* Academic Information */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Academic Information</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div><strong>Last Year Percentage:</strong> {formData.lastYearPercentage || 'N/A'}%</div>
-              <div><strong>Category:</strong> {formData.category || 'N/A'}</div>
-              <div><strong>Subjects Weak In:</strong> {formData.subjectsWeakIn || 'N/A'}</div>
-              <div><strong>Exams Preparing For:</strong> {formData.examsPreparingFor?.join(', ') || 'N/A'}</div>
-            </div>
-          </div>
-
-          {/* Fee Payment Details */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Fee Payment Details</h2>
-            <div className="grid grid-cols-3 gap-4">
-              <div><strong>Payment Mode:</strong> {formData.paymentMode || 'N/A'}</div>
-              <div><strong>Transaction ID:</strong> {formData.transactionId || 'N/A'}</div>
-              <div><strong>Amount Paid:</strong> ₹{formData.amountPaid || 'N/A'}</div>
-            </div>
-          </div>
-
-          {/* Document Images */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Uploaded Documents</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {formData.previousMarksheet && createSafeObjectURL(formData.previousMarksheet) && (
-                <div className="text-center">
-                  <img 
-                    src={createSafeObjectURL(formData.previousMarksheet)} 
-                    alt="Previous Marksheet"
-                    className="w-full h-32 object-cover border"
-                  />
-                  <p className="text-xs mt-1">Previous Marksheet</p>
-                </div>
-              )}
-              {formData.aadhaarCard && createSafeObjectURL(formData.aadhaarCard) && (
-                <div className="text-center">
-                  <img 
-                    src={createSafeObjectURL(formData.aadhaarCard)} 
-                    alt="Aadhaar Card"
-                    className="w-full h-32 object-cover border"
-                  />
-                  <p className="text-xs mt-1">Aadhaar Card</p>
-                </div>
-              )}
-              {formData.incomeCertificate && createSafeObjectURL(formData.incomeCertificate) && (
-                <div className="text-center">
-                  <img 
-                    src={createSafeObjectURL(formData.incomeCertificate)} 
-                    alt="Income Certificate"
-                    className="w-full h-32 object-cover border"
-                  />
-                  <p className="text-xs mt-1">Income Certificate</p>
-                </div>
-              )}
-              {formData.casteCertificate && createSafeObjectURL(formData.casteCertificate) && (
-                <div className="text-center">
-                  <img 
-                    src={createSafeObjectURL(formData.casteCertificate)} 
-                    alt="Caste Certificate"
-                    className="w-full h-32 object-cover border"
-                  />
-                  <p className="text-xs mt-1">Caste Certificate</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Declarations */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-300 pb-2">Declarations</h2>
-            <div className="space-y-4 text-sm">
-              <div>
-                <p className="font-medium">ಎಲ್ಲಾ ನಿಗದಿಪಡಿಸಿದ ಶುಲ್ಕಗಳನ್ನು ಮುಂಗಡವಾಗಿ ಪಾವತಿಸಬೇಕು</p>
-                <p className="text-gray-600">All the prescribed fees should be paid in Advance</p>
-              </div>
-              <div>
-                <p className="font-medium">ಒಮ್ಮೆ ಪಾವತಿಸಿದ ಶುಲ್ಕವನ್ನು ಯಾವುದೇ ಕಾರಣಕ್ಕೂ ಹಿಂತಿರುಗಿಸಲು / ವರ್ಗಾಯಿಸಲು ಅವಕಾಶವಿಲ್ಲ</p>
-                <p className="text-gray-600">Fees Once paid shall not be refunded or transferred under any circumstances.</p>
-              </div>
-              <div>
-                <p className="font-medium">ನಾನು ನಿಮ್ಮ ಸಂಸ್ಥೆಯ ನಿಯಮಗಳು ಮತ್ತು ನಿಬಂಧನೆಗಳನ್ನು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ ಎಂದು ಇಲ್ಲಿ ಘೋಷಿಸುತ್ತೇನೆ</p>
-                <p className="text-gray-600">I hereby declare that I have understood the rules and regulations of your Institution.</p>
-              </div>
-              <p className="font-medium">I hereby declare that all information provided is true to the best of my knowledge.</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <div><strong>Place:</strong> {formData.place || 'N/A'}</div>
-              <div><strong>Date:</strong> {formData.declarationDate ? new Date(formData.declarationDate).toLocaleDateString('en-GB') : 'N/A'}</div>
+            <div className="text-center">
+              <div className="h-10 w-40 border-b border-gray-400 mb-1"></div>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Authorized Signatory</p>
             </div>
           </div>
         </div>
       </div>
     );
   };
+
+
 
   const generateDocumentsSection = () => {
     const documents = [
@@ -483,20 +471,27 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
       { file: formData.casteCertificate, title: 'Caste Certificate', type: 'caste_certificate' }
     ];
 
+    const hasDocuments = documents.some(doc => doc.file);
+
+    if (!hasDocuments) return null;
+
     return (
-      <div ref={documentsContentRef} className="space-y-8 mt-8">
-        <h2 className="text-2xl font-bold text-gray-700 mb-6 text-center">Uploaded Documents</h2>
-        <div className="grid grid-cols-1 gap-8">
+      <div ref={documentsContentRef} className="max-w-4xl mx-auto mt-8">
+        <h2 className="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Attached Documents</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {documents.map((doc) => (
             doc.file && createSafeObjectURL(doc.file) && (
-              <div key={doc.type} className="text-center p-4 border border-gray-300 rounded">
-                <h3 className="text-lg font-semibold mb-4">{doc.title}</h3>
-                <img 
-                  src={createSafeObjectURL(doc.file)} 
-                  alt={doc.title}
-                  className="max-w-full h-auto mx-auto border"
-                  style={{ maxHeight: '400px' }}
-                />
+              <div key={doc.type} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                <div className="bg-gray-50 px-4 py-2 border-b border-gray-100">
+                  <h3 className="font-medium text-gray-700 text-sm">{doc.title}</h3>
+                </div>
+                <div className="p-4 flex items-center justify-center bg-gray-50/50 min-h-[200px]">
+                  <img
+                    src={createSafeObjectURL(doc.file)}
+                    alt={doc.title}
+                    className="max-w-full max-h-[300px] object-contain shadow-sm"
+                  />
+                </div>
               </div>
             )
           ))}
@@ -508,10 +503,10 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button 
+        <Button
           type="button"
-          variant="outline" 
-          size="lg" 
+          variant="outline"
+          size="lg"
           className="bg-white text-gray-600 border-gray-600 hover:bg-gray-50 px-8 sm:px-12 py-3 text-base sm:text-lg font-semibold w-full sm:w-auto"
         >
           <Eye className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
@@ -523,8 +518,8 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           <DialogTitle className="flex items-center justify-between">
             Application Form Preview
             <div className="flex gap-2">
-              <Button 
-                onClick={downloadPDF} 
+              <Button
+                onClick={downloadPDF}
                 disabled={isGeneratingPDF}
                 className="ml-4"
               >
@@ -533,8 +528,11 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
               </Button>
             </div>
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Preview the application form and download it as a PDF.
+          </DialogDescription>
         </DialogHeader>
-        
+
         <div className="mt-4">
           {generateFormContent()}
           {generateDocumentsSection()}
@@ -561,7 +559,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
                   className="mt-1"
                 />
               </div>
-              <Button 
+              <Button
                 onClick={sendViaWhatsApp}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >

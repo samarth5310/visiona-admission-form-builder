@@ -39,7 +39,7 @@ const FeesDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching dashboard data...');
+
 
       // Fetch metrics
       const { data: studentsData, error: studentsError } = await supabase
@@ -60,7 +60,7 @@ const FeesDashboard = () => {
         throw studentsError;
       }
 
-      console.log('Students data fetched:', studentsData);
+
 
       // Calculate metrics
       const totalStudents = studentsData.length;
@@ -69,10 +69,10 @@ const FeesDashboard = () => {
       let totalFees = 0;
 
       studentsData.forEach(student => {
-        const fees = Array.isArray(student.student_fees) 
-          ? student.student_fees[0] 
+        const fees = Array.isArray(student.student_fees)
+          ? student.student_fees[0]
           : student.student_fees;
-        
+
         if (fees) {
           totalFeesCollected += fees.paid_amount || 0;
           pendingAmount += fees.pending_amount || 0;
@@ -89,12 +89,7 @@ const FeesDashboard = () => {
         collectionRate
       });
 
-      console.log('Calculated metrics:', {
-        totalStudents,
-        totalFeesCollected,
-        pendingAmount,
-        collectionRate
-      });
+
 
       // Fetch recent payments
       const { data: paymentsData, error: paymentsError } = await supabase
@@ -119,7 +114,7 @@ const FeesDashboard = () => {
         throw paymentsError;
       }
 
-      console.log('Payments data fetched:', paymentsData);
+
 
       const formattedPayments: RecentPayment[] = paymentsData.map(payment => ({
         id: payment.id,
@@ -169,7 +164,7 @@ const FeesDashboard = () => {
       cheque: 'bg-yellow-100 text-yellow-800',
       other: 'bg-gray-100 text-gray-800'
     };
-    
+
     return (
       <Badge className={colors[method as keyof typeof colors] || colors.other}>
         {method.replace('_', ' ').toUpperCase()}

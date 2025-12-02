@@ -1,16 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, Trophy, MapPin, Phone, Mail, AlertCircle, Globe } from 'lucide-react';
+import { BookOpen, Users, Trophy, MapPin, Phone, Mail, AlertCircle, Globe, ArrowRight, CheckCircle2, Star } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Landing = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<'en' | 'kn'>('en');
+  const [themeColor, setThemeColor] = useState<'blue' | 'green'>('blue');
+
+  useEffect(() => {
+    // Randomly select theme color on mount
+    const randomTheme = Math.random() > 0.5 ? 'blue' : 'green';
+    setThemeColor(randomTheme);
+  }, []);
 
   const translations = {
     en: {
       alert: "ALERT:",
-      alertText: "नवोदय परीक्षा-2026 | Navodaya Exam 2026 Registration | Online Application Last Date: 29 July 2025 | Exam Date: 13 December 2025 | Contact: 7349420496 | Register at VISIONA EDUCATION ACADEMY",
+      alertText: "Navodaya Exam 2026 Registration | Online Application Last Date: 29 July 2025 | Exam Date: 13 December 2025 | Contact: 7349420496 | Register at VISIONA EDUCATION ACADEMY",
       title: "VISIONA EDUCATION ACADEMY",
       subtitle: "Excellence in Competitive Exam Preparation",
       heroTitle: "Nurturing Future Leaders",
@@ -60,6 +76,27 @@ const Landing = () => {
 
   const t = translations[language];
 
+  // Dynamic classes based on theme
+  const themeClasses = {
+    text: themeColor === 'blue' ? 'text-blue-500' : 'text-green-500',
+    textHover: themeColor === 'blue' ? 'hover:text-blue-400' : 'hover:text-green-400',
+    bg: themeColor === 'blue' ? 'bg-blue-600' : 'bg-green-600',
+    bgHover: themeColor === 'blue' ? 'hover:bg-blue-500' : 'hover:bg-green-500',
+    border: themeColor === 'blue' ? 'border-blue-500' : 'border-green-500',
+    gradientFrom: themeColor === 'blue' ? 'from-blue-600' : 'from-green-600',
+    gradientTo: themeColor === 'blue' ? 'to-cyan-600' : 'to-emerald-600',
+    gradientTextFrom: themeColor === 'blue' ? 'from-blue-400' : 'from-green-400',
+    gradientTextTo: themeColor === 'blue' ? 'to-cyan-400' : 'to-emerald-400',
+    shadow: themeColor === 'blue' ? 'shadow-[0_0_15px_-3px_rgba(37,99,235,0.4)]' : 'shadow-[0_0_15px_-3px_rgba(16,185,129,0.4)]',
+    alertBg: themeColor === 'blue' ? 'bg-blue-900/30' : 'bg-green-900/30',
+    alertBorder: themeColor === 'blue' ? 'border-blue-800/50' : 'border-green-800/50',
+    alertText: themeColor === 'blue' ? 'text-blue-200' : 'text-green-200',
+    alertIcon: themeColor === 'blue' ? 'text-blue-400' : 'text-green-400',
+    glow1: themeColor === 'blue' ? 'bg-blue-600/20' : 'bg-green-600/20',
+    glow2: themeColor === 'blue' ? 'bg-cyan-500/10' : 'bg-emerald-500/10',
+    selection: themeColor === 'blue' ? 'selection:bg-blue-500/30' : 'selection:bg-green-500/30',
+  };
+
   const handleMapClick = () => {
     window.open('https://maps.app.goo.gl/FGqFsReGQ2KLdiKPA', '_blank');
   };
@@ -76,7 +113,6 @@ const Landing = () => {
     setLanguage(prev => prev === 'en' ? 'kn' : 'en');
   };
 
-  // Images for slideshow
   const slideshowImages = [
     "/lovable-uploads/a5e775c0-2c26-43b1-8921-be177ed88016.png",
     "/lovable-uploads/9335fc94-811f-47f9-8f36-45eceb0bc7e7.png",
@@ -84,360 +120,418 @@ const Landing = () => {
     "/lovable-uploads/3003146b-96f4-4648-bab3-a8c0203219c6.png"
   ];
 
-  // Exam badges with unique colors and hover effects
   const examBadges = [
-    { 
-      name: 'Navodaya', 
-      bgColor: 'bg-emerald-600', 
-      hoverColor: 'hover:bg-emerald-500', 
-      textColor: 'text-white',
-      shadowColor: 'hover:shadow-emerald-500/50'
-    },
-    { 
-      name: 'Sainik', 
-      bgColor: 'bg-blue-600', 
-      hoverColor: 'hover:bg-blue-500', 
-      textColor: 'text-white',
-      shadowColor: 'hover:shadow-blue-500/50'
-    },
-    { 
-      name: 'Morarji', 
-      bgColor: 'bg-purple-600', 
-      hoverColor: 'hover:bg-purple-500', 
-      textColor: 'text-white',
-      shadowColor: 'hover:shadow-purple-500/50'
-    },
-    { 
-      name: 'Kittur', 
-      bgColor: 'bg-orange-600', 
-      hoverColor: 'hover:bg-orange-500', 
-      textColor: 'text-white',
-      shadowColor: 'hover:shadow-orange-500/50'
-    },
-    { 
-      name: 'RMS', 
-      bgColor: 'bg-red-600', 
-      hoverColor: 'hover:bg-red-500', 
-      textColor: 'text-white',
-      shadowColor: 'hover:shadow-red-500/50'
-    },
-    { 
-      name: 'Alvas', 
-      bgColor: 'bg-indigo-600', 
-      hoverColor: 'hover:bg-indigo-500', 
-      textColor: 'text-white',
-      shadowColor: 'hover:shadow-indigo-500/50'
-    }
+    { name: 'Navodaya', color: 'blue' },
+    { name: 'Sainik', color: 'indigo' },
+    { name: 'Morarji', color: 'purple' },
+    { name: 'Kittur', color: 'pink' },
+    { name: 'RMS', color: 'rose' },
+    { name: 'Alvas', color: 'cyan' }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative">
-      {/* Dark theme background with subtle pattern */}
-      <div 
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23beef00' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}
-      ></div>
-      
-      <div className="relative z-10">
-        {/* Moving Alert Banner with Electric Red */}
-        <div className="bg-gradient-to-r from-[#ff0028] to-[#1400c6] text-white py-3 overflow-hidden">
-          <div className="animate-marquee-slow whitespace-nowrap flex items-center">
-            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 text-[#beef00]" />
-            <span className="font-bold text-lg mr-4 text-[#beef00]">{t.alert}</span>
-            <span className="text-sm sm:text-base">
-              {t.alertText}
+    <div className={`min-h-screen bg-[#020617] text-white overflow-x-hidden font-sans ${themeClasses.selection}`}>
+      {/* Alert Banner */}
+      <div className={`${themeClasses.alertBg} border-b ${themeClasses.alertBorder} backdrop-blur-sm overflow-hidden`}>
+        <div className="max-w-7xl mx-auto px-4 py-2 relative">
+          <div className={`flex items-center whitespace-nowrap animate-marquee hover:pause text-sm ${themeClasses.alertText}`}>
+            <span className="inline-flex items-center mr-8">
+              <AlertCircle className={`w-4 h-4 mr-2 ${themeClasses.alertIcon}`} />
+              <span className="font-medium mr-2">{t.alert}</span>
+              <span>{t.alertText}</span>
+            </span>
+            {/* Duplicate for seamless feel */}
+            <span className="inline-flex items-center mr-8">
+              <AlertCircle className={`w-4 h-4 mr-2 ${themeClasses.alertIcon}`} />
+              <span className="font-medium mr-2">{t.alert}</span>
+              <span>{t.alertText}</span>
             </span>
           </div>
         </div>
+      </div>
 
-        {/* Header with dark theme */}
-        <header className="bg-gray-900/95 backdrop-blur-sm shadow-lg border-b border-gray-700">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-              <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 text-center sm:text-left">
-                <img 
-                  src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png" 
-                  alt="Visiona Education Academy Logo" 
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#020617]/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center gap-3">
+              <div className="relative group">
+                <div className={`absolute -inset-1 bg-gradient-to-r ${themeClasses.gradientFrom} ${themeClasses.gradientTo} rounded-full blur opacity-25 group-hover:opacity-75 transition duration-200`}></div>
+                <img
+                  src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png"
+                  alt="Logo"
+                  className="relative w-10 h-10 object-contain"
                 />
-                <div>
-                  <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-[#beef00]">{t.title}</h1>
-                  <p className="text-sm sm:text-base text-gray-300">{t.subtitle}</p>
-                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button 
-                  onClick={toggleLanguage}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center space-x-1 bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-[#beef00]"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>{language === 'en' ? 'ಕನ್ನಡ' : 'English'}</span>
-                </Button>
-                <Button 
+              <span className="font-bold text-xl tracking-tight text-white hidden sm:block">
+                Visiona <span className={themeClasses.text}>Education Academy</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleLanguage}
+                className="text-gray-400 hover:text-white hover:bg-white/5"
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                {language === 'en' ? 'ಕನ್ನಡ' : 'English'}
+              </Button>
+              <div className="hidden md:flex items-center gap-3">
+                <Button
+                  variant="ghost"
                   onClick={() => navigate('/student-login')}
-                  className="bg-[#657a00] hover:bg-[#beef00] hover:text-gray-900 text-white text-sm sm:text-base px-4 py-2 transition-all duration-300"
+                  className="text-gray-300 hover:text-white hover:bg-white/5"
                 >
                   {t.studentLogin}
                 </Button>
-                <Button 
+                <Button
                   onClick={() => navigate('/login')}
-                  className="bg-[#1400c6] hover:bg-[#ff0028] text-white text-sm sm:text-base px-4 py-2 transition-all duration-300"
+                  className={`${themeClasses.bg} ${themeClasses.bgHover} text-white ${themeClasses.shadow} border ${themeClasses.border}/50`}
                 >
                   {t.adminLogin}
                 </Button>
               </div>
             </div>
           </div>
-        </header>
+        </div>
+      </nav>
 
-        {/* Hero Section with dark theme enhancements */}
-        <section className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-8 sm:py-12 lg:py-16">
-          {/* Hero Content with dark theme decorative elements */}
-          <div className="relative mb-8 sm:mb-12 lg:mb-16">
-            {/* Decorative Elements with custom colors */}
-            <div className="absolute top-10 left-10 w-20 h-20 bg-[#beef00] rounded-full opacity-10 animate-pulse"></div>
-            <div className="absolute top-20 right-20 w-16 h-16 bg-[#ff0028] rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
-            <div className="absolute bottom-10 left-1/4 w-12 h-12 bg-[#1400c6] rounded-full opacity-15 animate-pulse" style={{ animationDelay: '2s' }}></div>
-            
-            {/* Study Icons Scattered with custom colors */}
-            <div className="absolute top-16 left-1/4 text-[#beef00] opacity-40">
-              <BookOpen className="h-8 w-8" />
-            </div>
-            <div className="absolute top-32 right-1/3 text-[#ff0028] opacity-40">
-              <Users className="h-10 w-10" />
-            </div>
-            <div className="absolute bottom-20 right-1/4 text-[#1400c6] opacity-40">
-              <Trophy className="h-8 w-8" />
-            </div>
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-32 overflow-hidden">
+        {/* Background Glows */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
+          <div className={`absolute top-[-20%] left-[20%] w-[500px] h-[500px] ${themeClasses.glow1} rounded-full blur-[100px] mix-blend-screen`}></div>
+          <div className={`absolute top-[10%] right-[20%] w-[400px] h-[400px] ${themeClasses.glow2} rounded-full blur-[100px] mix-blend-screen`}></div>
+        </div>
 
-            <div className="text-center relative z-10">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
-                {t.heroTitle}
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
-                {t.heroSubtitle}
-              </p>
-              
-              {/* QR Code Section with dark theme */}
-              <div className="flex flex-col items-center mb-6 sm:mb-8">
-                <div 
-                  onClick={handleRegistrationClick}
-                  className="cursor-pointer transform hover:scale-105 transition-transform duration-300 bg-gray-800 p-4 rounded-lg shadow-xl mb-4 border border-gray-700"
-                >
-                  <img 
-                    src="/lovable-uploads/9af6ccc3-2f27-40dd-826b-c66169cb2d27.png" 
-                    alt="Registration QR Code" 
-                    className="w-32 h-32 sm:w-40 sm:h-40 mx-auto"
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${themeClasses.alertBg} border ${themeClasses.alertBorder} ${themeClasses.alertText} text-sm font-medium mb-8`}>
+            <span className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${themeClasses.bg} opacity-75`}></span>
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${themeClasses.bg}`}></span>
+            </span>
+            Admissions Open for 2025-26
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight">
+            {t.heroTitle} <br />
+            <span className={`text-transparent bg-clip-text bg-gradient-to-r ${themeClasses.gradientTextFrom} ${themeClasses.gradientTextTo}`}>
+              with Visiona
+            </span>
+          </h1>
+
+          <p className="max-w-2xl mx-auto text-lg text-gray-400 mb-10 leading-relaxed">
+            {t.heroSubtitle}
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+            <Button
+              size="lg"
+              onClick={handleRegistrationClick}
+              className={`h-14 px-8 rounded-full ${themeClasses.bg} ${themeClasses.bgHover} text-white text-lg font-semibold shadow-[0_0_30px_-5px_rgba(37,99,235,0.5)] border ${themeClasses.border}/50 transition-all hover:scale-105`}
+            >
+              {t.registerNow}
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate('/student-login')}
+              className="h-14 px-8 rounded-full border-gray-700 text-gray-300 hover:bg-white/5 hover:text-white hover:border-gray-500 bg-transparent backdrop-blur-sm"
+            >
+              Student Portal
+            </Button>
+          </div>
+
+          {/* Hero Visual / Dashboard Preview */}
+          <div className="relative mx-auto max-w-5xl">
+            <div className={`absolute -inset-1 bg-gradient-to-r ${themeClasses.gradientFrom} ${themeClasses.gradientTo} rounded-2xl blur opacity-20`}></div>
+            <div className="relative bg-[#0B1121] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-white/5">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
+                </div>
+                <div className="mx-auto text-xs text-gray-500 font-mono">visiona-academy.com</div>
+              </div>
+              <div className="p-8 md:p-12 grid md:grid-cols-2 gap-8 items-center">
+                <div className="text-left space-y-6">
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold text-white">Start Your Journey Today</h3>
+                    <p className="text-gray-400">Scan to register instantly for the upcoming academic year.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {examBadges.map((badge, i) => (
+                      <span key={i} className={`px-3 py-1 rounded-full ${themeClasses.alertBg} border ${themeClasses.alertBorder} ${themeClasses.alertText} text-xs font-medium`}>
+                        {badge.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-center">
+                  <div className="p-4 bg-white rounded-xl shadow-lg">
+                    <img
+                      src="/lovable-uploads/9af6ccc3-2f27-40dd-826b-c66169cb2d27.png"
+                      alt="QR Code"
+                      className="w-48 h-48 object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trusted By / Badges Strip */}
+      <section className="py-10 border-y border-white/5 bg-white/[0.02]">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-sm text-gray-500 mb-6 uppercase tracking-wider font-medium">Specialized Coaching For</p>
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+            {examBadges.map((exam, index) => (
+              <div key={index} className="flex items-center gap-2 group cursor-default">
+                <CheckCircle2 className={`w-5 h-5 ${themeClasses.text} ${themeClasses.textHover} transition-colors`} />
+                <span className="text-lg font-semibold text-gray-300 group-hover:text-white transition-colors">{exam.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Why Choose Visiona?</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">We provide the best environment for your child's growth and success in competitive exams.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: BookOpen, title: t.expertCoaching, desc: t.expertCoachingDesc },
+              { icon: Users, title: t.smallBatch, desc: t.smallBatchDesc },
+              { icon: Trophy, title: t.provenResults, desc: t.provenResultsDesc },
+              { icon: MapPin, title: t.stateWideReach, desc: t.stateWideReachDesc }
+            ].map((feature, i) => (
+              <div key={i} className={`group p-6 rounded-2xl bg-white/5 border border-white/10 hover:${themeClasses.border}/50 hover:${themeClasses.alertBg} transition-all duration-300`}>
+                <div className={`w-12 h-12 rounded-lg ${themeClasses.alertBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <feature.icon className={`w-6 h-6 ${themeClasses.alertIcon}`} />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Success Stories / Slideshow */}
+      <section className={`py-24 bg-gradient-to-b from-[#020617] ${themeColor === 'blue' ? 'to-blue-950/20' : 'to-green-950/20'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Success Stories</h2>
+              <p className="text-gray-400">Celebrating the achievements of our brilliant students.</p>
+            </div>
+            <Button variant="outline" className={`border-${themeColor}-500/30 ${themeClasses.text} ${themeClasses.textHover} hover:${themeClasses.alertBg}`}>
+              View All Results
+            </Button>
+          </div>
+
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8">
+            <div className="flex gap-6 animate-scroll hover:pause">
+              {[...slideshowImages, ...slideshowImages].map((img, i) => (
+                <div key={i} className="flex-shrink-0 w-64 aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group relative">
+                  <img
+                    src={img}
+                    alt="Student Success"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                    <span className="text-white font-medium text-sm">Visiona Achiever</span>
+                  </div>
                 </div>
-                <Button 
-                  onClick={handleRegistrationClick}
-                  className="bg-gradient-to-r from-[#beef00] to-[#657a00] hover:from-[#ff0028] hover:to-[#1400c6] text-gray-900 hover:text-white px-6 py-3 rounded-lg font-semibold text-lg shadow-lg transform hover:scale-105 transition-all duration-300"
-                >
-                  {t.registerNow}
-                </Button>
-              </div>
-
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-4 text-xs sm:text-sm font-medium px-2">
-                {examBadges.map((exam, index) => (
-                  <span 
-                    key={index}
-                    className={`${exam.bgColor} ${exam.hoverColor} ${exam.textColor} ${exam.shadowColor} px-3 sm:px-5 py-2 sm:py-3 rounded-full shadow-lg cursor-pointer transform transition-all duration-300 hover:scale-110 hover:shadow-xl hover:-translate-y-1 font-semibold`}
-                  >
-                    {exam.name}
-                  </span>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Features Grid with dark theme */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16 px-2">
-            <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-xl text-center hover:shadow-2xl transition-all duration-300 relative overflow-hidden border border-gray-700 hover:border-[#beef00]">
-              <div className="absolute inset-0 opacity-10">
-                <img 
-                  src="https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=300&fit=crop&crop=faces"
-                  alt="Expert Coaching background"
-                  className="w-full h-full object-cover"
+      {/* CTA / Footer */}
+      <footer className="border-t border-white/10 bg-[#020617] pt-20 pb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            <div className="col-span-1 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <img
+                  src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png"
+                  alt="Logo"
+                  className="w-12 h-12 object-contain"
                 />
+                <span className="font-bold text-2xl text-white">
+                  Visiona <span className={themeClasses.text}>Education</span>
+                </span>
               </div>
-              <div className="relative z-10">
-                <div className="bg-[#beef00]/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-[#beef00]" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 sm:mb-4">{t.expertCoaching}</h3>
-                <p className="text-sm sm:text-base text-gray-300">
-                  {t.expertCoachingDesc}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-xl text-center hover:shadow-2xl transition-all duration-300 relative overflow-hidden border border-gray-700 hover:border-[#657a00]">
-              <div className="absolute inset-0 opacity-10">
-                <img 
-                  src="https://images.unsplash.com/photo-1466721591366-2d5fba72006d?w=400&h=300&fit=crop&crop=faces"
-                  alt="Small Batch background"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="relative z-10">
-                <div className="bg-[#657a00]/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#657a00]" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 sm:mb-4">{t.smallBatch}</h3>
-                <p className="text-sm sm:text-base text-gray-300">
-                  {t.smallBatchDesc}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-xl text-center hover:shadow-2xl transition-all duration-300 relative overflow-hidden border border-gray-700 hover:border-[#ff0028]">
-              <div className="absolute inset-0 opacity-10">
-                <img 
-                  src="https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?w=400&h=300&fit=crop&crop=faces"
-                  alt="Proven Results background"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="relative z-10">
-                <div className="bg-[#ff0028]/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <Trophy className="h-6 w-6 sm:h-8 sm:w-8 text-[#ff0028]" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 sm:mb-4">{t.provenResults}</h3>
-                <p className="text-sm sm:text-base text-gray-300">
-                  {t.provenResultsDesc}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 sm:p-6 lg:p-8 shadow-xl text-center hover:shadow-2xl transition-all duration-300 relative overflow-hidden border border-gray-700 hover:border-[#1400c6]">
-              <div className="absolute inset-0 opacity-10">
-                <img 
-                  src="https://images.unsplash.com/photo-1615729947596-a598e5de0ab3?w=400&h=300&fit=crop&crop=faces"
-                  alt="Karnataka landscape"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="relative z-10">
-                <div className="bg-[#1400c6]/20 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-[#1400c6]" />
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 sm:mb-4">{t.stateWideReach}</h3>
-                <p className="text-sm sm:text-base text-gray-300">
-                  {t.stateWideReachDesc}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Slideshow Section with dark theme */}
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-xl p-6 sm:p-8 mx-2 mb-8 sm:mb-12 lg:mb-16 overflow-hidden border border-gray-700">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                {language === 'en' ? 'Our Success Stories' : 'ನಮ್ಮ ಯಶಸ್ಸಿನ ಕಥೆಗಳು'}
-              </h3>
-              <p className="text-gray-300">
-                {language === 'en' ? 'Meet our successful students and their achievements' : 'ನಮ್ಮ ಯಶಸ್ವಿ ವಿದ್ಯಾರ್ಥಿಗಳು ಮತ್ತು ಅವರ ಸಾಧನೆಗಳನ್ನು ಭೇಟಿ ಮಾಡಿ'}
+              <p className="text-gray-400 max-w-md mb-8">
+                Empowering students to achieve their dreams through quality education and dedicated mentorship. Join us to build a strong foundation for the future.
               </p>
-            </div>
-            
-            <div className="relative h-48 sm:h-64 overflow-hidden rounded-lg">
-              <div className="flex animate-marquee-fast space-x-4">
-                {/* First set of images */}
-                {slideshowImages.map((image, index) => (
-                  <div 
-                    key={`first-${index}`} 
-                    className="flex-shrink-0 w-48 sm:w-64 h-48 sm:h-64 rounded-lg overflow-hidden shadow-md border border-gray-600"
-                  >
-                    <img 
-                      src={image} 
-                      alt={`Success story ${index + 1}`}
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                ))}
-                {/* Second set of images for seamless loop */}
-                {slideshowImages.map((image, index) => (
-                  <div 
-                    key={`second-${index}`} 
-                    className="flex-shrink-0 w-48 sm:w-64 h-48 sm:h-64 rounded-lg overflow-hidden shadow-md border border-gray-600"
-                  >
-                    <img 
-                      src={image} 
-                      alt={`Success story ${index + 1}`}
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Contact Information with dark theme */}
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-xl p-4 sm:p-6 lg:p-8 mx-2 border border-gray-700">
-            <h3 className="text-xl sm:text-2xl font-bold text-white text-center mb-6 sm:mb-8">{t.visitAcademy}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
-              <div className="flex flex-col items-center">
-                <div className="bg-[#1400c6]/20 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-                  <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-[#1400c6]" />
-                </div>
-                <h4 className="font-semibold text-white mb-2 text-sm sm:text-base">{t.address}</h4>
-                <p className="text-xs sm:text-sm text-gray-300 mb-3 sm:mb-4">16th Cross Vidyagiri<br />Bagalkot, Karnataka</p>
-                <Button 
-                  onClick={handleMapClick}
-                  variant="outline"
-                  size="sm"
-                  className="bg-gray-700 hover:bg-[#1400c6] border-gray-600 hover:border-[#1400c6] text-gray-300 hover:text-white text-xs sm:text-sm transition-all duration-300"
-                >
-                  {t.viewOnMap}
+              <div className="flex gap-4">
+                <Button size="icon" variant="ghost" className={`rounded-full hover:${themeClasses.alertBg} ${themeClasses.textHover}`}>
+                  <Globe className="w-5 h-5" />
+                </Button>
+                <Button size="icon" variant="ghost" className={`rounded-full hover:${themeClasses.alertBg} ${themeClasses.textHover}`}>
+                  <Mail className="w-5 h-5" />
+                </Button>
+                <Button size="icon" variant="ghost" className={`rounded-full hover:${themeClasses.alertBg} ${themeClasses.textHover}`}>
+                  <Phone className="w-5 h-5" />
                 </Button>
               </div>
+            </div>
 
-              <div className="flex flex-col items-center">
-                <div className="bg-[#657a00]/20 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-                  <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-[#657a00]" />
-                </div>
-                <h4 className="font-semibold text-white mb-2 text-sm sm:text-base">{t.contact}</h4>
-                <div className="text-xs sm:text-sm text-gray-300 space-y-1">
-                  <button 
-                    onClick={() => handleWhatsAppClick('8722189292')}
-                    className="block hover:text-[#25D366] transition-colors duration-300 hover:underline"
-                  >
-                    +91 8722189292
-                  </button>
-                  <button 
-                    onClick={() => handleWhatsAppClick('7349420496')}
-                    className="block hover:text-[#25D366] transition-colors duration-300 hover:underline"
-                  >
-                    +91 73494 20496
-                  </button>
-                </div>
-              </div>
+            <div>
+              <h4 className="font-semibold text-white mb-6">Contact Us</h4>
+              <ul className="space-y-4 text-gray-400">
+                <li className="flex items-start gap-3">
+                  <MapPin className={`w-5 h-5 ${themeClasses.text} shrink-0 mt-0.5`} />
+                  <span>16th Cross Vidyagiri<br />Bagalkot, Karnataka</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone className={`w-5 h-5 ${themeClasses.text} shrink-0`} />
+                  <span>+91 73494 20496</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Mail className={`w-5 h-5 ${themeClasses.text} shrink-0`} />
+                  <span>info@visionaeducation.com</span>
+                </li>
+              </ul>
+            </div>
 
-              <div className="flex flex-col items-center">
-                <div className="bg-[#ff0028]/20 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-[#ff0028]" />
-                </div>
-                <h4 className="font-semibold text-white mb-2 text-sm sm:text-base">{t.email}</h4>
-                <p className="text-xs sm:text-sm text-gray-300">info@visionaeducation.com<br />admissions@visionaeducation.com</p>
-              </div>
+            <div>
+              <h4 className="font-semibold text-white mb-6">Quick Links</h4>
+              <ul className="space-y-3 text-gray-400">
+                <li><button onClick={() => navigate('/student-login')} className={`${themeClasses.textHover} transition-colors`}>Student Login</button></li>
+                <li><button onClick={() => navigate('/login')} className={`${themeClasses.textHover} transition-colors`}>Admin Login</button></li>
+                <li><button onClick={handleRegistrationClick} className={`${themeClasses.textHover} transition-colors`}>Register Now</button></li>
+                <li><button onClick={handleMapClick} className={`${themeClasses.textHover} transition-colors`}>Find on Map</button></li>
+              </ul>
             </div>
           </div>
-        </section>
 
-        {/* Footer with dark theme */}
-        <footer className="bg-black/90 backdrop-blur-sm text-white py-4 sm:py-8 border-t border-gray-800">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 text-center">
-            <p className="text-xs sm:text-sm text-gray-400">
-              © 2024 Visiona Education Academy. All rights reserved.
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-gray-500 text-sm">
+              © 2025 Visiona Education Academy. All rights reserved.
             </p>
+            <div className="flex gap-6 text-sm text-gray-500">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="hover:text-white transition-colors">Privacy Policy</button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md sm:max-w-2xl bg-[#0B1121] text-white border-gray-800">
+                  <DialogHeader>
+                    <DialogTitle className={`text-xl font-bold ${themeClasses.text}`}>Privacy Policy</DialogTitle>
+                    <DialogDescription className="text-gray-400">
+                      Last updated: November 2025
+                    </DialogDescription>
+                  </DialogHeader>
+                  <ScrollArea className="h-[60vh] mt-4 pr-4">
+                    <div className="space-y-4 text-sm text-gray-300">
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">1. Information We Collect</h3>
+                        <p>We collect information that you provide directly to us, including:</p>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          <li>Name and contact information (phone number, email address)</li>
+                          <li>Student details (name, grade, school)</li>
+                          <li>Payment information for fee processing</li>
+                        </ul>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">2. How We Use Your Information</h3>
+                        <p>We use the information we collect to:</p>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          <li>Process admissions and enrollments</li>
+                          <li>Communicate with you about classes, exams, and events</li>
+                          <li>Provide educational services and track student progress</li>
+                          <li>Improve our services and educational offerings</li>
+                        </ul>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">3. Data Protection</h3>
+                        <p>We implement appropriate technical and organizational measures to maintain the safety of your personal information. Your data is stored securely and is only accessible to authorized personnel.</p>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">4. Information Sharing</h3>
+                        <p>We do not sell, trade, or otherwise transfer your personally identifiable information to outside parties. This does not include trusted third parties who assist us in operating our website or conducting our business, so long as those parties agree to keep this information confidential.</p>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">5. Contact Us</h3>
+                        <p>If you have any questions about this Privacy Policy, please contact us at info@visionaeducation.com.</p>
+                      </section>
+                    </div>
+                  </ScrollArea>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="hover:text-white transition-colors">Terms of Service</button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md sm:max-w-2xl bg-[#0B1121] text-white border-gray-800">
+                  <DialogHeader>
+                    <DialogTitle className={`text-xl font-bold ${themeClasses.text}`}>Terms of Service</DialogTitle>
+                    <DialogDescription className="text-gray-400">
+                      Please read these terms carefully before using our services.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <ScrollArea className="h-[60vh] mt-4 pr-4">
+                    <div className="space-y-4 text-sm text-gray-300">
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">1. Acceptance of Terms</h3>
+                        <p>By accessing or using the services provided by Visiona Education Academy, you agree to be bound by these Terms of Service. If you disagree with any part of the terms, you may not access our services.</p>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">2. Admission and Enrollment</h3>
+                        <p>Admission is subject to availability and meeting the eligibility criteria. The academy reserves the right to refuse admission to any student at its discretion.</p>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">3. Fees and Payments</h3>
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          <li>All fees must be paid by the specified due dates.</li>
+                          <li>Fees once paid are generally non-refundable, subject to our specific refund policy.</li>
+                          <li>Late payment may attract additional charges or suspension of services.</li>
+                        </ul>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">4. Student Conduct</h3>
+                        <p>Students are expected to maintain discipline and respect towards faculty and fellow students. Any form of misconduct may lead to disciplinary action, including expulsion.</p>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">5. Intellectual Property</h3>
+                        <p>All study materials, content, and resources provided by the academy are the intellectual property of Visiona Education Academy and are for personal use only. Redistribution is strictly prohibited.</p>
+                      </section>
+
+                      <section>
+                        <h3 className="text-white font-semibold mb-2">6. Limitation of Liability</h3>
+                        <p>While we strive for excellence, Visiona Education Academy cannot guarantee specific exam results, as student performance depends on various factors including individual effort.</p>
+                      </section>
+                    </div>
+                  </ScrollArea>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 };
