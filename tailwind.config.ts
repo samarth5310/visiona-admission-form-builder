@@ -193,7 +193,7 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				marquee: 'marquee 40s linear infinite',
+				marquee: 'marquee 20s linear infinite',
 				'marquee-slow': 'marquee-slow 60s linear infinite',
 				'marquee-fast': 'marquee-fast 30s linear infinite',
 				'fade-in': 'fade-in 0.5s ease-out',
@@ -201,7 +201,7 @@ export default {
 				'scale-in': 'scale-in 0.2s ease-out',
 				'float': 'float 3s ease-in-out infinite',
 				'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
-				'scroll': 'scroll 40s linear infinite',
+				'scroll': 'scroll 20s linear infinite',
 			}
 		}
 	},

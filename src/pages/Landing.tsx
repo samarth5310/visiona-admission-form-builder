@@ -40,8 +40,6 @@ const Landing = () => {
       smallBatchDesc: "Personalized attention with limited students per batch ensuring quality education.",
       provenResults: "Proven Results",
       provenResultsDesc: "Track record of successful admissions in prestigious schools and institutions.",
-      stateWideReach: "State-wide Reach",
-      stateWideReachDesc: "Students from 25+ towns across Karnataka trust us for their success.",
       visitAcademy: "Visit Our Academy",
       address: "Address",
       contact: "Contact",
@@ -58,7 +56,7 @@ const Landing = () => {
       heroTitle: "ಭವಿಷ್ಯದ ನಾಯಕರನ್ನು ಬೆಳೆಸುವುದು",
       heroSubtitle: "ನವೋದಯ, ಸೈನಿಕ್, ಮೊರಾರ್ಜಿ, ಕಿತ್ತೂರು, RMS, ಮತ್ತು ಅಲ್ವಾಸ್ ಪ್ರವೇಶ ಪರೀಕ್ಷೆಗಳು ಸೇರಿದಂತೆ 3-5 ನೇ ತರಗತಿ ಸ್ಪರ್ಧಾತ್ಮಕ ಪರೀಕ್ಷೆಗಳಿಗೆ ವಿಶೇಷ ತರಬೇತಿ.",
       registerNow: "ಈಗ ನೋಂದಾಯಿಸಿ",
-      vacationAdmissionTitle: "ವೇಕೇಶನ್ 2026 ಗೆ ದಾಖಲಾತಿಗಳು ತೆರೆದಿವೆ",
+      vacationAdmissionTitle: "ಬೇಸಿಗೆ ರಜೆ ತರಬೇತಿ -2026\nಪ್ರವೇಶಗಳು ಪ್ರಾರಂಭ",
       vacationRegisterNow: "ಈಗಲೇ ನೋಂದಾಯಿಸಿ!",
       expertCoaching: "ಪರಿಣಿತ ತರಬೇತಿ",
       expertCoachingDesc: "ಅನುಭವಿ ಅಧ್ಯಾಪಕರು ಮತ್ತು ಸಾಬೀತಾದ ಬೋಧನಾ ವಿಧಾನಗಳೊಂದಿಗೆ ಸಮಗ್ರ ತಯಾರಿ.",
@@ -66,8 +64,6 @@ const Landing = () => {
       smallBatchDesc: "ಗುಣಮಟ್ಟದ ಶಿಕ್ಷಣವನ್ನು ಖಚಿತಪಡಿಸುವ ಬ್ಯಾಚ್‌ಗೆ ಸೀಮಿತ ವಿದ್ಯಾರ್ಥಿಗಳೊಂದಿಗೆ ವೈಯಕ್ತಿಕ ಗಮನ.",
       provenResults: "ಸಾಬೀತಾದ ಫಲಿತಾಂಶಗಳು",
       provenResultsDesc: "ಪ್ರತಿಷ್ಠಿತ ಶಾಲೆಗಳು ಮತ್ತು ಸಂಸ್ಥೆಗಳಲ್ಲಿ ಯಶಸ್ವಿ ಪ್ರವೇಶಗಳ ದಾಖಲೆ.",
-      stateWideReach: "ರಾಜ್ಯವ್ಯಾಪಿ ಪಹುಂಚ",
-      stateWideReachDesc: "ಕರ್ನಾಟಕದಾದ್ಯಂತ 25+ ಪಟ್ಟಣಗಳ ವಿದ್ಯಾರ್ಥಿಗಳು ತಮ್ಮ ಯಶಸ್ಸಿಗಾಗಿ ನಮ್ಮನ್ನು ನಂಬಿದ್ದಾರೆ.",
       visitAcademy: "ನಮ್ಮ ಅಕಾಡೆಮಿಗೆ ಭೇಟಿ ನೀಡಿ",
       address: "ವಿಳಾಸ",
       contact: "ಸಂಪರ್ಕ",
@@ -201,10 +197,10 @@ const Landing = () => {
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${themeClasses.bg} opacity-75`}></span>
               <span className={`relative inline-flex rounded-full h-2 w-2 ${themeClasses.bg}`}></span>
             </span>
-            Admissions Open for 2025-26
+            Admissions Open for Vacation 2026
           </div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight uppercase">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight uppercase whitespace-pre-line">
             <span className={`text-transparent bg-clip-text bg-gradient-to-r ${themeClasses.gradientTextFrom} ${themeClasses.gradientTextTo} drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]`}>
               {t.vacationAdmissionTitle}
             </span>
@@ -219,15 +215,6 @@ const Landing = () => {
           </p>
 
           <div className="flex flex-col items-center justify-center gap-6 mb-16">
-            <Button
-              size="lg"
-              onClick={handleRegistrationClick}
-              className={`h-16 px-12 rounded-full ${themeClasses.bg} ${themeClasses.bgHover} text-white text-xl font-bold shadow-[0_0_40px_-5px_rgba(37,99,235,0.6)] border-2 ${themeClasses.border} transition-all hover:scale-110 animate-pulse`}
-            >
-              {t.registerNow}
-              <ArrowRight className="ml-2 w-6 h-6" />
-            </Button>
-
             {/* Terminal-style Info Box */}
             <div className="max-w-3xl w-full mt-8">
               <div className="bg-[#1e1e1e] rounded-lg overflow-hidden border-2 border-gray-700 shadow-2xl font-mono">
@@ -250,7 +237,7 @@ const Landing = () => {
                   
                   <p>
                     ನಿಮ್ಮ ಮಗುವಿನ ಪ್ರತಿಭೆ ಗುರುತಿಸಿ, ಸರಿಯಾದ ಮಾರ್ಗದರ್ಶನದ ಮೂಲಕ ಉಜ್ವಲ ಭವಿಷ್ಯ ನಿರ್ಮಿಸುವುದು ನಮ್ಮ ಹೊಣೆ.
-                    ಈ ಉದ್ದೇಶದಿಂದ ವಿಷನ್ ಕೋಚಿಂಗ್ ಸೆಂಟರ್ ವಿದ್ಯಾಗಿರಿ ಬಾಗಲಕೋಟ ಅವರಿಂದ ಈ ವರ್ಷ <span className="text-cyan-400 font-semibold">3ನೇ ಮತ್ತು 4ನೇ ತರಗತಿ</span> ಓದುತ್ತಿರುವ ಮಕ್ಕಳಿಗೆ ವಿಶೇಷ ರಿಯಾಯಿತಿಯೊಂದಿಗೆ ತರಗತಿಗಳ ದಾಖಲಾತಿಗಳು ಪ್ರಾರಂಭವಾಗಿವೆ.
+                    ಈ ಉದ್ದೇಶದಿಂದ ವಿಷನ್ ಕೋಚಿಂಗ್ ಸೆಂಟರ್ ವಿದ್ಯಾಗಿರಿ ಬಾಗಲಕೋಟ ಅವರಿಂದ ಈ ವರ್ಷ <span className="text-cyan-400 font-semibold">3ನೇ, 4ನೇ ಮತ್ತು 5ನೇ ತರಗತಿ</span> ಓದುತ್ತಿರುವ ಮಕ್ಕಳಿಗೆ ವಿಶೇಷ ರಿಯಾಯಿತಿಯೊಂದಿಗೆ ತರಗತಿಗಳ ದಾಖಲಾತಿಗಳು ಪ್ರಾರಂಭವಾಗಿವೆ.
                   </p>
                   
                   <p className="text-orange-300 font-semibold">
@@ -290,6 +277,15 @@ const Landing = () => {
               </div>
             </div>
 
+            <Button
+              size="lg"
+              onClick={handleRegistrationClick}
+              className={`h-16 px-12 rounded-full ${themeClasses.bg} ${themeClasses.bgHover} text-white text-xl font-bold shadow-[0_0_40px_-5px_rgba(37,99,235,0.6)] border-2 ${themeClasses.border} transition-all hover:scale-110 animate-pulse`}
+            >
+              {t.registerNow}
+              <ArrowRight className="ml-2 w-6 h-6" />
+            </Button>
+
           </div>
 
           {/* Hero Visual / Dashboard Preview */}
@@ -308,7 +304,7 @@ const Landing = () => {
                 <div className="text-left space-y-6">
                   <div className="space-y-2">
                     <h3 className="text-2xl font-bold text-white">Start Your Journey Today</h3>
-                    <p className="text-gray-400">Scan to register instantly for the upcoming academic year.</p>
+                    <p className="text-gray-400">Scan QR codes to register instantly or find our location.</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {examBadges.map((badge, i) => (
@@ -318,13 +314,35 @@ const Landing = () => {
                     ))}
                   </div>
                 </div>
-                <div className="flex justify-center">
-                  <div className="p-4 bg-white rounded-xl shadow-lg">
-                    <img
-                      src="/lovable-uploads/9af6ccc3-2f27-40dd-826b-c66169cb2d27.png"
-                      alt="QR Code"
-                      className="w-48 h-48 object-contain"
-                    />
+                <div className="flex justify-center gap-6">
+                  {/* Registration QR Code */}
+                  <div className="text-center">
+                    <button
+                      onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLSefz-O35rbTmnlsXO_NIR-DAmcUBNybSwwqZYx2zND36Uq6Vw/viewform', '_blank')}
+                      className="p-4 bg-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+                    >
+                      <img
+                        src="/lovable-uploads/qr-registration.png.png"
+                        alt="Registration QR Code"
+                        className="w-40 h-40 object-contain group-hover:opacity-80 transition-opacity"
+                      />
+                    </button>
+                    <p className="text-white text-sm font-semibold mt-3">Register Now</p>
+                  </div>
+                  
+                  {/* Location QR Code */}
+                  <div className="text-center">
+                    <button
+                      onClick={() => window.open('https://maps.app.goo.gl/HcEsFXUeAfQ1y8Sd6', '_blank')}
+                      className="p-4 bg-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+                    >
+                      <img
+                        src="/lovable-uploads/qr-location.png.png"
+                        alt="Location QR Code"
+                        className="w-40 h-40 object-contain group-hover:opacity-80 transition-opacity"
+                      />
+                    </button>
+                    <p className="text-white text-sm font-semibold mt-3">Find Our Location</p>
                   </div>
                 </div>
               </div>
@@ -356,12 +374,11 @@ const Landing = () => {
             <p className="text-gray-400 max-w-2xl mx-auto">We provide the best environment for your child's growth and success in competitive exams.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: BookOpen, title: t.expertCoaching, desc: t.expertCoachingDesc },
               { icon: Users, title: t.smallBatch, desc: t.smallBatchDesc },
-              { icon: Trophy, title: t.provenResults, desc: t.provenResultsDesc },
-              { icon: MapPin, title: t.stateWideReach, desc: t.stateWideReachDesc }
+              { icon: Trophy, title: t.provenResults, desc: t.provenResultsDesc }
             ].map((feature, i) => (
               <div key={i} className={`group p-6 rounded-2xl bg-white/5 border border-white/10 hover:${themeClasses.border}/50 hover:${themeClasses.alertBg} transition-all duration-300`}>
                 <div className={`w-12 h-12 rounded-lg ${themeClasses.alertBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
@@ -451,7 +468,7 @@ const Landing = () => {
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className={`w-5 h-5 ${themeClasses.text} shrink-0`} />
-                  <span>info@visionaeducation.com</span>
+                  <span>visionaedu16@gmail.com</span>
                 </li>
               </ul>
             </div>
@@ -480,7 +497,7 @@ const Landing = () => {
                   <DialogHeader>
                     <DialogTitle className={`text-xl font-bold ${themeClasses.text}`}>Privacy Policy</DialogTitle>
                     <DialogDescription className="text-gray-400">
-                      Last updated: November 2025
+                      Last updated: March 2026
                     </DialogDescription>
                   </DialogHeader>
                   <ScrollArea className="h-[60vh] mt-4 pr-4">
@@ -518,7 +535,7 @@ const Landing = () => {
 
                       <section>
                         <h3 className="text-white font-semibold mb-2">5. Contact Us</h3>
-                        <p>If you have any questions about this Privacy Policy, please contact us at info@visionaeducation.com.</p>
+                        <p>If you have any questions about this Privacy Policy, please contact us at visionaedu16@gmail.com.</p>
                       </section>
                     </div>
                   </ScrollArea>
