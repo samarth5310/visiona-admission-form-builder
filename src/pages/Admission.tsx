@@ -22,10 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import PDFPreview from '@/components/PDFPreview';
 
 const MAX_FILE_SIZE = 50 * 1024; // 50KB in bytes
 
@@ -265,6 +264,33 @@ const Admission = () => {
 
   const isSubmitting = form.formState.isSubmitting;
 
+  // Mobile step wizard - only for mobile view
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 6;
+
+  const stepTitles = [
+    "Admission Details",
+    "Student Info",
+    "Parent/Guardian",
+    "Address",
+    "Academic Info",
+    "Payment & Submit"
+  ];
+
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className={`min-h-full ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900'}`}>
       <div className="container mx-auto px-4 py-8">
@@ -281,333 +307,166 @@ const Admission = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-              {/* Admission Details & Photo */}
-              <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
-                <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
-                  Admission Details
-                </h3>
-                <div className="flex flex-col lg:flex-row gap-6">
-                  <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="admissionNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Admission Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Enter admission number" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="admissionType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Admission Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
-                                <SelectValue placeholder="Select admission type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
-                              <SelectItem value="residential">Residential</SelectItem>
-                              <SelectItem value="local">Local</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="studentPhoto"
-                      render={({ field }) => (
-                        <FormItem className="sm:col-span-2">
-                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Student Photo</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const file = e.target.files[0];
-                                  if (validateFileSize(file)) {
-                                    field.onChange(file);
-                                  } else {
-                                    e.target.value = '';
-                                  }
-                                }
-                              }}
-                              className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}
-                            />
-                          </FormControl>
-                          <FormDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                            Maximum file size: 50KB
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+              {/* Mobile Step Indicator - Only visible on mobile */}
+              <div className="sm:hidden">
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200 shadow-sm'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Step {currentStep} of {totalSteps}
+                    </span>
+                    <span className={`text-sm font-semibold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                      {stepTitles[currentStep - 1]}
+                    </span>
+                  </div>
+                  {/* Progress bar */}
+                  <div className={`h-2 rounded-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    <div
+                      className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                      style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                     />
                   </div>
+                  {/* Step dots */}
+                  <div className="flex justify-between mt-2">
+                    {Array.from({ length: totalSteps }, (_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setCurrentStep(i + 1)}
+                        className={`w-6 h-6 rounded-full text-xs font-medium transition-all ${i + 1 === currentStep
+                          ? 'bg-emerald-500 text-white'
+                          : i + 1 < currentStep
+                            ? isDarkMode ? 'bg-emerald-700 text-emerald-200' : 'bg-emerald-200 text-emerald-700'
+                            : isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500'
+                          }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-                  {/* Student Photo Display Box */}
-                  <div className="flex-shrink-0 self-center lg:self-start">
-                    <div className={`w-24 h-24 border-2 rounded-lg flex items-center justify-center overflow-hidden mx-auto lg:mx-0 ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-100'}`}>
-                      {form.watch('studentPhoto') && createSafeObjectURL(form.watch('studentPhoto')) ? (
-                        <img
-                          src={createSafeObjectURL(form.watch('studentPhoto'))}
-                          alt="Student"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className={`text-xs text-center p-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                          Student Photo
-                        </div>
-                      )}
+              {/* Step 1: Admission Details & Photo */}
+              <div className={`sm:block ${currentStep === 1 ? 'block' : 'hidden sm:block'}`}>
+                <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
+                  <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
+                    Admission Details
+                  </h3>
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="admissionNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Admission Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter admission number" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="admissionType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Admission Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
+                                  <SelectValue placeholder="Select admission type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
+                                <SelectItem value="residential">Residential</SelectItem>
+                                <SelectItem value="local">Local</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="studentPhoto"
+                        render={({ field }) => (
+                          <FormItem className="sm:col-span-2">
+                            <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Student Photo</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    const file = e.target.files[0];
+                                    if (validateFileSize(file)) {
+                                      field.onChange(file);
+                                    } else {
+                                      e.target.value = '';
+                                    }
+                                  }
+                                }}
+                                className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}
+                              />
+                            </FormControl>
+                            <FormDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+                              Maximum file size: 50KB
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Student Photo Display Box */}
+                    <div className="flex-shrink-0 self-center lg:self-start">
+                      <div className={`w-24 h-24 border-2 rounded-lg flex items-center justify-center overflow-hidden mx-auto lg:mx-0 ${isDarkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-100'}`}>
+                        {form.watch('studentPhoto') && createSafeObjectURL(form.watch('studentPhoto')) ? (
+                          <img
+                            src={createSafeObjectURL(form.watch('studentPhoto'))}
+                            alt="Student"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className={`text-xs text-center p-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Student Photo
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Student Information */}
-              <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
-                <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
-                  Student Information
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter full name" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="dateOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Date of Birth</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Gender</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
-                              <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="class"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Class</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
-                              <SelectValue placeholder="Select class" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
-                            <SelectItem value="3rd">3rd Standard</SelectItem>
-                            <SelectItem value="4th">4th Standard</SelectItem>
-                            <SelectItem value="5th">5th Standard</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="currentSchool"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Current School</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter current school" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="aadhaarNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Aadhaar Number *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter 12-digit Aadhaar number" {...field} maxLength={12} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Mobile Navigation for Step 1 */}
+                <div className="sm:hidden flex justify-end mt-4">
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    Next <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
-              {/* Parent/Guardian Information */}
-              <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
-                <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
-                  Parent/Guardian Information
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="fatherName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Father's Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter father's name" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="motherName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Mother's Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter mother's name" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fatherOccupation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Father's Occupation</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter father's occupation" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="motherOccupation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Mother's Occupation</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter mother's occupation" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="contactNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Contact Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter contact number" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter email" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="satsNumber"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>SATS Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter SATS number" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Address */}
-              <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
-                <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
-                  Address
-                </h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="streetAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Street Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter street address" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Step 2: Student Information */}
+              <div className={`sm:block ${currentStep === 2 ? 'block' : 'hidden sm:block'}`}>
+                <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
+                  <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
+                    Student Information
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="city"
+                      name="fullName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>City</FormLabel>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Full Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter city" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                            <Input placeholder="Enter full name" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -615,24 +474,33 @@ const Admission = () => {
                     />
                     <FormField
                       control={form.control}
-                      name="state"
+                      name="dateOfBirth"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>State</FormLabel>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Date of Birth</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Gender</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
-                                <SelectValue placeholder="Select state" />
+                                <SelectValue placeholder="Select gender" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
-                              <SelectItem value="Karnataka">Karnataka</SelectItem>
-                              <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
-                              <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                              <SelectItem value="Kerala">Kerala</SelectItem>
-                              <SelectItem value="Telangana">Telangana</SelectItem>
-                              <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                              <SelectItem value="Goa">Goa</SelectItem>
+                              <SelectItem value="male">Male</SelectItem>
+                              <SelectItem value="female">Female</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -641,232 +509,534 @@ const Admission = () => {
                     />
                     <FormField
                       control={form.control}
-                      name="pinCode"
+                      name="class"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>PIN Code</FormLabel>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Class</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
+                                <SelectValue placeholder="Select class" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
+                              <SelectItem value="3rd">3rd Standard</SelectItem>
+                              <SelectItem value="4th">4th Standard</SelectItem>
+                              <SelectItem value="5th">5th Standard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="currentSchool"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Current School</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter PIN code" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                            <Input placeholder="Enter current school" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="aadhaarNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Aadhaar Number *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter 12-digit Aadhaar number" {...field} maxLength={12} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  <FormField
-                    control={form.control}
-                    name="landmark"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Landmark (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter landmark" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                </div>
+                {/* Mobile Navigation for Step 2 */}
+                <div className="sm:hidden flex justify-between mt-4">
+                  <Button
+                    type="button"
+                    onClick={prevStep}
+                    variant="outline"
+                    className={isDarkMode ? 'border-gray-600 text-gray-300' : ''}
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    Next <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
-              {/* Academic Information */}
-              <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
-                <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
-                  Academic Information
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="lastYearPercentage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Last Year Percentage</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter percentage" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+              {/* Step 3: Parent/Guardian Information */}
+              <div className={`sm:block ${currentStep === 3 ? 'block' : 'hidden sm:block'}`}>
+                <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
+                  <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
+                    Parent/Guardian Information
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="fatherName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Father's Name</FormLabel>
                           <FormControl>
-                            <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
+                            <Input placeholder="Enter father's name" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
                           </FormControl>
-                          <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
-                            <SelectItem value="general">General</SelectItem>
-                            <SelectItem value="obc">OBC</SelectItem>
-                            <SelectItem value="sc">SC</SelectItem>
-                            <SelectItem value="st">ST</SelectItem>
-                            <SelectItem value="ews">EWS</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="subjectsWeakIn"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Subjects Weak In</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter subjects" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="examsPreparingFor"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Exams Preparing For</FormLabel>
-                        <FormDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                          Select all exams you are preparing for
-                        </FormDescription>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                          {examOptions.map((exam) => (
-                            <div key={exam.id} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={exam.id}
-                                checked={field.value?.includes(exam.id)}
-                                onCheckedChange={(checked) => {
-                                  const currentValue = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...currentValue, exam.id]);
-                                  } else {
-                                    field.onChange(currentValue.filter((value) => value !== exam.id));
-                                  }
-                                }}
-                                className={isDarkMode ? 'border-gray-500' : 'border-gray-300'}
-                              />
-                              <label htmlFor={exam.id} className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                {exam.label}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="motherName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Mother's Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter mother's name" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="fatherOccupation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Father's Occupation</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter father's occupation" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="motherOccupation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Mother's Occupation</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter mother's occupation" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="contactNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Contact Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter contact number" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter email" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="satsNumber"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>SATS Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter SATS number" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                {/* Mobile Navigation for Step 3 */}
+                <div className="sm:hidden flex justify-between mt-4">
+                  <Button
+                    type="button"
+                    onClick={prevStep}
+                    variant="outline"
+                    className={isDarkMode ? 'border-gray-600 text-gray-300' : ''}
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    Next <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
-              {/* Fee Payment Details */}
-              <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
-                <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
-                  Fee Payment Details
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="paymentMode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Payment Mode</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter payment mode" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="transactionId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Transaction ID</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter transaction ID" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="amountPaid"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Amount Paid</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter amount paid" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {/* Step 4: Address */}
+              <div className={`sm:block ${currentStep === 4 ? 'block' : 'hidden sm:block'}`}>
+                <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
+                  <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
+                    Address
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="streetAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Street Address</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter street address" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>City</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter city" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>State</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
+                                  <SelectValue placeholder="Select state" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
+                                <SelectItem value="Karnataka">Karnataka</SelectItem>
+                                <SelectItem value="Andhra Pradesh">Andhra Pradesh</SelectItem>
+                                <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                                <SelectItem value="Kerala">Kerala</SelectItem>
+                                <SelectItem value="Telangana">Telangana</SelectItem>
+                                <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                                <SelectItem value="Goa">Goa</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="pinCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>PIN Code</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter PIN code" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="landmark"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Landmark (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter landmark" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                {/* Mobile Navigation for Step 4 */}
+                <div className="sm:hidden flex justify-between mt-4">
+                  <Button
+                    type="button"
+                    onClick={prevStep}
+                    variant="outline"
+                    className={isDarkMode ? 'border-gray-600 text-gray-300' : ''}
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    Next <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
-              {/* Declarations */}
-              <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
-                <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
-                  Declarations
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="place"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Place</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter place" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="declarationDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Declaration Date</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {/* Step 5: Academic Information */}
+              <div className={`sm:block ${currentStep === 5 ? 'block' : 'hidden sm:block'}`}>
+                <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
+                  <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
+                    Academic Information
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="lastYearPercentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Last Year Percentage</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter percentage" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Category</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'}>
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}>
+                              <SelectItem value="general">General</SelectItem>
+                              <SelectItem value="obc">OBC</SelectItem>
+                              <SelectItem value="sc">SC</SelectItem>
+                              <SelectItem value="st">ST</SelectItem>
+                              <SelectItem value="ews">EWS</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="subjectsWeakIn"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Subjects Weak In</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter subjects" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="examsPreparingFor"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Exams Preparing For</FormLabel>
+                          <FormDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
+                            Select all exams you are preparing for
+                          </FormDescription>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                            {examOptions.map((exam) => (
+                              <div key={exam.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={exam.id}
+                                  checked={field.value?.includes(exam.id)}
+                                  onCheckedChange={(checked) => {
+                                    const currentValue = field.value || [];
+                                    if (checked) {
+                                      field.onChange([...currentValue, exam.id]);
+                                    } else {
+                                      field.onChange(currentValue.filter((value) => value !== exam.id));
+                                    }
+                                  }}
+                                  className={isDarkMode ? 'border-gray-500' : 'border-gray-300'}
+                                />
+                                <label htmlFor={exam.id} className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  {exam.label}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                {/* Mobile Navigation for Step 5 */}
+                <div className="sm:hidden flex justify-between mt-4">
+                  <Button
+                    type="button"
+                    onClick={prevStep}
+                    variant="outline"
+                    className={isDarkMode ? 'border-gray-600 text-gray-300' : ''}
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    Next <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <div className="flex flex-col sm:flex-row justify-center gap-4 pb-8">
-                <PDFPreview formData={form.getValues()} />
-                <Button
-                  type="button"
-                  onClick={downloadPDF}
-                  variant="outline"
-                  size="lg"
-                  className={`px-8 py-3 text-base font-semibold w-full sm:w-auto ${isDarkMode ? 'bg-gray-700 text-white border-gray-600 hover:bg-gray-600' : 'bg-white text-gray-600 border-gray-600 hover:bg-gray-50'}`}
-                >
-                  <Download className="mr-2 h-5 w-5" />
-                  Download PDF
-                </Button>
-                <Button
-                  type="submit"
-                  size="lg"
-                  className={`px-8 py-3 text-base font-semibold w-full sm:w-auto ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'}`}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Application"}
-                </Button>
+              {/* Step 6: Fee Payment Details & Submit */}
+              <div className={`sm:block ${currentStep === 6 ? 'block' : 'hidden sm:block'} space-y-6`}>
+                <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
+                  <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
+                    Fee Payment Details
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="paymentMode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Payment Mode</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter payment mode" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="transactionId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Transaction ID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter transaction ID" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="amountPaid"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Amount Paid</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter amount paid" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Declarations */}
+                <div className={`p-6 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200 shadow-sm'}`}>
+                  <h3 className={`text-xl font-semibold mb-4 border-b pb-2 ${isDarkMode ? 'text-white border-gray-700' : 'text-gray-700 border-gray-200'}`}>
+                    Declarations
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="place"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Place</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter place" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="declarationDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>Declaration Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} className={isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300'} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Mobile Previous Button for Step 6 */}
+                <div className="sm:hidden flex justify-start mb-4">
+                  <Button
+                    type="button"
+                    onClick={prevStep}
+                    variant="outline"
+                    className={isDarkMode ? 'border-gray-600 text-gray-300' : ''}
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                  </Button>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex flex-col sm:flex-row justify-center gap-4 pb-8">
+                  <Button
+                    type="button"
+                    onClick={downloadPDF}
+                    variant="outline"
+                    size="lg"
+                    className={`px-8 py-3 text-base font-semibold w-full sm:w-auto ${isDarkMode ? 'bg-gray-700 text-white border-gray-600 hover:bg-gray-600' : 'bg-white text-gray-600 border-gray-600 hover:bg-gray-50'}`}
+                  >
+                    <Download className="mr-2 h-5 w-5" />
+                    Download PDF
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className={`px-8 py-3 text-base font-semibold w-full sm:w-auto ${isDarkMode ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'}`}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Application"}
+                  </Button>
+                </div>
               </div>
 
             </form>

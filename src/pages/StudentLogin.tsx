@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Phone, Calendar, ArrowLeft, GraduationCap } from 'lucide-react';
+import { safeStorage } from '@/utils/safeStorage';
 
 const StudentLogin = () => {
   const [mobileNumber, setMobileNumber] = useState('');
@@ -17,7 +18,7 @@ const StudentLogin = () => {
 
   // Check if student is already logged in
   useEffect(() => {
-    const studentData = localStorage.getItem('visiona_student_data');
+    const studentData = safeStorage.getItem('visiona_student_data');
     if (studentData) {
       navigate('/student-dashboard', { replace: true });
     }
@@ -68,7 +69,7 @@ const StudentLogin = () => {
       }
 
       // Store student data in localStorage
-      localStorage.setItem('visiona_student_data', JSON.stringify(studentData));
+      safeStorage.setItem('visiona_student_data', JSON.stringify(studentData));
 
       toast({
         title: "Login Successful",

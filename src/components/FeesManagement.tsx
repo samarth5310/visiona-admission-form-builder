@@ -24,6 +24,7 @@ interface StudentWithFees {
   payment_status: string;
   paid_date: string | null;
   fee_id?: string;
+  fee_breakdown?: any;
 }
 
 const FeesManagement = () => {
@@ -57,7 +58,8 @@ const FeesManagement = () => {
             paid_amount,
             pending_amount,
             payment_status,
-            paid_date
+            paid_date,
+            fee_breakdown
           )
         `)
         .order('created_at', { ascending: false });
@@ -88,7 +90,8 @@ const FeesManagement = () => {
           pending_amount: studentFees?.pending_amount || 0,
           payment_status: studentFees?.payment_status || 'not_set',
           paid_date: studentFees?.paid_date || null,
-          fee_id: studentFees?.id
+          fee_id: studentFees?.id,
+          fee_breakdown: studentFees?.fee_breakdown || null
         };
       });
 
@@ -152,16 +155,16 @@ const FeesManagement = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      not_set: { label: 'Not Set', variant: 'secondary' as const, className: 'bg-gray-200 text-gray-800' },
-      pending: { label: 'Pending', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' },
-      partial: { label: 'Partial', variant: 'secondary' as const, className: 'bg-yellow-100 text-yellow-800' },
-      paid: { label: 'Paid', variant: 'secondary' as const, className: 'bg-green-100 text-green-800' }
+      not_set: { label: 'Incomplete', className: 'bg-gray-100 text-gray-500 border-gray-200' },
+      pending: { label: 'Due', className: 'bg-rose-50 text-rose-600 border-rose-100' },
+      partial: { label: 'Partial', className: 'bg-amber-50 text-amber-600 border-amber-100' },
+      paid: { label: 'Cleared', className: 'bg-emerald-50 text-emerald-600 border-emerald-100' }
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.not_set;
 
     return (
-      <Badge variant={config.variant} className={config.className}>
+      <Badge variant="outline" className={`${config.className} font-bold text-[10px] uppercase tracking-widest rounded-lg border px-2 py-0.5`}>
         {config.label}
       </Badge>
     );
@@ -194,180 +197,208 @@ const FeesManagement = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 overflow-x-hidden">
       {/* Dashboard */}
       <FeesDashboard />
 
-      {/* Stats and Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-            <Users className="h-5 w-5" />
-            <span className="font-semibold">Total Students: {students.length}</span>
+      {/* Manage Student Fees Section */}
+      <Card className="border-0 shadow-xl bg-white dark:bg-[#0B1121] overflow-hidden rounded-3xl">
+        <CardHeader className="bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5 p-6 sm:p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <CardTitle className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-xl">
+                  <Users className="h-6 w-6" />
+                </div>
+                Student Directory
+              </CardTitle>
+              <p className="text-sm text-gray-500 font-medium">Manage financial profiles for {students.length} active learners</p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="relative w-full sm:w-72 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 group-focus-within:text-emerald-500 transition-colors" />
+                <Input
+                  placeholder="Scan by name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-11 h-12 bg-white dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-emerald-500/20"
+                />
+              </div>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-44 h-12 bg-white dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 rounded-2xl">
+                  <SelectValue placeholder="Status Filter" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-gray-200">
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="not_set">Not Set</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                onClick={fetchStudents}
+                variant="outline"
+                size="icon"
+                className="h-12 w-12 rounded-2xl border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-white/5"
+              >
+                <RefreshCw className={`h-5 w-5 text-gray-500 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-            <CreditCard className="h-5 w-5" />
-            <span className="font-semibold">Displayed: {filteredStudents.length}</span>
-          </div>
-        </div>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-8">
 
-        <Button
-          onClick={fetchStudents}
-          variant="outline"
-          className="flex items-center gap-2"
-          disabled={loading}
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search students by name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 dark:text-gray-200"
-          />
-        </div>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="not_set">Not Set</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="partial">Partial</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Students Grid */}
-      {filteredStudents.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          {students.length === 0 ? 'No students found' : 'No students match your search criteria'}
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {paginatedStudents.map((student) => (
-              <Card key={student.id} className="hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-lg font-semibold text-gray-800 dark:text-white truncate">
-                      {student.full_name}
-                    </CardTitle>
-                    {getStatusBadge(student.payment_status)}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="pt-0">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Class:</span>
-                      <span className="font-medium dark:text-gray-200">{student.class}</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Phone:</span>
-                      <span className="font-medium dark:text-gray-200">{student.contact_number}</span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Applied:</span>
-                      <span className="font-medium dark:text-gray-200">{formatDate(student.created_at)}</span>
-                    </div>
-
-                    {student.paid_date && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Paid Date:</span>
-                        <span className="font-medium text-green-600 dark:text-green-400">{formatDate(student.paid_date)}</span>
+          {/* Students List */}
+          {filteredStudents.length === 0 ? (
+            <div className="text-center py-6 text-gray-500 text-sm">
+              {students.length === 0 ? 'No students found' : 'No students match your search criteria'}
+            </div>
+          ) : (
+            <>
+              {/* Mobile Compact List View */}
+              <div className="block sm:hidden space-y-2">
+                {paginatedStudents.map((student) => (
+                  <div
+                    key={student.id}
+                    className="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                          {student.full_name}
+                        </h3>
+                        {getStatusBadge(student.payment_status)}
                       </div>
-                    )}
-
-                    <div className="border-t pt-2 mt-2 dark:border-gray-700">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Total Fees:</span>
-                        <span className="font-medium text-blue-600 dark:text-blue-400">
-                          {student.total_fees > 0 ? formatCurrency(student.total_fees) : 'Not Set'}
+                      <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400">
+                        <span>Class {student.class}</span>
+                        <span>•</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                          {student.total_fees > 0 ? formatCurrency(student.paid_amount) : '₹0'} paid
                         </span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Paid:</span>
-                        <span className="font-medium text-green-600 dark:text-green-400">
-                          {formatCurrency(student.paid_amount)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Pending:</span>
-                        <span className="font-medium text-red-600 dark:text-red-400">
-                          {student.total_fees > 0 ? formatCurrency(student.pending_amount) : 'Not Set'}
-                        </span>
+                        {student.pending_amount > 0 && (
+                          <>
+                            <span>•</span>
+                            <span className="text-red-500 dark:text-red-400 font-medium">
+                              {formatCurrency(student.pending_amount)} due
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
-
                     <Button
-                      className="w-full mt-3"
-                      variant="outline"
+                      size="sm"
                       onClick={() => handleManageFees(student)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-3 text-xs flex-shrink-0"
                     >
-                      Manage Fees
+                      Manage
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                ))}
+              </div>
 
-          {pageCount > 1 && (
-            <div className="mt-8 flex justify-center">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                      aria-disabled={currentPage === 1}
-                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
-                    />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <span className="px-4 py-2 text-sm font-medium">
-                      Page {currentPage} of {pageCount}
-                    </span>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                      aria-disabled={currentPage === pageCount}
-                      className={currentPage === pageCount ? 'pointer-events-none opacity-50' : ''}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
+              {/* Desktop/Tablet Grid View */}
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedStudents.map((student) => {
+                  const progress = student.total_fees > 0 ? (student.paid_amount / student.total_fees) * 100 : 0;
+                  return (
+                    <Card key={student.id} className="group hover:shadow-2xl transition-all duration-500 border-0 bg-gray-50/50 dark:bg-white/5 rounded-3xl overflow-hidden ring-1 ring-gray-100 dark:ring-white/5 hover:ring-emerald-500/30">
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center font-black text-emerald-600 text-lg group-hover:scale-110 transition-transform">
+                              {student.full_name.charAt(0)}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-900 dark:text-white line-clamp-1">{student.full_name}</h3>
+                              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{student.class}</p>
+                            </div>
+                          </div>
+                          {getStatusBadge(student.payment_status)}
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                          <div className="flex justify-between items-end">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Total Payable</p>
+                              <p className="text-lg font-black text-gray-900 dark:text-white">
+                                {student.total_fees > 0 ? formatCurrency(student.total_fees) : '₹0'}
+                              </p>
+                            </div>
+                            <div className="text-right space-y-1">
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Balance Due</p>
+                              <p className="text-lg font-black text-rose-600">
+                                {formatCurrency(student.pending_amount)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="relative h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
+                            <div
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                              style={{ width: `${Math.min(progress, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <Button
+                          className="w-full h-11 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 hover:border-emerald-600 rounded-xl font-bold transition-all shadow-sm"
+                          onClick={() => handleManageFees(student)}
+                        >
+                          Manage Profile
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {pageCount > 1 && (
+                <div className="mt-4 flex justify-center">
+                  <Pagination>
+                    <PaginationContent className="gap-1">
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+                          aria-disabled={currentPage === 1}
+                          className={`h-8 text-xs ${currentPage === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                        />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <span className="px-2 py-1 text-xs font-medium">
+                          {currentPage} / {pageCount}
+                        </span>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+                          aria-disabled={currentPage === pageCount}
+                          className={`h-8 text-xs ${currentPage === pageCount ? 'pointer-events-none opacity-50' : ''}`}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
 
-      {/* Fee Details Modal */}
-      <FeeDetailsModal
-        student={selectedStudent}
-        isOpen={showModal}
-        onClose={handleModalClose}
-        onUpdate={handleModalUpdate}
-      />
+          {/* Fee Details Modal */}
+          <FeeDetailsModal
+            student={selectedStudent}
+            isOpen={showModal}
+            onClose={handleModalClose}
+            onUpdate={handleModalUpdate}
+          />
 
-      <InstallPWAButton />
+          <InstallPWAButton />
+        </CardContent>
+      </Card>
     </div>
   );
 };

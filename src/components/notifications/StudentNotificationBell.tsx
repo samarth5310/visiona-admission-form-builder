@@ -5,12 +5,13 @@ import { Bell } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from 'date-fns';
+import { safeStorage } from '@/utils/safeStorage';
 
 export function StudentNotificationBell() {
     const { notifications, markAsRead, clearNotifications } = useNotifications();
     const [open, setOpen] = useState(false);
 
-    const studentDataStr = localStorage.getItem('visiona_student_data');
+    const studentDataStr = safeStorage.getItem('visiona_student_data');
     const studentData = studentDataStr ? JSON.parse(studentDataStr) : null;
 
     const filteredNotifications = notifications.filter(n => {

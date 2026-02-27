@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, ExternalLink, Calendar, User, FileText } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { safeStorage } from '@/utils/safeStorage';
 
 interface HomeworkItem {
   id: string;
@@ -23,11 +24,14 @@ const StudentHomework = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     fetchHomework();
 
-    // Set up real-time subscription
+    // Use random channel ID to ensure uniqueness and prevent "subscribe multiple times" error
+    const channelId = Math.random().toString(36).substring(7);
     const channel = supabase
-      .channel('homework-changes')
+      .channel(`homework-changes-${channelId}`)
       .on(
         'postgres_changes',
         {
@@ -36,19 +40,21 @@ const StudentHomework = () => {
           table: 'homework'
         },
         () => {
-          fetchHomework();
+          if (mounted) fetchHomework();
         }
       )
       .subscribe();
 
     return () => {
+      mounted = false;
+      // Immediate cleanup is better to prevent lingering subscriptions
       supabase.removeChannel(channel);
     };
   }, []);
 
   const fetchHomework = async () => {
     try {
-      const studentData = localStorage.getItem('visiona_student_data');
+      const studentData = safeStorage.getItem('visiona_student_data');
       if (!studentData) {
         console.error('No student data found');
         return;
@@ -111,7 +117,7 @@ const StudentHomework = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
       </div>
     );
   }

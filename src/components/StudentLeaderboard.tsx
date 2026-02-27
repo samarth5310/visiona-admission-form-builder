@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Trophy, Crown, Medal, Award, RefreshCw, Star } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { safeStorage } from '@/utils/safeStorage';
 
 interface StudentRanking {
   id: string;
@@ -20,7 +21,8 @@ const StudentLeaderboard = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const studentData = JSON.parse(localStorage.getItem('visiona_student_data') || '{}');
+  const studentDataStr = safeStorage.getItem('visiona_student_data');
+  const studentData = studentDataStr ? JSON.parse(studentDataStr) : {};
 
   useEffect(() => {
     fetchLeaderboard();
@@ -193,8 +195,8 @@ const StudentLeaderboard = () => {
             <div
               key={student.id}
               className={`flex items-center justify-between p-4 transition-colors ${student.is_current_student
-                  ? 'bg-blue-50/50 dark:bg-blue-900/10'
-                  : 'hover:bg-gray-50 dark:hover:bg-white/5'
+                ? 'bg-blue-50/50 dark:bg-blue-900/10'
+                : 'hover:bg-gray-50 dark:hover:bg-white/5'
                 }`}
             >
               <div className="flex items-center gap-4">

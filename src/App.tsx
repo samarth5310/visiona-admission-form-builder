@@ -1,4 +1,5 @@
 import React from 'react';
+import AdminQuizzes from "./pages/AdminQuizzes";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,7 @@ import Homework from "./pages/Homework";
 import Marks from "./pages/Marks";
 import NotFound from "./pages/NotFound";
 import AdminDashboardHome from "./pages/AdminDashboardHome";
+import CoursePreparation from "./pages/CoursePreparation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,43 +32,54 @@ const queryClient = new QueryClient({
   },
 });
 
-const App: React.FC = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <NotificationProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/student-login" element={<StudentLogin />} />
-              <Route path="/student-dashboard" element={<StudentDashboard />} />
+// Import Capacitor Core
+import { Capacitor } from '@capacitor/core';
+import MobileRoleSelection from "./pages/MobileRoleSelection";
 
-              {/* Admin Routes */}
-              <Route element={
-                <ProtectedRoute>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }>
-                <Route path="/admin-dashboard" element={<AdminDashboardHome />} />
-                <Route path="/students" element={<Students />} />
-                <Route path="/admission" element={<Admission />} />
-                <Route path="/marks" element={<Marks />} />
-                <Route path="/fees" element={<Fees />} />
-                <Route path="/documents" element={<Documents />} />
-                <Route path="/homework" element={<Homework />} />
-              </Route>
+const App: React.FC = () => {
+  const isNative = Capacitor.isNativePlatform();
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </NotificationProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <NotificationProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={isNative ? <MobileRoleSelection /> : <Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/student-login" element={<StudentLogin />} />
+                <Route path="/student-dashboard" element={<StudentDashboard />} />
+                <Route path="/student/preparation/:courseName" element={<CoursePreparation />} />
+
+                {/* Admin Routes */}
+                <Route element={
+                  <ProtectedRoute>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route path="/admin-dashboard" element={<AdminDashboardHome />} />
+                  <Route path="/students" element={<Students />} />
+                  <Route path="/admission" element={<Admission />} />
+                  <Route path="/marks" element={<Marks />} />
+                  <Route path="/fees" element={<Fees />} />
+                  <Route path="/documents" element={<Documents />} />
+                  <Route path="/homework" element={<Homework />} />
+                  <Route path="/quizzes" element={<AdminQuizzes />} />
+                </Route>
+
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </NotificationProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
 
 export default App;

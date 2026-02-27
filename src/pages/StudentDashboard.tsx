@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Menu, BookOpen, CreditCard, GraduationCap, Search, Bell, Moon, Sun, LogOut, Home, DollarSign, BarChart3, Calendar } from 'lucide-react';
+import { User, Menu, BookOpen, CreditCard, GraduationCap, Search, Bell, Moon, Sun, LogOut, Home, DollarSign, BarChart3, Calendar, ChevronRight } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import StudentMarks from '@/components/StudentMarks';
 import StudentFeeDetails from '@/components/StudentFeeDetails';
 import StudentSidebar from '@/components/StudentSidebar';
 import StudentLeaderboard from '@/components/StudentLeaderboard';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { StudentNotificationBell } from '@/components/notifications/StudentNotificationBell';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from "@/integrations/supabase/client";
+import { safeStorage } from '@/utils/safeStorage';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ const StudentDashboard = () => {
   const [attendancePercentage, setAttendancePercentage] = useState<number>(0);
 
   useEffect(() => {
-    const data = localStorage.getItem('visiona_student_data');
+    const data = safeStorage.getItem('visiona_student_data');
     if (!data) {
       navigate('/', { replace: true });
       return;
@@ -37,7 +39,7 @@ const StudentDashboard = () => {
       setStudentData(parsedData);
     } catch (error) {
       console.error('Error parsing student data:', error);
-      localStorage.removeItem('visiona_student_data');
+      safeStorage.removeItem('visiona_student_data');
       navigate('/', { replace: true });
     } finally {
       setLoading(false);
@@ -50,11 +52,11 @@ const StudentDashboard = () => {
 
       try {
         // Fetch fees
-        const { data: feeData } = await supabase
+        const { data: feeData } = await (supabase
           .from('student_fees')
           .select('total_fees, paid_amount')
           .eq('application_id', studentData.id)
-          .maybeSingle();
+          .maybeSingle() as any);
 
         if (feeData) {
           setFees({ total: feeData.total_fees || 0, paid: feeData.paid_amount || 0 });
@@ -81,7 +83,7 @@ const StudentDashboard = () => {
   }, [studentData]);
 
   const handleLogout = () => {
-    localStorage.removeItem('visiona_student_data');
+    safeStorage.removeItem('visiona_student_data');
     navigate('/', { replace: true });
   };
 
@@ -127,39 +129,39 @@ const StudentDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className={`border-0 shadow-lg ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}>
                 <CardContent className="p-6 flex items-center space-x-4">
-                  <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">
-                    <DollarSign className="h-8 w-8" />
+                  <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-blue-500/10 text-blue-500' : 'bg-blue-100 text-blue-600'}`}>
+                    <DollarSign className="h-7 w-7" />
                   </div>
                   <div>
                     <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total Fees</p>
-                    <h3 className="text-2xl font-bold">₹ {fees.total.toLocaleString()}</h3>
-                    <p className="text-xs text-green-500 mt-1">Paid: ₹ {fees.paid.toLocaleString()}</p>
+                    <h3 className="text-3xl font-bold">₹{fees.total.toLocaleString()}</h3>
+                    <p className="text-xs text-green-500 mt-0.5 font-medium">Paid: ₹{fees.paid.toLocaleString()}</p>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className={`border-0 shadow-lg ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}>
                 <CardContent className="p-6 flex items-center space-x-4">
-                  <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
-                    <BookOpen className="h-8 w-8" />
+                  <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-purple-500/10 text-purple-500' : 'bg-purple-100 text-purple-600'}`}>
+                    <BookOpen className="h-7 w-7" />
                   </div>
                   <div>
                     <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Enrolled Courses</p>
-                    <h3 className="text-2xl font-bold">{studentData.exams_preparing_for?.length || 0}</h3>
-                    <p className="text-xs text-purple-500 mt-1">Active</p>
+                    <h3 className="text-3xl font-bold">{studentData.exams_preparing_for?.length || 0}</h3>
+                    <p className={`text-xs mt-0.5 font-medium ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>Active Programs</p>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className={`border-0 shadow-lg ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}>
                 <CardContent className="p-6 flex items-center space-x-4">
-                  <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">
-                    <BarChart3 className="h-8 w-8" />
+                  <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-orange-500/10 text-orange-500' : 'bg-orange-100 text-orange-600'}`}>
+                    <BarChart3 className="h-7 w-7" />
                   </div>
                   <div>
                     <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Attendance</p>
-                    <h3 className="text-2xl font-bold">{attendancePercentage}%</h3>
-                    <p className="text-xs text-orange-500 mt-1">Overall</p>
+                    <h3 className="text-3xl font-bold">{attendancePercentage}%</h3>
+                    <p className={`text-xs mt-0.5 font-medium ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>Current Session</p>
                   </div>
                 </CardContent>
               </Card>
@@ -236,45 +238,64 @@ const StudentDashboard = () => {
               </Card>
             </div>
 
-            {/* Enrolled Courses / Exams */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className={`border-0 shadow-lg overflow-hidden ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg font-bold">Enrolled Courses</CardTitle>
-                  <Button variant="ghost" size="sm" className="text-blue-500 hover:text-blue-600 p-0 h-auto">See all</Button>
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                  {studentData.exams_preparing_for?.map((exam: string, index: number) => (
-                    <div key={index} className={`flex items-center p-4 rounded-xl ${isDarkMode ? 'bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-white/5' : 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-100'}`}>
-                      <div className={`p-3 rounded-lg mr-4 ${isDarkMode ? 'bg-blue-500/20 text-blue-400' : 'bg-white text-blue-600 shadow-sm'}`}>
-                        <BookOpen className="h-6 w-6" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{exam} Preparation</h4>
-                        <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Comprehensive Course</p>
-                      </div>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white rounded-full px-6">View</Button>
-                    </div>
-                  ))}
-                  {(!studentData.exams_preparing_for || studentData.exams_preparing_for.length === 0) && (
-                    <p className="text-sm text-gray-500">No active courses found.</p>
-                  )}
-                </CardContent>
-              </Card>
+            {/* Leaderboard Section */}
+            <div className="animate-in fade-in-50 duration-700">
+              <StudentLeaderboard />
+            </div>
+          </div>
+        );
+      case 'courses':
+        return (
+          <div className="space-y-6 animate-in fade-in-50 duration-500">
+            <div className="flex flex-col gap-2 mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Enrolled Courses</h2>
+              <p className="text-gray-500 dark:text-gray-400">Access your preparation portals and study materials</p>
+            </div>
 
-              {/* Leaderboard Section */}
-              <div className="h-full">
-                <StudentLeaderboard />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {studentData.exams_preparing_for?.map((exam: string, index: number) => (
+                <Card
+                  key={index}
+                  className={`border border-white/5 shadow-2xl overflow-hidden group cursor-pointer transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}
+                  onClick={() => navigate(`/student/preparation/${exam.toLowerCase()}`)}
+                >
+                  <CardContent className="p-8">
+                    <div className="flex items-center gap-5 mb-8">
+                      <div className={`p-5 rounded-[2rem] ${isDarkMode ? 'bg-blue-600 shadow-xl shadow-blue-600/20' : 'bg-blue-600 text-white'}`}>
+                        <BookOpen className="h-8 w-8 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-2xl tracking-tight">{exam}</h4>
+                        <p className={`text-[10px] uppercase tracking-widest font-black ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>Official Portal</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 mb-8">
+                      <div className="flex items-center gap-3 text-sm font-medium text-gray-400">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Interactive Mock Tests
+                      </div>
+                      <div className="flex items-center gap-3 text-sm font-medium text-gray-400">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        AI Performance Analysis
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-blue-400 font-bold text-sm uppercase tracking-wider group-hover:gap-4 transition-all">
+                      Enter Portal <ChevronRight className="h-5 w-5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         );
       case 'homework':
-        return <div className="animate-in fade-in-50 duration-500"><StudentHomework /></div>;
+        return <div className="slide-in-up"><StudentHomework /></div>;
       case 'marks':
-        return <div className="animate-in fade-in-50 duration-500"><StudentMarks /></div>;
+        return <div className="slide-in-up"><StudentMarks /></div>;
       case 'fees':
-        return <div className="animate-in fade-in-50 duration-500"><StudentFeeDetails /></div>;
+        return <div className="slide-in-up"><StudentFeeDetails /></div>;
       default:
         return null;
     }
@@ -282,25 +303,34 @@ const StudentDashboard = () => {
 
   return (
     <div className={`min-h-screen flex transition-colors duration-300 ${isDarkMode ? 'dark bg-[#020617] text-white' : 'bg-gray-100 text-gray-900'}`}>
-      {/* Sidebar */}
-      <StudentSidebar
-        isOpen={sidebarOpen}
-        onClose={closeSidebar}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onLogout={handleLogout}
-        onBackToHome={handleBackToHome}
-        isDarkMode={isDarkMode}
-      />
+      {/* Sidebar - Hidden on mobile */}
+      <div className="hidden md:block">
+        <StudentSidebar
+          isOpen={sidebarOpen}
+          onClose={closeSidebar}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onLogout={handleLogout}
+          onBackToHome={handleBackToHome}
+          isDarkMode={isDarkMode}
+          studentData={studentData}
+        />
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
-        <header className={`h-20 flex items-center justify-between px-6 border-b ${isDarkMode ? 'bg-[#0B1121]/80 border-white/5' : 'bg-white border-gray-200'} backdrop-blur-md z-10`}>
+        <header className={`min-h-20 flex items-center justify-between px-6 border-b ${isDarkMode ? 'bg-[#0B1121]/80 border-white/5' : 'bg-white border-gray-200'} backdrop-blur-md z-10 pt-[env(safe-area-inset-top)]`}>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
-              <Menu className="h-6 w-6" />
-            </Button>
+            {/* Logo for mobile */}
+            <div className="flex items-center gap-2 md:hidden">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                {studentData.full_name.charAt(0)}
+              </div>
+              <span className="font-bold text-lg">
+                <span className="text-emerald-500">Student</span>
+              </span>
+            </div>
 
             {/* Search Bar (Visual Only) */}
             <div className={`hidden md:flex items-center px-4 py-2 rounded-full w-64 ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
@@ -323,15 +353,15 @@ const StudentDashboard = () => {
                 <p className="text-sm font-semibold leading-none">{studentData.full_name}</p>
                 <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{studentData.class}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                 {studentData.full_name.charAt(0)}
               </div>
             </div>
           </div>
         </header>
 
-        {/* Scrollable Content Area */}
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* Scrollable Content Area - Add padding bottom for mobile nav */}
+        <main className="flex-1 overflow-y-auto p-6 pb-28 md:pb-6">
           {/* Welcome Banner */}
           {activeTab === 'profile' && (
             <div className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white shadow-2xl">
@@ -357,6 +387,13 @@ const StudentDashboard = () => {
           {renderActiveContent()}
         </main>
       </div>
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav
+        type="student"
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onLogout={handleLogout}
+      />
     </div>
   );
 };

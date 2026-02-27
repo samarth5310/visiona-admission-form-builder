@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { User, BookOpen, GraduationCap, CreditCard, Home, LogOut, X } from 'lucide-react';
+import { User, BookOpen, GraduationCap, CreditCard, Home, LogOut, X, ChevronRight } from 'lucide-react';
 
 interface StudentSidebarProps {
   isOpen: boolean;
@@ -11,6 +11,7 @@ interface StudentSidebarProps {
   onLogout: () => void;
   onBackToHome: () => void;
   isDarkMode?: boolean;
+  studentData?: any;
 }
 
 const StudentSidebar = ({
@@ -20,9 +21,11 @@ const StudentSidebar = ({
   onTabChange,
   onLogout,
   onBackToHome,
-  isDarkMode = true
+  isDarkMode = true,
+  studentData
 }: StudentSidebarProps) => {
   const navigate = useNavigate();
+  const [showCourses, setShowCourses] = React.useState(false);
 
   const navigationItems = [
     {
@@ -73,11 +76,11 @@ const StudentSidebar = ({
         fixed top-0 left-0 h-screen w-64 shadow-xl transform transition-all duration-300 ease-out z-50 border-r flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0 md:shadow-none md:h-screen
-        ${isDarkMode ? 'bg-[#0B1121] border-white/5' : 'bg-white border-gray-200'}
+        ${isDarkMode ? 'bg-gradient-to-b from-[#0B1121] to-[#071010] border-emerald-900/30' : 'bg-white border-gray-200'}
       `}>
         {/* Header */}
         <div className="flex items-center justify-center p-8">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${isDarkMode ? 'bg-blue-600' : 'bg-blue-500'}`}>
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${isDarkMode ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-emerald-500'}`}>
             <GraduationCap className="h-8 w-8 text-white" />
           </div>
         </div>
@@ -95,8 +98,8 @@ const StudentSidebar = ({
                 className={`
                   w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-200
                   ${isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : `${isDarkMode ? 'text-gray-400 hover:bg-white/5 hover:text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20'
+                    : `${isDarkMode ? 'text-gray-400 hover:bg-emerald-900/20 hover:text-emerald-300' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`
                   }
                 `}
               >
@@ -108,19 +111,62 @@ const StudentSidebar = ({
             );
           })}
 
-          {/* Logout Button - Part of the flow for consistent spacing */}
-          <button
-            onClick={onLogout}
-            className={`
-              w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-200
-              ${isDarkMode ? 'text-gray-400 hover:bg-white/5 hover:text-red-400' : 'text-gray-600 hover:bg-gray-100 hover:text-red-600'}
-            `}
-          >
-            <div className="w-5 h-5 flex items-center justify-center shrink-0">
-              <LogOut className="w-full h-full" />
-            </div>
-            <span className="font-medium">Logout</span>
-          </button>
+          {/* Enrolled Courses Section */}
+          <div className="pt-4 mt-4 border-t border-emerald-900/10">
+            <button
+              onClick={() => setShowCourses(!showCourses)}
+              className={`
+                w-full flex items-center justify-between px-6 py-4 rounded-xl transition-all duration-200
+                ${isDarkMode ? 'text-gray-400 hover:bg-emerald-900/20 hover:text-emerald-300' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
+              `}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-full h-full" />
+                </div>
+                <span className="font-medium">My Courses</span>
+              </div>
+              <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${showCourses ? 'rotate-90' : ''}`} />
+            </button>
+
+            {showCourses && studentData?.exams_preparing_for && (
+              <div className="mt-2 space-y-1 ml-4 border-l-2 border-emerald-900/20">
+                {studentData.exams_preparing_for.map((exam: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      navigate(`/student/preparation/${exam.toLowerCase()}`);
+                      if (window.innerWidth < 768) onClose();
+                    }}
+                    className={`
+                      w-full flex items-center gap-3 px-8 py-3 rounded-r-xl transition-all duration-200 text-sm
+                      ${isDarkMode ? 'text-gray-500 hover:bg-emerald-900/10 hover:text-emerald-300' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}
+                    `}
+                  >
+                    <span className="font-medium">{exam} Prep</span>
+                  </button>
+                ))}
+                {studentData.exams_preparing_for.length === 0 && (
+                  <p className="px-8 py-2 text-xs text-gray-500 italic">No courses enrolled</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-auto pb-8">
+            <button
+              onClick={onLogout}
+              className={`
+                w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all duration-200
+                ${isDarkMode ? 'text-gray-400 hover:bg-red-900/20 hover:text-red-400' : 'text-gray-600 hover:bg-gray-100 hover:text-red-600'}
+              `}
+            >
+              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                <LogOut className="w-full h-full" />
+              </div>
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
         </nav>
       </div>
     </>

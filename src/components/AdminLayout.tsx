@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, Search, Bell, Moon, Sun } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminSidebar from '@/components/AdminSidebar';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { AdminNotificationDialog } from '@/components/notifications/AdminNotificationDialog';
 
 const AdminLayout = () => {
@@ -31,22 +32,32 @@ const AdminLayout = () => {
 
     return (
         <div className={`fixed inset-0 overflow-hidden flex transition-colors duration-300 ${isDarkMode ? 'dark bg-[#020617] text-white' : 'bg-gray-100 text-gray-900'}`}>
-            {/* Sidebar */}
-            <AdminSidebar
-                isOpen={sidebarOpen}
-                onClose={closeSidebar}
-                onLogout={handleLogout}
-                isDarkMode={isDarkMode}
-            />
+            {/* Sidebar - Hidden on mobile */}
+            <div className="hidden md:block">
+                <AdminSidebar
+                    isOpen={sidebarOpen}
+                    onClose={closeSidebar}
+                    onLogout={handleLogout}
+                    isDarkMode={isDarkMode}
+                />
+            </div>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full overflow-hidden">
                 {/* Top Header */}
                 <header className={`flex-none min-h-16 sm:min-h-20 flex items-center justify-between px-4 sm:px-6 border-b ${isDarkMode ? 'bg-[#0B1121]/80 border-white/5' : 'bg-white border-gray-200'} backdrop-blur-md z-10 pt-[env(safe-area-inset-top)]`}>
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="md:hidden">
-                            <Menu className="h-6 w-6" />
-                        </Button>
+                        {/* Logo for mobile */}
+                        <div className="flex items-center gap-2 md:hidden">
+                            <img
+                                src="/lovable-uploads/b537825f-b519-4377-84f5-fa9b1a028acf.png"
+                                alt="Logo"
+                                className="w-8 h-8 object-contain"
+                            />
+                            <span className="font-bold text-lg">
+                                Visiona <span className="text-emerald-500">Admin</span>
+                            </span>
+                        </div>
 
                         {/* Search Bar (Visual Only) */}
                         <div className={`hidden md:flex items-center px-4 py-2 rounded-full w-64 ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
@@ -69,18 +80,24 @@ const AdminLayout = () => {
                                 <p className="text-sm font-semibold leading-none">{user?.name || 'Admin'}</p>
                                 <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Administrator</p>
                             </div>
-                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                                 {(user?.name || 'A').charAt(0)}
                             </div>
                         </div>
                     </div>
                 </header>
 
-                {/* Scrollable Content Area */}
-                <main className="flex-1 overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+                {/* Scrollable Content Area - Add padding bottom for mobile nav */}
+                <main className="flex-1 overflow-y-auto pb-28 md:pb-6">
                     <Outlet context={{ isDarkMode }} />
                 </main>
             </div>
+
+            {/* Mobile Bottom Navigation */}
+            <MobileBottomNav
+                type="admin"
+                onLogout={handleLogout}
+            />
         </div>
     );
 };

@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
     componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['/lovable-uploads/a0b99c62-518a-4718-8058-4637d0e376b3.png'],
+      includeAssets: ['/logo.png'],
       manifest: {
         name: 'Visiona Education Academy',
         short_name: 'VisionaApp',
@@ -28,19 +28,19 @@ export default defineConfig(({ mode }) => ({
         display: 'standalone',
         icons: [
           {
-            src: '/lovable-uploads/a0b99c62-518a-4718-8058-4637d0e376b3.png',
+            src: '/logo.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/lovable-uploads/a0b99c62-518a-4718-8058-4637d0e376b3.png',
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any'
           },
           {
-            src: '/lovable-uploads/a0b99c62-518a-4718-8058-4637d0e376b3.png',
+            src: '/logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'

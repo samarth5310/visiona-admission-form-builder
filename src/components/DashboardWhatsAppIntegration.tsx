@@ -38,7 +38,8 @@ const DashboardWhatsAppIntegration = () => {
         className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
       >
         <MessageCircle className="h-4 w-4" />
-        Send WhatsApp Message
+        <span className="hidden sm:inline">Send WhatsApp Message</span>
+        <span className="sm:hidden">Send WhatsApp</span>
       </Button>
 
       <StudentSelector

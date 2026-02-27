@@ -2,19 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, TrendingUp, TrendingDown, Minus, ChevronRight, BarChart3, Calendar } from 'lucide-react';
+import { GraduationCap, TrendingUp, TrendingDown, Minus, ChevronRight, BarChart3, Calendar, AlertCircle } from 'lucide-react';
 import type { StudentMark } from '@/types/marks';
+import { safeStorage } from '@/utils/safeStorage';
 
 const StudentMarks = () => {
   const [marks, setMarks] = useState<StudentMark[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     fetchStudentMarks();
 
-    // Set up real-time subscription
+    // Use random channel ID to ensure uniqueness
+    const channelId = Math.random().toString(36).substring(7);
     const channel = supabase
-      .channel('student-marks-changes')
+      .channel(`student-marks-changes-${channelId}`)
       .on(
         'postgres_changes',
         {
@@ -23,19 +28,20 @@ const StudentMarks = () => {
           table: 'student_marks'
         },
         () => {
-          fetchStudentMarks();
+          if (mounted) fetchStudentMarks();
         }
       )
       .subscribe();
 
     return () => {
+      mounted = false;
       supabase.removeChannel(channel);
     };
   }, []);
 
   const fetchStudentMarks = async () => {
     try {
-      const studentData = localStorage.getItem('visiona_student_data');
+      const studentData = safeStorage.getItem('visiona_student_data');
       if (!studentData) return;
 
       const student = JSON.parse(studentData);
@@ -51,6 +57,7 @@ const StudentMarks = () => {
       setMarks(data || []);
     } catch (error) {
       console.error('Error fetching student marks:', error);
+      setError('Failed to load marks');
     } finally {
       setLoading(false);
     }
@@ -79,10 +86,18 @@ const StudentMarks = () => {
   };
 
   const getTrendIcon = (marks: StudentMark[], index: number) => {
-    if (index === marks.length - 1) return <Minus className="h-4 w-4 text-gray-400" />;
+    // Check if next item exists
+    if (!marks[index + 1]) return <Minus className="h-4 w-4 text-gray-400" />;
 
-    const current = (marks[index].marks_obtained / marks[index].total_marks) * 100;
-    const previous = (marks[index + 1].marks_obtained / marks[index + 1].total_marks) * 100;
+    const currentMark = marks[index];
+    const prevMark = marks[index + 1];
+
+    // Avoid division by zero
+    if (currentMark.total_marks === 0 || prevMark.total_marks === 0)
+      return <Minus className="h-4 w-4 text-gray-400" />;
+
+    const current = (currentMark.marks_obtained / currentMark.total_marks) * 100;
+    const previous = (prevMark.marks_obtained / prevMark.total_marks) * 100;
 
     if (current > previous) return <TrendingUp className="h-4 w-4 text-green-500" />;
     if (current < previous) return <TrendingDown className="h-4 w-4 text-red-500" />;
@@ -103,8 +118,24 @@ const StudentMarks = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-dashed border-2 bg-gray-50 dark:bg-white/5 dark:border-white/10">
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <div className="p-4 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+            <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Error Loading Marks</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-center max-w-sm mt-2">
+            {error}. Please try refreshing the page.
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 

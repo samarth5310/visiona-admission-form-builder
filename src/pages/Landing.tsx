@@ -14,7 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [language, setLanguage] = useState<'en' | 'kn'>('en');
+  const [language, setLanguage] = useState<'en' | 'kn'>('kn');
   const [themeColor, setThemeColor] = useState<'blue' | 'green'>('blue');
 
   useEffect(() => {
@@ -25,13 +25,15 @@ const Landing = () => {
 
   const translations = {
     en: {
-      alert: "ALERT:",
-      alertText: "Navodaya Exam 2026 Registration | Online Application Last Date: 29 July 2025 | Exam Date: 13 December 2025 | Contact: 7349420496 | Register at VISIONA EDUCATION ACADEMY",
+      alert: "🚨",
+      alertText: "Vacation Admissions Open for 2026! 🚨 ✨ Vision Coaching Center Talent Exam – 2026 Register Now! ✨",
       title: "VISIONA EDUCATION ACADEMY",
       subtitle: "Excellence in Competitive Exam Preparation",
       heroTitle: "Nurturing Future Leaders",
       heroSubtitle: "Specialized coaching for 3rd-5th standard competitive exams including Navodaya, Sainik, Morarji, Kittur, RMS, and Alvas entrance tests.",
       registerNow: "Register Now",
+      vacationAdmissionTitle: "Admissions for Vacation 2026 Open",
+      vacationRegisterNow: "Register Now!",
       expertCoaching: "Expert Coaching",
       expertCoachingDesc: "Comprehensive preparation with experienced faculty and proven teaching methodologies.",
       smallBatch: "Small Batch Size",
@@ -49,13 +51,15 @@ const Landing = () => {
       studentLogin: "Student Login"
     },
     kn: {
-      alert: "ಎಚ್ಚರಿಕೆ:",
-      alertText: "ನವೋದಯ ಪರೀಕ್ಷೆ-2026 | Navodaya Exam 2026 ನೋಂದಣಿ | ಆನ್‌ಲೈನ್ ಅರ್ಜಿ ಕೊನೆಯ ದಿನಾಂಕ: 29 ಜುಲೈ 2025 | ಪರೀಕ್ಷಾ ದಿನಾಂಕ: 13 ಡಿಸೆಂಬರ್ 2025 | ಸಂಪರ್ಕ: 7349420496 | ವಿಶನ್ ಎಜುಕೇಶನ್ ಅಕಾಡೆಮಿಯಲ್ಲಿ ನೋಂದಾಯಿಸಿ",
+      alert: "🚨",
+      alertText: "2026ನೇ ಸಾಲಿನ ರಜೆ ತರಗತಿಗಳಿಗೆ ಪ್ರವೇಶಾತಿ ಪ್ರಾರಂಭವಾಗಿದೆ! 🚨 ✨ ವಿಜನ್ ಕೋಚಿಂಗ್ ಸೆಂಟರ್ ಟ್ಯಾಲೆಂಟ್ ಪರೀಕ್ಷೆ – 2026 ಈಗಲೇ ನೋಂದಾಯಿಸಿ! ✨",
       title: "ವಿಶನ್ ಎಜುಕೇಶನ್ ಅಕಾಡೆಮಿ",
       subtitle: "ಸ್ಪರ್ಧಾತ್ಮಕ ಪರೀಕ್ಷಾ ತಯಾರಿಯಲ್ಲಿ ಶ್ರೇಷ್ಠತೆ",
       heroTitle: "ಭವಿಷ್ಯದ ನಾಯಕರನ್ನು ಬೆಳೆಸುವುದು",
       heroSubtitle: "ನವೋದಯ, ಸೈನಿಕ್, ಮೊರಾರ್ಜಿ, ಕಿತ್ತೂರು, RMS, ಮತ್ತು ಅಲ್ವಾಸ್ ಪ್ರವೇಶ ಪರೀಕ್ಷೆಗಳು ಸೇರಿದಂತೆ 3-5 ನೇ ತರಗತಿ ಸ್ಪರ್ಧಾತ್ಮಕ ಪರೀಕ್ಷೆಗಳಿಗೆ ವಿಶೇಷ ತರಬೇತಿ.",
       registerNow: "ಈಗ ನೋಂದಾಯಿಸಿ",
+      vacationAdmissionTitle: "ವೇಕೇಶನ್ 2026 ಗೆ ದಾಖಲಾತಿಗಳು ತೆರೆದಿವೆ",
+      vacationRegisterNow: "ಈಗಲೇ ನೋಂದಾಯಿಸಿ!",
       expertCoaching: "ಪರಿಣಿತ ತರಬೇತಿ",
       expertCoachingDesc: "ಅನುಭವಿ ಅಧ್ಯಾಪಕರು ಮತ್ತು ಸಾಬೀತಾದ ಬೋಧನಾ ವಿಧಾನಗಳೊಂದಿಗೆ ಸಮಗ್ರ ತಯಾರಿ.",
       smallBatch: "ಸಣ್ಣ ಬ್ಯಾಚ್ ಗಾತ್ರ",
@@ -102,7 +106,7 @@ const Landing = () => {
   };
 
   const handleRegistrationClick = () => {
-    window.open('https://docs.google.com/forms/d/e/1FAIpQLSdhepGfefCEKyaiHkGzuxMKMpWsoTIFnGdfoafgFlrYTOD_Ig/viewform', '_blank');
+    window.open('https://docs.google.com/forms/d/e/1FAIpQLSefz-O35rbTmnlsXO_NIR-DAmcUBNybSwwqZYx2zND36Uq6Vw/viewform', '_blank');
   };
 
   const handleWhatsAppClick = (phoneNumber: string) => {
@@ -178,21 +182,6 @@ const Landing = () => {
                 <Globe className="w-4 h-4 mr-2" />
                 {language === 'en' ? 'ಕನ್ನಡ' : 'English'}
               </Button>
-              <div className="hidden md:flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate('/student-login')}
-                  className="text-gray-300 hover:text-white hover:bg-white/5"
-                >
-                  {t.studentLogin}
-                </Button>
-                <Button
-                  onClick={() => navigate('/login')}
-                  className={`${themeClasses.bg} ${themeClasses.bgHover} text-white ${themeClasses.shadow} border ${themeClasses.border}/50`}
-                >
-                  {t.adminLogin}
-                </Button>
-              </div>
             </div>
           </div>
         </div>
@@ -215,10 +204,13 @@ const Landing = () => {
             Admissions Open for 2025-26
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight">
-            {t.heroTitle} <br />
-            <span className={`text-transparent bg-clip-text bg-gradient-to-r ${themeClasses.gradientTextFrom} ${themeClasses.gradientTextTo}`}>
-              with Visiona
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight uppercase">
+            <span className={`text-transparent bg-clip-text bg-gradient-to-r ${themeClasses.gradientTextFrom} ${themeClasses.gradientTextTo} drop-shadow-[0_0_30px_rgba(59,130,246,0.5)]`}>
+              {t.vacationAdmissionTitle}
+            </span>
+            <br />
+            <span className="text-3xl md:text-5xl lg:text-6xl mt-2 inline-block">
+              {t.vacationRegisterNow}
             </span>
           </h1>
 
@@ -226,23 +218,78 @@ const Landing = () => {
             {t.heroSubtitle}
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="flex flex-col items-center justify-center gap-6 mb-16">
             <Button
               size="lg"
               onClick={handleRegistrationClick}
-              className={`h-14 px-8 rounded-full ${themeClasses.bg} ${themeClasses.bgHover} text-white text-lg font-semibold shadow-[0_0_30px_-5px_rgba(37,99,235,0.5)] border ${themeClasses.border}/50 transition-all hover:scale-105`}
+              className={`h-16 px-12 rounded-full ${themeClasses.bg} ${themeClasses.bgHover} text-white text-xl font-bold shadow-[0_0_40px_-5px_rgba(37,99,235,0.6)] border-2 ${themeClasses.border} transition-all hover:scale-110 animate-pulse`}
             >
               {t.registerNow}
-              <ArrowRight className="ml-2 w-5 h-5" />
+              <ArrowRight className="ml-2 w-6 h-6" />
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate('/student-login')}
-              className="h-14 px-8 rounded-full border-gray-700 text-gray-300 hover:bg-white/5 hover:text-white hover:border-gray-500 bg-transparent backdrop-blur-sm"
-            >
-              Student Portal
-            </Button>
+
+            {/* Terminal-style Info Box */}
+            <div className="max-w-3xl w-full mt-8">
+              <div className="bg-[#1e1e1e] rounded-lg overflow-hidden border-2 border-gray-700 shadow-2xl font-mono">
+                {/* Terminal Header */}
+                <div className="bg-[#323233] px-4 py-2 flex items-center gap-2 border-b border-gray-700">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <span className="text-gray-400 text-sm ml-2">talent-exam-2026.sh</span>
+                </div>
+                {/* Terminal Content */}
+                <div className="p-6 text-left space-y-4 text-gray-300 text-sm md:text-base leading-relaxed">
+                  <div className="text-green-400 font-bold text-lg mb-4">$ ವಿಜನ್ ಕೋಚಿಂಗ್ ಸೆಂಟರ್ ಟ್ಯಾಲೆಂಟ್ ಪರೀಕ್ಷೆ – 2026</div>
+                  
+                  <p className="text-gray-200">
+                    <span className="text-yellow-400">👆🏻</span> <span className="font-semibold text-white">ಆತ್ಮೀಯ ಪಾಲಕರೇ,</span>
+                  </p>
+                  
+                  <p>
+                    ನಿಮ್ಮ ಮಗುವಿನ ಪ್ರತಿಭೆ ಗುರುತಿಸಿ, ಸರಿಯಾದ ಮಾರ್ಗದರ್ಶನದ ಮೂಲಕ ಉಜ್ವಲ ಭವಿಷ್ಯ ನಿರ್ಮಿಸುವುದು ನಮ್ಮ ಹೊಣೆ.
+                    ಈ ಉದ್ದೇಶದಿಂದ ವಿಷನ್ ಕೋಚಿಂಗ್ ಸೆಂಟರ್ ವಿದ್ಯಾಗಿರಿ ಬಾಗಲಕೋಟ ಅವರಿಂದ ಈ ವರ್ಷ <span className="text-cyan-400 font-semibold">3ನೇ ಮತ್ತು 4ನೇ ತರಗತಿ</span> ಓದುತ್ತಿರುವ ಮಕ್ಕಳಿಗೆ ವಿಶೇಷ ರಿಯಾಯಿತಿಯೊಂದಿಗೆ ತರಗತಿಗಳ ದಾಖಲಾತಿಗಳು ಪ್ರಾರಂಭವಾಗಿವೆ.
+                  </p>
+                  
+                  <p className="text-orange-300 font-semibold">
+                    ಮಾರ್ಚ್ 10 ರಿಂದ 22 ರ ವರೆಗೆ ಪ್ರತಿದಿನ ದಿನ ಟ್ಯಾಲೆಂಟ್ ಪರೀಕ್ಷೆ ಮತ್ತು ನಿಮ್ಮ ಮಗುವಿನ ಸಾಮರ್ಥ್ಯವನ್ನು ಗುರುತಿಸುವ ಮಹತ್ವದ ಅವಕಾಶ.
+                  </p>
+                  
+                  <p>
+                    ಈ ಅವಕಾಶವನ್ನು ತಪ್ಪಿಸಿಕೊಳ್ಳದೆ, ದಯವಿಟ್ಟು ಮೇಲಿನ ಲಿಂಕ್ ಮೇಲೆ ಕ್ಲಿಕ್ ಮಾಡಿ ಈಗಲೇ ಆನ್‌ಲೈನ್ ಮೂಲಕ ನೋಂದಣಿ ಮಾಡಿಕೊಳ್ಳಿ.
+                  </p>
+                  
+                  <div className="bg-[#2d2d2d] p-4 rounded border border-gray-600 mt-4">
+                    <p className="text-green-400 font-bold text-lg">💰 ಪರೀಕ್ಷಾ ಶುಲ್ಕ: <span className="text-yellow-300">₹ 99</span></p>
+                  </div>
+                  
+                  <p className="text-cyan-300">
+                    <span className="font-bold">👉</span> ಪರೀಕ್ಷಾ ಶುಲ್ಕವನ್ನು QR Scanner / Pay ಮೂಲಕ ಸುಲಭವಾಗಿ ಪಾವತಿಸಬಹುದು. ಪಾವತಿಸಿದ ಪಾಲಕರು ಕೆಳಗಡೆ ಹೆಸರು ತರಗತಿ ಕಳುಹಿಸಬೇಕು
+                  </p>
+                  
+                  <div className="mt-6 pt-4 border-t border-gray-600">
+                    <p className="text-blue-400 font-semibold mb-2">📞 ಹೆಚ್ಚಿನ ಮಾಹಿತಿಗಾಗಿ ಸಂಪರ್ಕಿಸಿ:</p>
+                    <div className="flex flex-col gap-2 text-green-300 font-mono">
+                      <button 
+                        onClick={() => handleWhatsAppClick('7349420496')}
+                        className="text-left hover:text-green-200 transition-colors"
+                      >
+                        → 7349420496
+                      </button>
+                      <button 
+                        onClick={() => handleWhatsAppClick('8147836151')}
+                        className="text-left hover:text-green-200 transition-colors"
+                      >
+                        → 8147836151
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* Hero Visual / Dashboard Preview */}

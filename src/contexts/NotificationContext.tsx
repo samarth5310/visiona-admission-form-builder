@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { safeStorage } from '@/utils/safeStorage';
 
 export type Notification = {
     id: string;
@@ -42,7 +43,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const loadNotifications = async () => {
             try {
                 // 1. Load from local storage first for immediate display
-                const stored = localStorage.getItem('visiona_notifications');
+                const stored = safeStorage.getItem('visiona_notifications');
                 let localNotifications: Notification[] = [];
                 if (stored) {
                     const parsed: Notification[] = JSON.parse(stored);
@@ -73,7 +74,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     });
 
                     setNotifications(mergedNotifications);
-                    localStorage.setItem('visiona_notifications', JSON.stringify(mergedNotifications));
+                    safeStorage.setItem('visiona_notifications', JSON.stringify(mergedNotifications));
                 }
 
             } catch (e) {
@@ -88,37 +89,59 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // Subscribe to real-time changes
     useEffect(() => {
-        const channel = supabase
-            .channel('public:notifications')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'notifications' as any,
-                },
-                (payload) => {
-                    const newNotification = payload.new as Notification;
+        let mounted = true;
+        let channel: ReturnType<typeof supabase.channel> | null = null;
 
-                    setNotifications(prev => {
-                        // Avoid duplicates
-                        if (prev.find(n => n.id === newNotification.id)) return prev;
+        // Use unique channel name to avoid duplicate subscription errors in React Strict Mode
+        const channelId = `notifications-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-                        const updated = [newNotification, ...prev];
-                        localStorage.setItem('visiona_notifications', JSON.stringify(updated));
-                        return updated;
-                    });
+        const setupSubscription = () => {
+            if (!mounted) return;
 
-                    toast({
-                        title: "New Notification",
-                        description: newNotification.message,
-                    });
-                }
-            )
-            .subscribe();
+            channel = supabase
+                .channel(channelId)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'notifications' as any,
+                    },
+                    (payload) => {
+                        if (!mounted) return;
+
+                        const newNotification = payload.new as Notification;
+
+                        setNotifications(prev => {
+                            // Avoid duplicates
+                            if (prev.find(n => n.id === newNotification.id)) return prev;
+
+                            const updated = [newNotification, ...prev];
+                            safeStorage.setItem('visiona_notifications', JSON.stringify(updated));
+                            return updated;
+                        });
+
+                        toast({
+                            title: "New Notification",
+                            description: newNotification.message,
+                        });
+                    }
+                )
+                .subscribe();
+        };
+
+        setupSubscription();
 
         return () => {
-            supabase.removeChannel(channel);
+            mounted = false;
+            if (channel) {
+                // Delay cleanup to avoid "closed before established" errors
+                setTimeout(() => {
+                    if (channel) {
+                        supabase.removeChannel(channel);
+                    }
+                }, 100);
+            }
         };
     }, [toast]);
 
@@ -160,7 +183,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
             setNotifications(prev => {
                 const updated = prev.filter(n => n.id !== id);
-                localStorage.setItem('visiona_notifications', JSON.stringify(updated));
+                safeStorage.setItem('visiona_notifications', JSON.stringify(updated));
                 return updated;
             });
 
@@ -182,14 +205,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const markAsRead = (id: string) => {
         setNotifications(prev => {
             const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
-            localStorage.setItem('visiona_notifications', JSON.stringify(updated));
+            safeStorage.setItem('visiona_notifications', JSON.stringify(updated));
             return updated;
         });
     };
 
     const clearNotifications = () => {
         setNotifications([]);
-        localStorage.removeItem('visiona_notifications');
+        safeStorage.removeItem('visiona_notifications');
     };
 
     const unreadCount = notifications.filter(n => !n.read).length;

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import WhatsAppMessaging from './WhatsAppMessaging';
@@ -71,7 +71,8 @@ const PaymentForm = ({
     try {
       setLoading(true);
 
-      const { error } = await supabase
+      // Insert the payment record
+      const { error: paymentError } = await supabase
         .from('fee_payments')
         .insert({
           student_fees_id: studentFeesId,
@@ -82,7 +83,33 @@ const PaymentForm = ({
           notes: payment.notes || null
         });
 
-      if (error) throw error;
+      if (paymentError) throw paymentError;
+
+      // Calculate new paid amount and update student_fees
+      const { data: currentFees, error: fetchError } = await supabase
+        .from('student_fees')
+        .select('total_fees, paid_amount')
+        .eq('id', studentFeesId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const newPaidAmount = (currentFees?.paid_amount || 0) + amount;
+      const totalFees = currentFees?.total_fees || 0;
+      const newPendingAmount = Math.max(0, totalFees - newPaidAmount);
+      const newStatus = newPaidAmount >= totalFees ? 'paid' : (newPaidAmount > 0 ? 'partial' : 'pending');
+
+      const { error: updateError } = await supabase
+        .from('student_fees')
+        .update({
+          paid_amount: newPaidAmount,
+          pending_amount: newPendingAmount,
+          payment_status: newStatus,
+          paid_date: new Date().toISOString().split('T')[0]
+        })
+        .eq('id', studentFeesId);
+
+      if (updateError) throw updateError;
 
       // Store payment data for WhatsApp message
       setLastPaymentData({
@@ -164,15 +191,23 @@ const PaymentForm = ({
           </DialogHeader>
 
           {paymentSuccess ? (
-            <div className="space-y-4">
-              <div className="text-center p-6 bg-green-50 rounded-lg">
-                <div className="text-green-600 text-4xl mb-2">✅</div>
-                <h3 className="text-lg font-semibold text-green-800 mb-2">
-                  Payment Recorded Successfully
-                </h3>
-                <p className="text-green-700">
-                  ₹{lastPaymentData?.amount.toLocaleString()} has been added to {studentName}'s account
-                </p>
+            <div className="space-y-6">
+              <div className="text-center p-8 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-3xl border border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+                <div className="relative z-10">
+                  <div className="bg-emerald-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30">
+                    <CheckCircle2 className="h-10 w-10 text-white" />
+                  </div>
+                  <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+                    Payment Success!
+                  </h3>
+                  <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mb-2">
+                    {formatCurrency(lastPaymentData?.amount || 0)}
+                  </p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Successfully credited to <span className="text-gray-900 dark:text-white">{studentName}</span>
+                  </p>
+                </div>
               </div>
 
               <div className="flex gap-3">

@@ -36,7 +36,7 @@ const StudentsSection = () => {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(12); // Desktop: 12 items, Mobile will show 4
+  const [itemsPerPage] = useState(8); // Reduced for better mobile experience
   const { toast } = useToast();
 
   useEffect(() => {
@@ -225,67 +225,111 @@ const StudentsSection = () => {
   };
 
   return (
-    <div className="w-full">
-      <Card className="w-full shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 sm:p-6">
-          <CardTitle className="text-lg sm:text-2xl font-bold text-center flex items-center justify-center gap-2">
-            <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+    <div className="w-full overflow-x-hidden">
+      <Card className="w-full shadow-lg overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-700 dark:to-teal-700 text-white p-3 sm:p-6">
+          <CardTitle className="text-base sm:text-2xl font-bold text-center flex items-center justify-center gap-2">
+            <Users className="h-4 w-4 sm:h-6 sm:w-6" />
             Students Database
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6">
+        <CardContent className="p-3 sm:p-6">
           {/* Search and Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 mb-3 sm:mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search by name, admission number, or class..."
+                placeholder="Search students..."
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                 }}
-                className="pl-10 text-sm dark:text-gray-200"
+                className="pl-10 text-sm dark:text-gray-200 h-9"
               />
             </div>
-            <Button onClick={fetchStudents} disabled={loading} className="w-full sm:w-auto">
+            <Button onClick={fetchStudents} disabled={loading} size="sm" className="sm:w-auto dark:bg-emerald-600 dark:hover:bg-emerald-700">
               {loading ? 'Loading...' : 'Refresh'}
             </Button>
           </div>
 
           {/* Results Count */}
-          <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            Showing {currentStudents.length} of {filteredStudents.length} students
+          <div className="mb-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+            {filteredStudents.length} students
             {totalPages > 1 && (
-              <span className="ml-2">
-                (Page {currentPage} of {totalPages})
+              <span className="ml-1">
+                • Page {currentPage}/{totalPages}
               </span>
             )}
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading students...</p>
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mx-auto mb-3"></div>
+              <p className="text-gray-600 text-sm">Loading students...</p>
             </div>
           ) : filteredStudents.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 text-lg">No students found</p>
-              <p className="text-gray-500 text-sm">
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-600 text-base">No students found</p>
+              <p className="text-gray-500 text-xs mt-1">
                 {students.length === 0
-                  ? "No students have been added yet or there was an error loading data."
-                  : "Try adjusting your search criteria"
+                  ? "No students have been added yet."
+                  : "Try adjusting your search"
                 }
               </p>
             </div>
           ) : (
             <>
-              {/* Student Grid - Responsive */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              {/* Mobile List View - Compact */}
+              <div className="block sm:hidden space-y-2">
                 {currentStudents.map((student) => (
-                  <Card key={student.id} className="overflow-hidden border hover:border-blue-300 transition-colors shadow-sm dark:bg-gray-800 dark:border-gray-700">
+                  <div
+                    key={student.id}
+                    className="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <Avatar className="h-10 w-10 border border-emerald-200 dark:border-emerald-700 flex-shrink-0">
+                      <AvatarImage
+                        src={student.student_photo}
+                        alt={student.full_name}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                        {getInitials(student.full_name)}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                        {student.full_name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                        <span className="font-mono">{student.admission_number}</span>
+                        <span>•</span>
+                        <span>Class {student.class}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                        <Phone className="h-2.5 w-2.5" />
+                        <span>{student.contact_number}</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() => handleWhatsAppMessage(student)}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white h-8 w-8 p-0 flex-shrink-0"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop/Tablet Grid View */}
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                {currentStudents.map((student) => (
+                  <Card key={student.id} className="overflow-hidden border hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors shadow-sm dark:bg-gray-800 dark:border-gray-700">
                     {/* ID Card Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2">
+                    <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-2">
                       <div className="flex justify-between items-center">
                         <h3 className="font-bold text-xs">ID CARD</h3>
                         <p className="text-[10px] opacity-90 font-mono">{student.admission_number}</p>
@@ -295,13 +339,13 @@ const StudentsSection = () => {
                     <CardContent className="p-3">
                       {/* Student Photo and Basic Info */}
                       <div className="flex items-center gap-3 mb-3">
-                        <Avatar className="h-12 w-12 border border-blue-200 flex-shrink-0">
+                        <Avatar className="h-12 w-12 border border-emerald-200 flex-shrink-0">
                           <AvatarImage
                             src={student.student_photo}
                             alt={student.full_name}
                             className="object-cover"
                           />
-                          <AvatarFallback className="bg-blue-100 text-blue-600 text-xs font-bold">
+                          <AvatarFallback className="bg-emerald-100 text-emerald-600 text-xs font-bold">
                             {getInitials(student.full_name)}
                           </AvatarFallback>
                         </Avatar>
@@ -369,62 +413,56 @@ const StudentsSection = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 sm:mt-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Page {currentPage} of {totalPages}
+                <div className="flex items-center justify-center gap-2 mt-4 sm:mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8 p-0 sm:w-auto sm:px-3"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-1">Prev</span>
+                  </Button>
+
+                  {/* Page Numbers - Fewer on mobile */}
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 2) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 1) {
+                        pageNum = totalPages - 2 + i;
+                      } else {
+                        pageNum = currentPage - 1 + i;
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`w-8 h-8 p-0 text-xs ${currentPage === pageNum ? 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700' : ''}`}
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="flex items-center gap-1"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      <span className="hidden sm:inline">Previous</span>
-                    </Button>
-
-                    {/* Page Numbers */}
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
-
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(pageNum)}
-                            className="w-8 h-8 p-0 text-xs"
-                          >
-                            {pageNum}
-                          </Button>
-                        );
-                      })}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="flex items-center gap-1"
-                    >
-                      <span className="hidden sm:inline">Next</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8 p-0 sm:w-auto sm:px-3"
+                  >
+                    <span className="hidden sm:inline mr-1">Next</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
             </>
