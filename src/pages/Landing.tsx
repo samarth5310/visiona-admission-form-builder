@@ -250,6 +250,20 @@ const Landing = () => {
                   
                   <div className="bg-[#2d2d2d] p-4 rounded border border-gray-600 mt-4">
                     <p className="text-green-400 font-bold text-lg">💰 ಪರೀಕ್ಷಾ ಶುಲ್ಕ: <span className="text-yellow-300">₹ 99</span></p>
+                    <div className="mt-4 flex flex-col sm:flex-row items-center gap-4">
+                      <div className="flex-1">
+                        <p className="text-cyan-300 text-sm mb-2">ಇಲ್ಲಿ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ:</p>
+                        <img src="/lovable-uploads/payment-qr.jpeg" alt="Payment QR Code" className="w-32 h-32 object-contain border border-gray-500 rounded" />
+                      </div>
+                      <div className="flex-1">
+                        <button
+                          onClick={() => window.location.href = 'upi://pay?pa=shreedevik1976@okaxis&pn=Visiona%20Coaching&tn=Talent%20Exam%20Fee&am=99'}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition-colors"
+                        >
+                          💳 Pay 99 Now
+                        </button>
+                      </div>
+                    </div>
                   </div>
                   
                   <p className="text-cyan-300">
@@ -406,7 +420,7 @@ const Landing = () => {
           </div>
 
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-8">
-            <div className="flex gap-6 animate-scroll hover:pause">
+            <div className="flex gap-6 animate-scroll-fast sm:animate-scroll hover:pause">
               {[...slideshowImages, ...slideshowImages].map((img, i) => (
                 <div key={i} className="flex-shrink-0 w-64 aspect-[4/3] rounded-xl overflow-hidden border border-white/10 group relative">
                   <img

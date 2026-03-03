@@ -188,6 +188,14 @@ export default {
 					'100%': {
 						transform: 'translateX(-50%)'
 					}
+				},
+				'scroll-fast': {
+					'0%': {
+						transform: 'translateX(0)'
+					},
+					'100%': {
+						transform: 'translateX(-50%)'
+					}
 				}
 			},
 			animation: {
@@ -202,6 +210,7 @@ export default {
 				'float': 'float 3s ease-in-out infinite',
 				'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
 				'scroll': 'scroll 20s linear infinite',
+				'scroll-fast': 'scroll-fast 10s linear infinite',
 			}
 		}
 	},
