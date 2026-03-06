@@ -16,11 +16,20 @@ const Landing = () => {
   const navigate = useNavigate();
   const [language, setLanguage] = useState<'en' | 'kn'>('kn');
   const [themeColor, setThemeColor] = useState<'blue' | 'green'>('blue');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     // Randomly select theme color on mount
     const randomTheme = Math.random() > 0.5 ? 'blue' : 'green';
     setThemeColor(randomTheme);
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const translations = {
@@ -34,6 +43,24 @@ const Landing = () => {
       registerNow: "Register Now",
       vacationAdmissionTitle: "Admissions for Vacation 2026 Open",
       vacationRegisterNow: "Register Now!",
+      admissionsBadge: "Admissions Open for Vacation 2026",
+      countdownBefore: "March 10–22 • {days} days left",
+      countdownLive: "March 10–22 • Exam is live now",
+      countdownEnded: "March 10–22 • Exam window ended",
+      statsYearsLabel: "Years",
+      statsStudentsLabel: "Students",
+      statsResultsTitle: "Top Results",
+      statsResultsLabel: "Sainik/Navodaya Results",
+      howToJoinTitle: "How to Join",
+      step1: "STEP 1",
+      step2: "STEP 2",
+      step3: "STEP 3",
+      joinRegister: "Register",
+      joinPay: "Pay ₹99",
+      joinWhatsApp: "WhatsApp details",
+      stickyCtaText: "₹99 Talent Exam • Register Now",
+      stickyRegister: "Register",
+      stickyPay: "Pay ₹99",
       expertCoaching: "Expert Coaching",
       expertCoachingDesc: "Comprehensive preparation with experienced faculty and proven teaching methodologies.",
       smallBatch: "Small Batch Size",
@@ -58,6 +85,24 @@ const Landing = () => {
       registerNow: "ಈಗ ನೋಂದಾಯಿಸಿ",
       vacationAdmissionTitle: "ಬೇಸಿಗೆ ರಜೆ ತರಬೇತಿ -2026\nಪ್ರವೇಶಗಳು ಪ್ರಾರಂಭ",
       vacationRegisterNow: "ಈಗಲೇ ನೋಂದಾಯಿಸಿ!",
+      admissionsBadge: "ವೇಕೇಶನ್ 2026 ಗೆ ದಾಖಲಾತಿಗಳು ತೆರೆದಿವೆ",
+      countdownBefore: "ಮಾರ್ಚ್ 10–22 • ಇನ್ನೂ {days} ದಿನಗಳು ಬಾಕಿ",
+      countdownLive: "ಮಾರ್ಚ್ 10–22 • ಪರೀಕ್ಷೆ ನಡೆಯುತ್ತಿದೆ",
+      countdownEnded: "ಮಾರ್ಚ್ 10–22 • ಪರೀಕ್ಷಾ ಅವಧಿ ಮುಕ್ತಾಯ",
+      statsYearsLabel: "ವರ್ಷಗಳು",
+      statsStudentsLabel: "ವಿದ್ಯಾರ್ಥಿಗಳು",
+      statsResultsTitle: "ಮುಖ್ಯ ಫಲಿತಾಂಶಗಳು",
+      statsResultsLabel: "ಸೈನಿಕ್/ನವೋದಯ ಫಲಿತಾಂಶಗಳು",
+      howToJoinTitle: "ಸೇರಲು ಹಂತಗಳು",
+      step1: "ಹಂತ 1",
+      step2: "ಹಂತ 2",
+      step3: "ಹಂತ 3",
+      joinRegister: "ನೋಂದಣಿ ಮಾಡಿ",
+      joinPay: "₹99 ಪಾವತಿಸಿ",
+      joinWhatsApp: "WhatsApp ವಿವರ ಕಳುಹಿಸಿ",
+      stickyCtaText: "₹99 ಟ್ಯಾಲೆಂಟ್ ಪರೀಕ್ಷೆ • ಈಗಲೇ ನೋಂದಾಯಿಸಿ",
+      stickyRegister: "ನೋಂದಾಯಿಸಿ",
+      stickyPay: "₹99 ಪಾವತಿ",
       expertCoaching: "ಪರಿಣಿತ ತರಬೇತಿ",
       expertCoachingDesc: "ಅನುಭವಿ ಅಧ್ಯಾಪಕರು ಮತ್ತು ಸಾಬೀತಾದ ಬೋಧನಾ ವಿಧಾನಗಳೊಂದಿಗೆ ಸಮಗ್ರ ತಯಾರಿ.",
       smallBatch: "ಸಣ್ಣ ಬ್ಯಾಚ್ ಗಾತ್ರ",
@@ -105,8 +150,16 @@ const Landing = () => {
     window.open('https://docs.google.com/forms/d/e/1FAIpQLSefz-O35rbTmnlsXO_NIR-DAmcUBNybSwwqZYx2zND36Uq6Vw/viewform', '_blank');
   };
 
+  const handlePayNowClick = () => {
+    window.location.href = 'upi://pay?pa=shreedevik1976@okaxis&pn=Visiona%20Coaching&tn=Talent%20Exam%20Fee&am=99&cu=INR';
+  };
+
   const handleWhatsAppClick = (phoneNumber: string) => {
     window.open(`https://wa.me/91${phoneNumber}`, '_blank');
+  };
+
+  const handleCallClick = (phoneNumber: string) => {
+    window.location.href = `tel:+91${phoneNumber}`;
   };
 
   const toggleLanguage = () => {
@@ -129,8 +182,18 @@ const Landing = () => {
     { name: 'Alvas', color: 'cyan' }
   ];
 
+  const examStartDate = new Date(currentTime.getFullYear(), 2, 10);
+  const examEndDate = new Date(currentTime.getFullYear(), 2, 22, 23, 59, 59);
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysLeft = Math.max(0, Math.ceil((examStartDate.getTime() - currentTime.getTime()) / msPerDay));
+  const countdownText = currentTime < examStartDate
+    ? t.countdownBefore.replace('{days}', String(daysLeft))
+    : currentTime <= examEndDate
+      ? t.countdownLive
+      : t.countdownEnded;
+
   return (
-    <div className={`min-h-screen bg-[#020617] text-white overflow-x-hidden font-sans ${themeClasses.selection}`}>
+    <div className={`min-h-screen bg-[#020617] text-white overflow-x-hidden font-sans pb-24 md:pb-0 ${themeClasses.selection}`}>
       {/* Alert Banner */}
       <div className={`${themeClasses.alertBg} border-b ${themeClasses.alertBorder} backdrop-blur-sm overflow-hidden`}>
         <div className="max-w-7xl mx-auto px-4 py-2 relative">
@@ -197,7 +260,13 @@ const Landing = () => {
               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${themeClasses.bg} opacity-75`}></span>
               <span className={`relative inline-flex rounded-full h-2 w-2 ${themeClasses.bg}`}></span>
             </span>
-            Admissions Open for Vacation 2026
+            {t.admissionsBadge}
+          </div>
+
+          <div className="mb-6">
+            <span className="inline-flex items-center px-4 py-2 rounded-full bg-orange-900/30 border border-orange-500/50 text-orange-200 text-sm font-semibold">
+              ⏳ {countdownText}
+            </span>
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight uppercase whitespace-pre-line">
@@ -213,6 +282,21 @@ const Landing = () => {
           <p className="max-w-2xl mx-auto text-lg text-gray-400 mb-10 leading-relaxed">
             {t.heroSubtitle}
           </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 max-w-4xl mx-auto">
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-2xl font-bold text-white">10+</p>
+              <p className="text-sm text-gray-300">{t.statsYearsLabel}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-2xl font-bold text-white">1000+</p>
+              <p className="text-sm text-gray-300">{t.statsStudentsLabel}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-2xl font-bold text-white">{t.statsResultsTitle}</p>
+              <p className="text-sm text-gray-300">{t.statsResultsLabel}</p>
+            </div>
+          </div>
 
           <div className="flex flex-col items-center justify-center gap-6 mb-16">
             {/* Terminal-style Info Box */}
@@ -257,10 +341,10 @@ const Landing = () => {
                       </div>
                       <div className="flex-1">
                         <button
-                          onClick={() => window.location.href = 'upi://pay?pa=shreedevik1976@okaxis&pn=Visiona%20Coaching&tn=Talent%20Exam%20Fee&am=99'}
+                          onClick={handlePayNowClick}
                           className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition-colors"
                         >
-                          💳 Pay 99 Now
+                          💳 {t.joinPay}
                         </button>
                       </div>
                     </div>
@@ -299,6 +383,24 @@ const Landing = () => {
               {t.registerNow}
               <ArrowRight className="ml-2 w-6 h-6" />
             </Button>
+
+            <div className="w-full max-w-4xl rounded-2xl border border-white/10 bg-white/5 p-5 text-left">
+              <h3 className="text-lg font-bold text-white mb-4">{t.howToJoinTitle}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="rounded-lg bg-[#0B1121] border border-white/10 p-4">
+                  <p className="text-xs text-gray-400 mb-1">{t.step1}</p>
+                  <p className="text-white font-semibold">{t.joinRegister}</p>
+                </div>
+                <div className="rounded-lg bg-[#0B1121] border border-white/10 p-4">
+                  <p className="text-xs text-gray-400 mb-1">{t.step2}</p>
+                  <p className="text-white font-semibold">{t.joinPay}</p>
+                </div>
+                <div className="rounded-lg bg-[#0B1121] border border-white/10 p-4">
+                  <p className="text-xs text-gray-400 mb-1">{t.step3}</p>
+                  <p className="text-white font-semibold">{t.joinWhatsApp}</p>
+                </div>
+              </div>
+            </div>
 
           </div>
 
@@ -409,13 +511,18 @@ const Landing = () => {
       {/* Success Stories / Slideshow */}
       <section className={`py-24 bg-gradient-to-b from-[#020617] ${themeColor === 'blue' ? 'to-blue-950/20' : 'to-green-950/20'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
+          <div className="flex flex-col items-center text-center mb-12 gap-6">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Success Stories</h2>
-              <p className="text-gray-400">Celebrating the achievements of our brilliant students.</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">ಯಶಸ್ಸಿನ ಕಥೆಗಳು</h2>
+              <p className="text-gray-400 mb-4">ಪ್ರತಿಷ್ಠಿತ ಶಾಲೆಗಳು ಮತ್ತು ಸಂಸ್ಥೆಗಳಲ್ಲಿ ಯಶಸ್ವಿ ಪ್ರವೇಶಗಳ ದಾಖಲೆ</p>
             </div>
-            <Button variant="outline" className={`border-${themeColor}-500/30 ${themeClasses.text} ${themeClasses.textHover} hover:${themeClasses.alertBg}`}>
+            <Button 
+              onClick={() => navigate('/results')}
+              size="lg"
+              className={`h-14 px-10 rounded-full ${themeClasses.bg} ${themeClasses.bgHover} text-white text-lg font-bold shadow-[0_0_30px_-5px_rgba(37,99,235,0.5)] border-2 ${themeClasses.border} transition-all hover:scale-105`}
+            >
               View All Results
+              <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
           </div>
 
@@ -474,7 +581,7 @@ const Landing = () => {
               <ul className="space-y-4 text-gray-400">
                 <li className="flex items-start gap-3">
                   <MapPin className={`w-5 h-5 ${themeClasses.text} shrink-0 mt-0.5`} />
-                  <span>16th Cross Vidyagiri<br />Bagalkot, Karnataka</span>
+                  <span>21st Cross Vidyagiri<br />Bagalkot, Karnataka</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone className={`w-5 h-5 ${themeClasses.text} shrink-0`} />
@@ -610,6 +717,40 @@ const Landing = () => {
           </div>
         </div>
       </footer>
+
+      <div className="fixed bottom-0 inset-x-0 z-50 md:hidden border-t border-white/10 bg-[#020617]/95 backdrop-blur-md px-3 py-3">
+        <p className="text-center text-sm text-white font-semibold mb-2">{t.stickyCtaText}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            onClick={handleRegistrationClick}
+            className={`${themeClasses.bg} ${themeClasses.bgHover} text-white font-bold h-11`}
+          >
+            {t.stickyRegister}
+          </Button>
+          <Button
+            onClick={handlePayNowClick}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold h-11"
+          >
+            {t.stickyPay}
+          </Button>
+        </div>
+      </div>
+
+      <div className="fixed right-2 bottom-[110px] z-50 md:hidden flex flex-col gap-1">
+        <Button
+          onClick={() => handleCallClick('7349420496')}
+          className="h-8 px-2.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-semibold shadow-lg rounded-full flex items-center justify-center"
+        >
+          <Phone className="w-3 h-3 mr-1" />
+          Call
+        </Button>
+        <Button
+          onClick={() => handleWhatsAppClick('7349420496')}
+          className="h-8 px-2.5 bg-green-600 hover:bg-green-700 text-white text-[10px] font-semibold shadow-lg rounded-full flex items-center justify-center"
+        >
+          WhatsApp
+        </Button>
+      </div>
     </div>
   );
 };

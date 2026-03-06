@@ -22,6 +22,7 @@ import Marks from "./pages/Marks";
 import NotFound from "./pages/NotFound";
 import AdminDashboardHome from "./pages/AdminDashboardHome";
 import CoursePreparation from "./pages/CoursePreparation";
+import Results from "./pages/Results";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +50,7 @@ const App: React.FC = () => {
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={isNative ? <MobileRoleSelection /> : <Landing />} />
+                <Route path="/results" element={<Results />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/student-login" element={<StudentLogin />} />
                 <Route path="/student-dashboard" element={<StudentDashboard />} />
