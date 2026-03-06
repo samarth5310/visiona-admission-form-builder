@@ -44,7 +44,7 @@ const Landing = () => {
       vacationAdmissionTitle: "Admissions for Vacation 2026 Open",
       vacationRegisterNow: "Register Now!",
       admissionsBadge: "Admissions Open for Vacation 2026",
-      countdownBefore: "March 10–22 • {days} days left",
+      countdownBefore: "March 10–22 ",
       countdownLive: "March 10–22 • Exam is live now",
       countdownEnded: "March 10–22 • Exam window ended",
       statsYearsLabel: "Years",
