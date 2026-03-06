@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, Trophy, MapPin, Phone, Mail, AlertCircle, Globe, ArrowRight, CheckCircle2, Star } from 'lucide-react';
+import { BookOpen, Users, MapPin, Phone, Mail, AlertCircle, Globe, ArrowRight, CheckCircle2, Star } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -49,8 +49,6 @@ const Landing = () => {
       countdownEnded: "March 10–22 • Exam window ended",
       statsYearsLabel: "Years",
       statsStudentsLabel: "Students",
-      statsResultsTitle: "Top Results",
-      statsResultsLabel: "Sainik/Navodaya Results",
       howToJoinTitle: "How to Join",
       step1: "STEP 1",
       step2: "STEP 2",
@@ -65,8 +63,6 @@ const Landing = () => {
       expertCoachingDesc: "Comprehensive preparation with experienced faculty and proven teaching methodologies.",
       smallBatch: "Small Batch Size",
       smallBatchDesc: "Personalized attention with limited students per batch ensuring quality education.",
-      provenResults: "Proven Results",
-      provenResultsDesc: "Track record of successful admissions in prestigious schools and institutions.",
       visitAcademy: "Visit Our Academy",
       address: "Address",
       contact: "Contact",
@@ -91,8 +87,6 @@ const Landing = () => {
       countdownEnded: "ಮಾರ್ಚ್ 10–22 • ಪರೀಕ್ಷಾ ಅವಧಿ ಮುಕ್ತಾಯ",
       statsYearsLabel: "ವರ್ಷಗಳು",
       statsStudentsLabel: "ವಿದ್ಯಾರ್ಥಿಗಳು",
-      statsResultsTitle: "ಮುಖ್ಯ ಫಲಿತಾಂಶಗಳು",
-      statsResultsLabel: "ಸೈನಿಕ್/ನವೋದಯ ಫಲಿತಾಂಶಗಳು",
       howToJoinTitle: "ಸೇರಲು ಹಂತಗಳು",
       step1: "ಹಂತ 1",
       step2: "ಹಂತ 2",
@@ -107,8 +101,6 @@ const Landing = () => {
       expertCoachingDesc: "ಅನುಭವಿ ಅಧ್ಯಾಪಕರು ಮತ್ತು ಸಾಬೀತಾದ ಬೋಧನಾ ವಿಧಾನಗಳೊಂದಿಗೆ ಸಮಗ್ರ ತಯಾರಿ.",
       smallBatch: "ಸಣ್ಣ ಬ್ಯಾಚ್ ಗಾತ್ರ",
       smallBatchDesc: "ಗುಣಮಟ್ಟದ ಶಿಕ್ಷಣವನ್ನು ಖಚಿತಪಡಿಸುವ ಬ್ಯಾಚ್‌ಗೆ ಸೀಮಿತ ವಿದ್ಯಾರ್ಥಿಗಳೊಂದಿಗೆ ವೈಯಕ್ತಿಕ ಗಮನ.",
-      provenResults: "ಸಾಬೀತಾದ ಫಲಿತಾಂಶಗಳು",
-      provenResultsDesc: "ಪ್ರತಿಷ್ಠಿತ ಶಾಲೆಗಳು ಮತ್ತು ಸಂಸ್ಥೆಗಳಲ್ಲಿ ಯಶಸ್ವಿ ಪ್ರವೇಶಗಳ ದಾಖಲೆ.",
       visitAcademy: "ನಮ್ಮ ಅಕಾಡೆಮಿಗೆ ಭೇಟಿ ನೀಡಿ",
       address: "ವಿಳಾಸ",
       contact: "ಸಂಪರ್ಕ",
@@ -283,7 +275,7 @@ const Landing = () => {
             {t.heroSubtitle}
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10 max-w-3xl mx-auto">
             <div className="rounded-xl border border-white/10 bg-white/5 p-4">
               <p className="text-2xl font-bold text-white">10+</p>
               <p className="text-sm text-gray-300">{t.statsYearsLabel}</p>
@@ -291,10 +283,6 @@ const Landing = () => {
             <div className="rounded-xl border border-white/10 bg-white/5 p-4">
               <p className="text-2xl font-bold text-white">1000+</p>
               <p className="text-sm text-gray-300">{t.statsStudentsLabel}</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-2xl font-bold text-white">{t.statsResultsTitle}</p>
-              <p className="text-sm text-gray-300">{t.statsResultsLabel}</p>
             </div>
           </div>
 
@@ -490,11 +478,10 @@ const Landing = () => {
             <p className="text-gray-400 max-w-2xl mx-auto">We provide the best environment for your child's growth and success in competitive exams.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {[
               { icon: BookOpen, title: t.expertCoaching, desc: t.expertCoachingDesc },
-              { icon: Users, title: t.smallBatch, desc: t.smallBatchDesc },
-              { icon: Trophy, title: t.provenResults, desc: t.provenResultsDesc }
+              { icon: Users, title: t.smallBatch, desc: t.smallBatchDesc }
             ].map((feature, i) => (
               <div key={i} className={`group p-6 rounded-2xl bg-white/5 border border-white/10 hover:${themeClasses.border}/50 hover:${themeClasses.alertBg} transition-all duration-300`}>
                 <div className={`w-12 h-12 rounded-lg ${themeClasses.alertBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
