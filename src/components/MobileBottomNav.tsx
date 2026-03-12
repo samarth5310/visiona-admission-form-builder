@@ -46,7 +46,7 @@ const MobileBottomNav = ({ type, activeTab, onTabChange, onLogout }: MobileBotto
 
     const studentNavItems: NavItem[] = [
         { id: 'profile', label: 'Home', icon: Home },
-        { id: 'courses', label: 'Courses', icon: BookOpen },
+        { id: 'quiz', label: 'Quiz', icon: CheckCircle2 },
         { id: 'fees', label: 'Fees', icon: CreditCard },
         { id: 'homework', label: 'HW', icon: FileText },
         { id: 'marks', label: 'Marks', icon: GraduationCap },
@@ -83,14 +83,15 @@ const MobileBottomNav = ({ type, activeTab, onTabChange, onLogout }: MobileBotto
         return (
             <div className="fixed bottom-6 left-6 right-6 z-50 md:hidden flex justify-center">
                 <div className="bg-[#0B1121]/90 backdrop-blur-xl rounded-full p-1 border border-white/5 shadow-2xl max-w-md w-full">
-                    <div className={`relative grid grid-cols-${gridCols}`}>
+                    <div className="relative flex">
                         {/* Compact Indicator */}
                         <div
-                            className="absolute top-1 bottom-1 bg-emerald-500 rounded-full transition-all duration-300 ease-out"
+                            className="absolute bg-emerald-500 rounded-full transition-all duration-300 ease-out"
                             style={{
-                                left: `${activeIndex * (100 / gridCols)}%`,
-                                width: `${100 / gridCols}%`,
-                                transform: 'scale(0.85)'
+                                top: '4px',
+                                bottom: '4px',
+                                left: `calc(${activeIndex * (100 / gridCols)}% + 4px)`,
+                                width: `calc(${100 / gridCols}% - 8px)`,
                             }}
                         />
 
@@ -103,6 +104,7 @@ const MobileBottomNav = ({ type, activeTab, onTabChange, onLogout }: MobileBotto
                                     key={item.id}
                                     onClick={() => handleItemClick(item, index)}
                                     className="relative flex flex-col items-center justify-center py-2 z-10"
+                                    style={{ flex: `1 1 0%` }}
                                 >
                                     <Icon className={`w-4 h-4 mb-0.5 transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-500'}`} />
                                     <span className={`text-[9px] font-bold uppercase tracking-tighter transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-500'}`}>

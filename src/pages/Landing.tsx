@@ -44,9 +44,8 @@ const Landing = () => {
       vacationAdmissionTitle: "Admissions for Vacation 2026 Open",
       vacationRegisterNow: "Register Now!",
       admissionsBadge: "Admissions Open for Vacation 2026",
-      countdownBefore: "March 10–22 ",
-      countdownLive: "March 10–22 • Exam is live now",
-      countdownEnded: "March 10–22 • Exam window ended",
+      countdownLive: "March 14–25 • Exam is live now",
+      countdownEnded: "March 14–25 • Exam window ended",
       statsYearsLabel: "Years",
       statsStudentsLabel: "Students",
       howToJoinTitle: "How to Join",
@@ -82,9 +81,8 @@ const Landing = () => {
       vacationAdmissionTitle: "ಬೇಸಿಗೆ ರಜೆ ತರಬೇತಿ -2026\nಪ್ರವೇಶಗಳು ಪ್ರಾರಂಭ",
       vacationRegisterNow: "ಈಗಲೇ ನೋಂದಾಯಿಸಿ!",
       admissionsBadge: "ವೇಕೇಶನ್ 2026 ಗೆ ದಾಖಲಾತಿಗಳು ತೆರೆದಿವೆ",
-      countdownBefore: "ಮಾರ್ಚ್ 10–22 • ಇನ್ನೂ {days} ದಿನಗಳು ಬಾಕಿ",
-      countdownLive: "ಮಾರ್ಚ್ 10–22 • ಪರೀಕ್ಷೆ ನಡೆಯುತ್ತಿದೆ",
-      countdownEnded: "ಮಾರ್ಚ್ 10–22 • ಪರೀಕ್ಷಾ ಅವಧಿ ಮುಕ್ತಾಯ",
+      countdownLive: "ಮಾರ್ಚ್ 14–25 • ಪರೀಕ್ಷೆ ನಡೆಯುತ್ತಿದೆ",
+      countdownEnded: "ಮಾರ್ಚ್ 14–25 • ಪರೀಕ್ಷಾ ಅವಧಿ ಮುಕ್ತಾಯ",
       statsYearsLabel: "ವರ್ಷಗಳು",
       statsStudentsLabel: "ವಿದ್ಯಾರ್ಥಿಗಳು",
       howToJoinTitle: "ಸೇರಲು ಹಂತಗಳು",
@@ -174,15 +172,13 @@ const Landing = () => {
     { name: 'Alvas', color: 'cyan' }
   ];
 
-  const examStartDate = new Date(currentTime.getFullYear(), 2, 10);
-  const examEndDate = new Date(currentTime.getFullYear(), 2, 22, 23, 59, 59);
-  const msPerDay = 1000 * 60 * 60 * 24;
-  const daysLeft = Math.max(0, Math.ceil((examStartDate.getTime() - currentTime.getTime()) / msPerDay));
-  const countdownText = currentTime < examStartDate
-    ? t.countdownBefore.replace('{days}', String(daysLeft))
-    : currentTime <= examEndDate
-      ? t.countdownLive
-      : t.countdownEnded;
+  const examStartDate = new Date(currentTime.getFullYear(), 2, 14);
+  const examEndDate = new Date(currentTime.getFullYear(), 2, 25, 23, 59, 59);
+  const countdownText = currentTime >= examStartDate && currentTime <= examEndDate
+    ? t.countdownLive
+    : currentTime > examEndDate
+      ? t.countdownEnded
+      : "March 14–25";
 
   return (
     <div className={`min-h-screen bg-[#020617] text-white overflow-x-hidden font-sans pb-24 md:pb-0 ${themeClasses.selection}`}>
@@ -313,7 +309,7 @@ const Landing = () => {
                   </p>
                   
                   <p className="text-orange-300 font-semibold">
-                    ಮಾರ್ಚ್ 10 ರಿಂದ 22 ರ ವರೆಗೆ ಪ್ರತಿದಿನ ದಿನ ಟ್ಯಾಲೆಂಟ್ ಪರೀಕ್ಷೆ ಮತ್ತು ನಿಮ್ಮ ಮಗುವಿನ ಸಾಮರ್ಥ್ಯವನ್ನು ಗುರುತಿಸುವ ಮಹತ್ವದ ಅವಕಾಶ.
+                    ಮಾರ್ಚ್ 14 ರಿಂದ 25 ರ ವರೆಗೆ ಪ್ರತಿದಿನ ದಿನ ಟ್ಯಾಲೆಂಟ್ ಪರೀಕ್ಷೆ ಮತ್ತು ನಿಮ್ಮ ಮಗುವಿನ ಸಾಮರ್ಥ್ಯವನ್ನು ಗುರುತಿಸುವ ಮಹತ್ವದ ಅವಕಾಶ.
                   </p>
                   
                   <p>

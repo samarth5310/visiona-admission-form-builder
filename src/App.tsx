@@ -21,7 +21,6 @@ import Homework from "./pages/Homework";
 import Marks from "./pages/Marks";
 import NotFound from "./pages/NotFound";
 import AdminDashboardHome from "./pages/AdminDashboardHome";
-import CoursePreparation from "./pages/CoursePreparation";
 import Results from "./pages/Results";
 
 const queryClient = new QueryClient({
@@ -54,7 +53,6 @@ const App: React.FC = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/student-login" element={<StudentLogin />} />
                 <Route path="/student-dashboard" element={<StudentDashboard />} />
-                <Route path="/student/preparation/:courseName" element={<CoursePreparation />} />
 
                 {/* Admin Routes */}
                 <Route element={

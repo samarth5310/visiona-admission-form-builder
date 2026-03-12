@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Menu, BookOpen, CreditCard, GraduationCap, Search, Bell, Moon, Sun, LogOut, Home, DollarSign, BarChart3, Calendar, ChevronRight } from 'lucide-react';
+import { User, Menu, BookOpen, CreditCard, GraduationCap, Search, Bell, Moon, Sun, LogOut, Home, DollarSign, BarChart3, Calendar } from 'lucide-react';
 import StudentHomework from '@/components/StudentHomework';
 import StudentMarks from '@/components/StudentMarks';
 import StudentFeeDetails from '@/components/StudentFeeDetails';
+import StudentQuiz from '@/components/StudentQuiz';
 import StudentSidebar from '@/components/StudentSidebar';
 import StudentLeaderboard from '@/components/StudentLeaderboard';
 import MobileBottomNav from '@/components/MobileBottomNav';
@@ -126,7 +127,7 @@ const StudentDashboard = () => {
         return (
           <div className="space-y-6 animate-in fade-in-50 duration-500">
             {/* Quick Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className={`border-0 shadow-lg ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}>
                 <CardContent className="p-6 flex items-center space-x-4">
                   <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-blue-500/10 text-blue-500' : 'bg-blue-100 text-blue-600'}`}>
@@ -136,19 +137,6 @@ const StudentDashboard = () => {
                     <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total Fees</p>
                     <h3 className="text-3xl font-bold">₹{fees.total.toLocaleString()}</h3>
                     <p className="text-xs text-green-500 mt-0.5 font-medium">Paid: ₹{fees.paid.toLocaleString()}</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className={`border-0 shadow-lg ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}>
-                <CardContent className="p-6 flex items-center space-x-4">
-                  <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-purple-500/10 text-purple-500' : 'bg-purple-100 text-purple-600'}`}>
-                    <BookOpen className="h-7 w-7" />
-                  </div>
-                  <div>
-                    <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Enrolled Courses</p>
-                    <h3 className="text-3xl font-bold">{studentData.exams_preparing_for?.length || 0}</h3>
-                    <p className={`text-xs mt-0.5 font-medium ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`}>Active Programs</p>
                   </div>
                 </CardContent>
               </Card>
@@ -244,52 +232,8 @@ const StudentDashboard = () => {
             </div>
           </div>
         );
-      case 'courses':
-        return (
-          <div className="space-y-6 animate-in fade-in-50 duration-500">
-            <div className="flex flex-col gap-2 mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">My Enrolled Courses</h2>
-              <p className="text-gray-500 dark:text-gray-400">Access your preparation portals and study materials</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {studentData.exams_preparing_for?.map((exam: string, index: number) => (
-                <Card
-                  key={index}
-                  className={`border border-white/5 shadow-2xl overflow-hidden group cursor-pointer transition-all hover:scale-[1.02] ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}
-                  onClick={() => navigate(`/student/preparation/${exam.toLowerCase()}`)}
-                >
-                  <CardContent className="p-8">
-                    <div className="flex items-center gap-5 mb-8">
-                      <div className={`p-5 rounded-[2rem] ${isDarkMode ? 'bg-blue-600 shadow-xl shadow-blue-600/20' : 'bg-blue-600 text-white'}`}>
-                        <BookOpen className="h-8 w-8 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-2xl tracking-tight">{exam}</h4>
-                        <p className={`text-[10px] uppercase tracking-widest font-black ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>Official Portal</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 mb-8">
-                      <div className="flex items-center gap-3 text-sm font-medium text-gray-400">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Interactive Mock Tests
-                      </div>
-                      <div className="flex items-center gap-3 text-sm font-medium text-gray-400">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                        AI Performance Analysis
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-blue-400 font-bold text-sm uppercase tracking-wider group-hover:gap-4 transition-all">
-                      Enter Portal <ChevronRight className="h-5 w-5" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
+      case 'quiz':
+        return <div className="slide-in-up"><StudentQuiz studentData={studentData} isDarkMode={isDarkMode} /></div>;
       case 'homework':
         return <div className="slide-in-up"><StudentHomework /></div>;
       case 'marks':
