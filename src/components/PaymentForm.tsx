@@ -94,10 +94,17 @@ const PaymentForm = ({
 
       if (fetchError) throw fetchError;
 
-      const newPaidAmount = (currentFees?.paid_amount || 0) + amount;
-      const totalFees = currentFees?.total_fees || 0;
+      const totalFees = Number(currentFees?.total_fees || 0);
+      const currentPaid = Number(currentFees?.paid_amount || 0);
+      const newPaidAmount = Math.min(totalFees, Math.max(0, currentPaid + amount));
       const newPendingAmount = Math.max(0, totalFees - newPaidAmount);
-      const newStatus = newPaidAmount >= totalFees ? 'paid' : (newPaidAmount > 0 ? 'partial' : 'pending');
+      const newStatus = totalFees <= 0
+        ? 'not_set'
+        : newPaidAmount >= totalFees
+          ? 'paid'
+          : newPaidAmount > 0
+            ? 'partial'
+            : 'pending';
 
       const { error: updateError } = await supabase
         .from('student_fees')

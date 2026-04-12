@@ -77,6 +77,17 @@ const FeesManagement = () => {
           ? student.student_fees[0]
           : student.student_fees;
 
+        const totalFees = Number(studentFees?.total_fees || 0);
+        const paidAmount = Math.min(totalFees, Math.max(0, Number(studentFees?.paid_amount || 0)));
+        const pendingAmount = Math.max(0, totalFees - paidAmount);
+        const paymentStatus = totalFees <= 0
+          ? 'not_set'
+          : paidAmount >= totalFees
+            ? 'paid'
+            : paidAmount > 0
+              ? 'partial'
+              : 'pending';
+
 
 
         return {
@@ -85,10 +96,10 @@ const FeesManagement = () => {
           class: student.class || 'Not specified',
           contact_number: student.contact_number || 'Not provided',
           created_at: student.created_at,
-          total_fees: studentFees?.total_fees || 0,
-          paid_amount: studentFees?.paid_amount || 0,
-          pending_amount: studentFees?.pending_amount || 0,
-          payment_status: studentFees?.payment_status || 'not_set',
+          total_fees: totalFees,
+          paid_amount: paidAmount,
+          pending_amount: pendingAmount,
+          payment_status: paymentStatus,
           paid_date: studentFees?.paid_date || null,
           fee_id: studentFees?.id,
           fee_breakdown: studentFees?.fee_breakdown || null

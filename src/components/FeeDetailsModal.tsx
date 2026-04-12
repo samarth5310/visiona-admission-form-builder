@@ -101,6 +101,16 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
     try {
       setLoading(true);
       const grandTotal = calculateGrandTotal();
+      const currentPaid = Number(student.paid_amount || 0);
+      const normalizedPaid = Math.min(Math.max(0, currentPaid), grandTotal);
+      const normalizedPending = Math.max(0, grandTotal - normalizedPaid);
+      const normalizedStatus = grandTotal <= 0
+        ? 'not_set'
+        : normalizedPaid >= grandTotal
+          ? 'paid'
+          : normalizedPaid > 0
+            ? 'partial'
+            : 'pending';
 
       const { error } = await supabase
         .from('student_fees')
@@ -108,11 +118,9 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
           application_id: student.id,
           total_fees: grandTotal,
           fee_breakdown: feeBreakdown as any,
-          paid_amount: student.paid_amount || 0,
-          pending_amount: grandTotal - (student.paid_amount || 0),
-          payment_status: (student.paid_amount || 0) > 0 ?
-            ((student.paid_amount || 0) >= grandTotal ? 'paid' : 'partial') :
-            'pending'
+          paid_amount: normalizedPaid,
+          pending_amount: normalizedPending,
+          payment_status: normalizedStatus
         }, { onConflict: 'application_id' });
 
       if (error) throw error;

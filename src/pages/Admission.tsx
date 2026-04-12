@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Download, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import PDFPreview from "@/components/PDFPreview";
 
 const MAX_FILE_SIZE = 50 * 1024; // 50KB in bytes
 
@@ -213,34 +214,6 @@ const Admission = () => {
       });
     }
   }
-
-  const downloadPDF = async () => {
-    try {
-      const formData = form.getValues();
-
-      if (!formData.fullName.trim()) {
-        toast({
-          title: "Missing Information",
-          description: "Please fill in at least the student's full name before downloading PDF.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "PDF Download",
-        description: "Use the Preview PDF button to view and download your application form.",
-      });
-
-    } catch (error) {
-      console.error('PDF download error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to prepare PDF download. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const createSafeObjectURL = (file: any) => {
     if (file && file instanceof File && file.size > 0) {
@@ -1018,16 +991,7 @@ const Admission = () => {
 
                 {/* Submit Button */}
                 <div className="flex flex-col sm:flex-row justify-center gap-4 pb-8">
-                  <Button
-                    type="button"
-                    onClick={downloadPDF}
-                    variant="outline"
-                    size="lg"
-                    className={`px-8 py-3 text-base font-semibold w-full sm:w-auto ${isDarkMode ? 'bg-gray-700 text-white border-gray-600 hover:bg-gray-600' : 'bg-white text-gray-600 border-gray-600 hover:bg-gray-50'}`}
-                  >
-                    <Download className="mr-2 h-5 w-5" />
-                    Download PDF
-                  </Button>
+                  <PDFPreview formData={form.getValues()} />
                   <Button
                     type="submit"
                     size="lg"

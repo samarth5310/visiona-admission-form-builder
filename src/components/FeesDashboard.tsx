@@ -98,9 +98,13 @@ const FeesDashboard = () => {
       studentsData.forEach(student => {
         const fees = Array.isArray(student.student_fees) ? student.student_fees[0] : student.student_fees;
         if (fees) {
-          totalFeesCollected += fees.paid_amount || 0;
-          pendingAmount += fees.pending_amount || 0;
-          totalFees += fees.total_fees || 0;
+          const studentTotalFees = Number(fees.total_fees || 0);
+          const studentPaidAmount = Math.min(studentTotalFees, Math.max(0, Number(fees.paid_amount || 0)));
+          const studentPendingAmount = Math.max(0, studentTotalFees - studentPaidAmount);
+
+          totalFeesCollected += studentPaidAmount;
+          pendingAmount += studentPendingAmount;
+          totalFees += studentTotalFees;
         }
       });
 

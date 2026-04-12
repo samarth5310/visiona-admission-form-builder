@@ -113,8 +113,8 @@ const AdminQuizManagement = () => {
     };
 
     const filteredStudents = students.filter(s =>
-        s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.class?.toLowerCase().includes(searchQuery.toLowerCase())
+        (s.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (s.class || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (

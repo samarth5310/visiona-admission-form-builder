@@ -38,9 +38,10 @@ const StudentSelector = ({ isOpen, onClose, onSelectStudent }: StudentSelectorPr
   }, [isOpen]);
 
   useEffect(() => {
+    const query = searchTerm.toLowerCase();
     const filtered = students.filter(student =>
-      student.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.class.toLowerCase().includes(searchTerm.toLowerCase())
+      (student.full_name || '').toLowerCase().includes(query) ||
+      (student.class || '').toLowerCase().includes(query)
     );
     setFilteredStudents(filtered);
   }, [searchTerm, students]);

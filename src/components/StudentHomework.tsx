@@ -99,7 +99,16 @@ const StudentHomework = () => {
     }
   };
 
-  const handleOpenLink = (link: string) => {
+  const handleOpenLink = (link: string | null | undefined) => {
+    if (!link || typeof link !== 'string') {
+      toast({
+        title: "Invalid Link",
+        description: "This homework does not have a valid Google Drive link.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Extract file ID from Google Drive link if needed
     let finalLink = link;
 

@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Menu, BookOpen, CreditCard, GraduationCap, Search, Bell, Moon, Sun, LogOut, Home, DollarSign, BarChart3, Calendar } from 'lucide-react';
+import { BookOpen, CreditCard, GraduationCap, Search, Moon, Sun, Home, DollarSign, BarChart3, CheckCircle2, LogOut } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import StudentHomework from '@/components/StudentHomework';
 import StudentMarks from '@/components/StudentMarks';
 import StudentFeeDetails from '@/components/StudentFeeDetails';
 import StudentQuiz from '@/components/StudentQuiz';
-import StudentSidebar from '@/components/StudentSidebar';
 import StudentLeaderboard from '@/components/StudentLeaderboard';
-import MobileBottomNav from '@/components/MobileBottomNav';
+import FloatingNavbar from '@/components/FloatingNavbar';
 import { StudentNotificationBell } from '@/components/notifications/StudentNotificationBell';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -21,7 +21,6 @@ const StudentDashboard = () => {
   const [studentData, setStudentData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode to match landing page
   const { notifications } = useNotifications();
 
@@ -90,14 +89,6 @@ const StudentDashboard = () => {
 
   const handleBackToHome = () => {
     navigate('/', { replace: true });
-  };
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setSidebarOpen(false);
   };
 
   const toggleTheme = () => {
@@ -245,22 +236,25 @@ const StudentDashboard = () => {
     }
   };
 
+  const studentNavItems = [
+    { id: 'profile', label: 'Dashboard', icon: Home },
+    { id: 'fees', label: 'Payment Info', icon: CreditCard },
+    { id: 'quiz', label: 'Quizzes', icon: CheckCircle2 },
+    { id: 'homework', label: 'Homework', icon: BookOpen },
+    { id: 'marks', label: 'Results', icon: GraduationCap },
+    { id: 'logout', label: 'Logout', icon: LogOut },
+  ];
+
+  const handleStudentNavChange = (id: string) => {
+    if (id === 'logout') {
+      handleLogout();
+      return;
+    }
+    setActiveTab(id);
+  };
+
   return (
     <div className={`min-h-screen flex transition-colors duration-300 ${isDarkMode ? 'dark bg-[#020617] text-white' : 'bg-gray-100 text-gray-900'}`}>
-      {/* Sidebar - Hidden on mobile */}
-      <div className="hidden md:block">
-        <StudentSidebar
-          isOpen={sidebarOpen}
-          onClose={closeSidebar}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          onLogout={handleLogout}
-          onBackToHome={handleBackToHome}
-          isDarkMode={isDarkMode}
-          studentData={studentData}
-        />
-      </div>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
@@ -305,7 +299,7 @@ const StudentDashboard = () => {
         </header>
 
         {/* Scrollable Content Area - Add padding bottom for mobile nav */}
-        <main className="flex-1 overflow-y-auto p-6 pb-28 md:pb-6">
+        <main className="flex-1 overflow-y-auto p-6 pb-36">
           {/* Welcome Banner */}
           {activeTab === 'profile' && (
             <div className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white shadow-2xl">
@@ -328,15 +322,26 @@ const StudentDashboard = () => {
             </div>
           )}
 
-          {renderActiveContent()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+              {renderActiveContent()}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav
-        type="student"
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onLogout={handleLogout}
+
+      <FloatingNavbar
+        role="student"
+        items={studentNavItems}
+        activeId={activeTab}
+        isDarkMode={isDarkMode}
+        onChange={handleStudentNavChange}
       />
     </div>
   );

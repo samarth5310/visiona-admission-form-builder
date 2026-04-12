@@ -401,17 +401,17 @@ const AdminHomework = () => {
                             <div key={student.id} className="flex items-center space-x-2">
                               <Checkbox
                                 id={student.id}
-                                checked={formData.assigned_to_students.includes(student.id)}
+                                checked={Array.isArray(formData.assigned_to_students) && formData.assigned_to_students.includes(student.id)}
                                 onCheckedChange={(checked) => {
                                   if (checked) {
                                     setFormData({
                                       ...formData,
-                                      assigned_to_students: [...formData.assigned_to_students, student.id]
+                                      assigned_to_students: [...(Array.isArray(formData.assigned_to_students) ? formData.assigned_to_students : []), student.id]
                                     });
                                   } else {
                                     setFormData({
                                       ...formData,
-                                      assigned_to_students: formData.assigned_to_students.filter(id => id !== student.id)
+                                      assigned_to_students: (Array.isArray(formData.assigned_to_students) ? formData.assigned_to_students : []).filter(id => id !== student.id)
                                     });
                                   }
                                 }}

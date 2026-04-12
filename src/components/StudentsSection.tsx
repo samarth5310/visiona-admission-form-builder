@@ -44,10 +44,11 @@ const StudentsSection = () => {
   }, []);
 
   useEffect(() => {
+    const query = searchTerm.toLowerCase();
     const filtered = students.filter(student =>
-      student.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.admission_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.class.toLowerCase().includes(searchTerm.toLowerCase())
+      (student.full_name || '').toLowerCase().includes(query) ||
+      (student.admission_number || '').toLowerCase().includes(query) ||
+      (student.class || '').toLowerCase().includes(query)
     );
     setFilteredStudents(filtered);
     setCurrentPage(1); // Reset to first page when filtering

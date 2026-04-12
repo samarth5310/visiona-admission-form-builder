@@ -1,25 +1,17 @@
 import React, { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, Search, Bell, Moon, Sun } from 'lucide-react';
+import { Search, Moon, Sun, Home, FileText, Users, BookOpen, GraduationCap, CreditCard, Upload, CheckCircle2, LogOut } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import AdminSidebar from '@/components/AdminSidebar';
-import MobileBottomNav from '@/components/MobileBottomNav';
+import FloatingNavbar from '@/components/FloatingNavbar';
 import { AdminNotificationDialog } from '@/components/notifications/AdminNotificationDialog';
 
 const AdminLayout = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, logout } = useAuth();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(true);
-
-    const toggleSidebar = () => {
-        setSidebarOpen(!sidebarOpen);
-    };
-
-    const closeSidebar = () => {
-        setSidebarOpen(false);
-    };
 
     const toggleTheme = () => {
         setIsDarkMode(!isDarkMode);
@@ -30,18 +22,34 @@ const AdminLayout = () => {
         navigate('/login');
     };
 
+    const adminNavItems = [
+        { id: 'home', label: 'Home', path: '/admin-dashboard', icon: Home },
+        { id: 'admission', label: 'Admission', path: '/admission', icon: FileText },
+        { id: 'students', label: 'Students', path: '/students', icon: Users },
+        { id: 'homework', label: 'Homework', path: '/homework', icon: BookOpen },
+        { id: 'marks', label: 'Marks', path: '/marks', icon: GraduationCap },
+        { id: 'fees', label: 'Fees', path: '/fees', icon: CreditCard },
+        { id: 'documents', label: 'Documents', path: '/documents', icon: Upload },
+        { id: 'quizzes', label: 'Quizzes', path: '/quizzes', icon: CheckCircle2 },
+        { id: 'logout', label: 'Logout', icon: LogOut },
+    ];
+
+    const activeAdminId = adminNavItems.find((item) => item.path === location.pathname)?.id || 'home';
+
+    const handleAdminNavChange = (id: string) => {
+        if (id === 'logout') {
+            handleLogout();
+            return;
+        }
+
+        const target = adminNavItems.find((item) => item.id === id);
+        if (target?.path) {
+            navigate(target.path);
+        }
+    };
+
     return (
         <div className={`fixed inset-0 overflow-hidden flex transition-colors duration-300 ${isDarkMode ? 'dark bg-[#020617] text-white' : 'bg-gray-100 text-gray-900'}`}>
-            {/* Sidebar - Hidden on mobile */}
-            <div className="hidden md:block">
-                <AdminSidebar
-                    isOpen={sidebarOpen}
-                    onClose={closeSidebar}
-                    onLogout={handleLogout}
-                    isDarkMode={isDarkMode}
-                />
-            </div>
-
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full overflow-hidden">
                 {/* Top Header */}
@@ -88,15 +96,27 @@ const AdminLayout = () => {
                 </header>
 
                 {/* Scrollable Content Area - Add padding bottom for mobile nav */}
-                <main className="flex-1 overflow-y-auto pb-28 md:pb-6">
-                    <Outlet context={{ isDarkMode }} />
+                <main className="flex-1 overflow-y-auto pb-36">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={location.pathname}
+                            initial={{ opacity: 0, y: 14 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                        >
+                            <Outlet context={{ isDarkMode }} />
+                        </motion.div>
+                    </AnimatePresence>
                 </main>
             </div>
 
-            {/* Mobile Bottom Navigation */}
-            <MobileBottomNav
-                type="admin"
-                onLogout={handleLogout}
+            <FloatingNavbar
+                role="admin"
+                items={adminNavItems}
+                activeId={activeAdminId}
+                isDarkMode={isDarkMode}
+                onChange={handleAdminNavChange}
             />
         </div>
     );

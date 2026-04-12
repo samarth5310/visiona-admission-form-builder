@@ -264,10 +264,11 @@ const MarksManagement = () => {
 
   const filteredMarks = marks.filter(mark => {
     const student = students.find(s => s.id === mark.student_id);
+    const query = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm ||
-      (student && student.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      mark.test_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mark.subject.toLowerCase().includes(searchTerm.toLowerCase());
+      ((student?.full_name || '').toLowerCase().includes(query)) ||
+      ((mark.test_name || '').toLowerCase().includes(query)) ||
+      ((mark.subject || '').toLowerCase().includes(query));
 
     const matchesSubject = filterSubject === 'all' || mark.subject === filterSubject;
     const matchesClass = filterClass === 'all' || (student && student.class === filterClass);
