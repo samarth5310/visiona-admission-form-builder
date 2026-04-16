@@ -513,7 +513,7 @@ const PDFPreview: React.FC<PDFPreviewProps> = ({ formData }) => {
           Preview PDF
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-5xl max-h-[88svh] sm:max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             Application Form Preview

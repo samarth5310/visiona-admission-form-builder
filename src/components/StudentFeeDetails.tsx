@@ -25,6 +25,9 @@ interface PaymentHistory {
   payment_amount: number;
   payment_date: string;
   payment_method: string;
+  verification_status: 'pending_verification' | 'verified' | 'rejected';
+  submitted_utr: string | null;
+  transaction_id: string | null;
   receipt_number: string | null;
   notes: string | null;
 }
@@ -219,25 +222,36 @@ const StudentFeeDetails = () => {
   }
 
   const displayValues = getDisplayValues(feeDetails);
+  const pendingVerificationCount = paymentHistory.filter(p => p.verification_status === 'pending_verification').length;
 
   const handleUPISuccess = async (transactionId: string) => {
     try {
-      const studentData = JSON.parse(safeStorage.getItem('visiona_student_data') || '{}');
+      const utr = transactionId.trim();
+      if (utr.length < 8) {
+        toast({
+          title: "Invalid UTR",
+          description: "Please enter a valid UTR/transaction reference.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // Update the main fee record for visibility (Admin will verify)
-      const { error } = await supabase.from('fee_payments').insert({
+      const { error } = await (supabase.from('fee_payments') as any).insert({
         student_fees_id: feeDetails!.id,
         payment_amount: displayValues.pendingAmount,
         payment_method: 'upi',
-        transaction_id: transactionId,
-        notes: `UPI Payment by student. UTR: ${transactionId}`
+        transaction_id: utr,
+        submitted_utr: utr,
+        verification_status: 'pending_verification',
+        payment_date: new Date().toISOString().split('T')[0],
+        notes: `UPI payment submitted by student. Awaiting office verification. UTR: ${utr}`
       });
 
       if (error) throw error;
 
       toast({
-        title: "Payment Submitted",
-        description: "Your payment reference has been recorded. Admin will verify and update your status soon.",
+        title: "Payment Sent To Office",
+        description: "Your UTR was submitted successfully. Verification usually completes within 6 hours.",
       });
 
       setIsUPIOpen(false);
@@ -289,6 +303,22 @@ const StudentFeeDetails = () => {
           </Card>
         ))}
       </div>
+
+      {pendingVerificationCount > 0 && (
+        <Card className="border-amber-200 bg-amber-50/80 dark:bg-amber-900/20 dark:border-amber-700/40">
+          <CardContent className="p-4 flex items-start gap-3">
+            <Clock className="h-5 w-5 text-amber-600 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-900 dark:text-amber-100">
+                {pendingVerificationCount} payment{pendingVerificationCount > 1 ? 's are' : ' is'} under verification
+              </p>
+              <p className="text-sm text-amber-800/80 dark:text-amber-200/80">
+                Payment sent to office. Verification is usually completed within 6 hours.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
@@ -352,12 +382,31 @@ const StudentFeeDetails = () => {
                       <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                         {new Date(payment.payment_date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
                       </span>
-                      <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0 text-[10px] font-black uppercase">Confirmed</Badge>
+                      <Badge
+                        className={`border-0 text-[10px] font-black uppercase ${
+                          payment.verification_status === 'verified'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : payment.verification_status === 'rejected'
+                              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        }`}
+                      >
+                        {payment.verification_status === 'verified'
+                          ? 'Confirmed'
+                          : payment.verification_status === 'rejected'
+                            ? 'Rejected'
+                            : 'Pending'}
+                      </Badge>
                     </div>
                     <div className="flex items-end justify-between">
                       <h4 className="text-2xl font-black text-gray-900 dark:text-white">₹{payment.payment_amount.toLocaleString()}</h4>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{payment.payment_method}</span>
                     </div>
+                    {(payment.submitted_utr || payment.transaction_id) && (
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        UTR: {payment.submitted_utr || payment.transaction_id}
+                      </p>
+                    )}
                   </div>
                 ))
               ) : (

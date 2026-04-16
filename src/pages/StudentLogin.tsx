@@ -5,12 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Phone, Calendar, ArrowLeft, GraduationCap } from 'lucide-react';
+import { Phone, ArrowLeft, GraduationCap } from 'lucide-react';
 import { safeStorage } from '@/utils/safeStorage';
 
 const StudentLogin = () => {
   const [mobileNumber, setMobileNumber] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -29,18 +28,12 @@ const StudentLogin = () => {
     return mobileRegex.test(mobile);
   };
 
-  const formatDateForComparison = (dateString: string) => {
-    // Convert input date (YYYY-MM-DD) to match database format
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!mobileNumber.trim() || !dateOfBirth.trim()) {
-      setError('Please fill in all fields');
+    if (!mobileNumber.trim()) {
+      setError('Please enter mobile number');
       return;
     }
 
@@ -52,21 +45,20 @@ const StudentLogin = () => {
     setIsLoggingIn(true);
 
     try {
-      // Format the date for comparison
-      const formattedDOB = formatDateForComparison(dateOfBirth);
-
-      // Check if student exists with matching mobile number and DOB
-      const { data: studentData, error: fetchError } = await supabase
+      // Check if student exists with matching primary or secondary mobile number.
+      const { data: studentRows, error: fetchError } = await supabase
         .from('applications')
         .select('*')
-        .eq('contact_number', mobileNumber)
-        .eq('date_of_birth', formattedDOB)
-        .single();
+        .or(`contact_number.eq.${mobileNumber},second_contact_number.eq.${mobileNumber}`)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (fetchError || !studentData) {
-        setError('Invalid mobile number or date of birth. Please check your credentials.');
+      if (fetchError || !studentRows || studentRows.length === 0) {
+        setError('Invalid mobile number. Please check your credentials.');
         return;
       }
+
+      const studentData = studentRows[0];
 
       // Store student data in localStorage
       safeStorage.setItem('visiona_student_data', JSON.stringify(studentData));
@@ -112,30 +104,12 @@ const StudentLogin = () => {
                 type="tel"
                 placeholder="Enter registered mobile"
                 value={mobileNumber}
-                onChange={(e) => setMobileNumber(e.target.value)}
+                onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
                 className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 h-11 focus:border-green-500/50 focus:ring-green-500/20 transition-all rounded-xl"
                 required
                 maxLength={10}
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dob" className="text-gray-300 text-sm font-medium ml-1">Date of Birth</Label>
-            <div className="relative group">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-green-500 transition-colors" />
-              <Input
-                id="dob"
-                type="date"
-                value={dateOfBirth}
-                onChange={(e) => setDateOfBirth(e.target.value)}
-                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600 h-11 focus:border-green-500/50 focus:ring-green-500/20 transition-all rounded-xl [color-scheme:dark]"
-                required
-              />
-            </div>
-            <p className="text-xs text-gray-500 ml-1">
-              Use the DOB provided during admission
-            </p>
           </div>
 
           {error && (
@@ -148,7 +122,7 @@ const StudentLogin = () => {
           <Button
             type="submit"
             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white py-6 rounded-xl font-semibold shadow-[0_0_20px_-5px_rgba(16,185,129,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98]"
-            disabled={isLoggingIn || !mobileNumber.trim() || !dateOfBirth.trim()}
+            disabled={isLoggingIn || !mobileNumber.trim()}
           >
             {isLoggingIn ? (
               <div className="flex items-center gap-2">

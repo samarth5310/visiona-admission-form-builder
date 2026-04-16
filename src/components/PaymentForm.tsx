@@ -70,15 +70,21 @@ const PaymentForm = ({
 
     try {
       setLoading(true);
+      const { data: authData } = await supabase.auth.getSession();
+      const verifierId = authData?.session?.user?.id || null;
 
       // Insert the payment record
-      const { error: paymentError } = await supabase
-        .from('fee_payments')
+      const { error: paymentError } = await (supabase
+        .from('fee_payments') as any)
         .insert({
           student_fees_id: studentFeesId,
           payment_amount: amount,
           payment_method: payment.method,
           transaction_id: payment.transaction_id || null,
+          submitted_utr: payment.method === 'upi' ? (payment.transaction_id || null) : null,
+          verification_status: 'verified',
+          verified_at: new Date().toISOString(),
+          verified_by: verifierId,
           receipt_number: payment.receipt_number || null,
           notes: payment.notes || null
         });
@@ -187,7 +193,7 @@ const PaymentForm = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[88svh] overflow-y-auto rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {paymentSuccess ? 'Payment Successful!' : `Add Payment - ${studentName}`}

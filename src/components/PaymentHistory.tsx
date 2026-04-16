@@ -23,6 +23,10 @@ interface Payment {
   payment_date: string;
   payment_method: string;
   transaction_id: string | null;
+  submitted_utr: string | null;
+  verification_status: 'pending_verification' | 'verified' | 'rejected';
+  verified_at: string | null;
+  verification_notes: string | null;
   receipt_number: string | null;
   notes: string | null;
   created_at: string;
@@ -46,7 +50,7 @@ interface PaymentHistoryProps {
   onUpdate: () => void;
 }
 
-const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistoryProps) => {
+const PaymentHistory = ({ studentFeesId, onUpdate }: PaymentHistoryProps) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -71,7 +75,7 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
         throw error;
       }
 
-      setPayments(data || []);
+      setPayments((data || []) as Payment[]);
     } catch (error) {
       console.error('Error fetching payments:', error);
       toast({
@@ -84,7 +88,96 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
     }
   };
 
-  const handleDeletePayment = async (paymentId: string, paymentAmount: number) => {
+  const recalculateStudentFeeSummary = async () => {
+    const { data: feeRow, error: feeError } = await supabase
+      .from('student_fees')
+      .select('id, total_fees')
+      .eq('id', studentFeesId)
+      .single();
+
+    if (feeError || !feeRow) {
+      throw feeError || new Error('Failed to read student fee data');
+    }
+
+    const { data: verifiedPayments, error: verifiedError } = await (supabase
+      .from('fee_payments') as any)
+      .select('payment_amount')
+      .eq('student_fees_id', studentFeesId)
+      .eq('verification_status', 'verified');
+
+    if (verifiedError) {
+      throw verifiedError;
+    }
+
+    const totalFees = Number(feeRow.total_fees || 0);
+    const verifiedPaid = (verifiedPayments || []).reduce((sum: number, p: any) => sum + Number(p.payment_amount || 0), 0);
+    const paidAmount = Math.min(totalFees, Math.max(0, verifiedPaid));
+    const pendingAmount = Math.max(0, totalFees - paidAmount);
+    const paymentStatus = totalFees <= 0
+      ? 'not_set'
+      : paidAmount >= totalFees
+        ? 'paid'
+        : paidAmount > 0
+          ? 'partial'
+          : 'pending';
+
+    const { error: updateError } = await supabase
+      .from('student_fees')
+      .update({
+        paid_amount: paidAmount,
+        pending_amount: pendingAmount,
+        payment_status: paymentStatus,
+        paid_date: paymentStatus === 'paid' ? new Date().toISOString().split('T')[0] : null,
+      })
+      .eq('id', studentFeesId);
+
+    if (updateError) {
+      throw updateError;
+    }
+  };
+
+  const handleVerifyPayment = async (paymentId: string, status: 'verified' | 'rejected') => {
+    try {
+      const { data: authData } = await supabase.auth.getSession();
+      const verifierId = authData?.session?.user?.id || null;
+
+      const { error } = await (supabase.from('fee_payments') as any)
+        .update({
+          verification_status: status,
+          verified_at: new Date().toISOString(),
+          verified_by: verifierId,
+          verification_notes: status === 'verified'
+            ? 'Verified by admin after manual check'
+            : 'Rejected by admin after manual check',
+        })
+        .eq('id', paymentId);
+
+      if (error) {
+        throw error;
+      }
+
+      await recalculateStudentFeeSummary();
+
+      toast({
+        title: status === 'verified' ? 'Payment Approved' : 'Payment Rejected',
+        description: status === 'verified'
+          ? 'Marked as paid and included in fee summary.'
+          : 'Marked as not paid and excluded from fee summary.',
+      });
+
+      await fetchPayments();
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating payment verification:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update payment verification status.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
     try {
       const { error } = await supabase
         .from('fee_payments')
@@ -95,42 +188,14 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
         throw error;
       }
 
-      // Update student_fees to reflect the deleted payment
-      const { data: currentFees, error: fetchError } = await supabase
-        .from('student_fees')
-        .select('total_fees, paid_amount')
-        .eq('id', studentFeesId)
-        .single();
-
-      if (!fetchError && currentFees) {
-        const totalFees = Number(currentFees.total_fees || 0);
-        const currentPaid = Number(currentFees.paid_amount || 0);
-        const newPaidAmount = Math.min(totalFees, Math.max(0, currentPaid - paymentAmount));
-        const newPendingAmount = Math.max(0, totalFees - newPaidAmount);
-        const newStatus = totalFees <= 0
-          ? 'not_set'
-          : newPaidAmount >= totalFees
-            ? 'paid'
-            : newPaidAmount > 0
-              ? 'partial'
-              : 'pending';
-
-        await supabase
-          .from('student_fees')
-          .update({
-            paid_amount: newPaidAmount,
-            pending_amount: newPendingAmount,
-            payment_status: newStatus
-          })
-          .eq('id', studentFeesId);
-      }
+      await recalculateStudentFeeSummary();
 
       toast({
         title: "Success",
         description: "Payment deleted successfully.",
       });
 
-      fetchPayments();
+      await fetchPayments();
       onUpdate();
     } catch (error) {
       console.error('Error deleting payment:', error);
@@ -147,7 +212,7 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -155,7 +220,7 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -167,7 +232,7 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
       card: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
       cheque: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
       adjustment: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-      other: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+      other: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
     };
 
     return (
@@ -175,6 +240,16 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
         {method.replace('_', ' ').toUpperCase()}
       </Badge>
     );
+  };
+
+  const getVerificationBadge = (status: Payment['verification_status']) => {
+    if (status === 'verified') {
+      return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Verified</Badge>;
+    }
+    if (status === 'rejected') {
+      return <Badge className="bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">Rejected</Badge>;
+    }
+    return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Pending Verification</Badge>;
   };
 
   if (loading) {
@@ -213,25 +288,54 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
             {payments.map((payment) => (
               <div
                 key={payment.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                className="p-4 rounded-lg bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {formatDate(payment.payment_date)}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{formatDate(payment.payment_date)}</div>
+                    {getMethodBadge(payment.payment_method)}
+                    {getVerificationBadge(payment.verification_status)}
                   </div>
-                  {getMethodBadge(payment.payment_method)}
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="font-bold text-lg text-emerald-600 dark:text-emerald-400">
+                  <div className="font-bold text-lg text-emerald-600 dark:text-emerald-400">
                     {formatCurrency(payment.payment_amount)}
-                  </span>
+                  </div>
+                </div>
+
+                {(payment.submitted_utr || payment.transaction_id) && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    UTR: {payment.submitted_utr || payment.transaction_id}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  {payment.verification_status === 'pending_verification' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20"
+                        onClick={() => handleVerifyPayment(payment.id, 'verified')}
+                      >
+                        Mark Paid
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-900/20"
+                        onClick={() => handleVerifyPayment(payment.id, 'rejected')}
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  )}
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-lg rounded-2xl">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Payment</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -242,7 +346,7 @@ const PaymentHistory = ({ studentFeesId, studentData, onUpdate }: PaymentHistory
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => handleDeletePayment(payment.id, payment.payment_amount)}
+                          onClick={() => handleDeletePayment(payment.id)}
                           className="bg-red-600 hover:bg-red-700"
                         >
                           Delete

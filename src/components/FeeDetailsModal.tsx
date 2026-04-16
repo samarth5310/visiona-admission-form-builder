@@ -140,6 +140,8 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
     try {
       setLoading(true);
       const remainingAmount = Math.max(0, student.total_fees - student.paid_amount);
+      const { data: authData } = await supabase.auth.getSession();
+      const verifierId = authData?.session?.user?.id || null;
 
       if (remainingAmount <= 0) {
         toast({
@@ -150,12 +152,15 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
       }
 
       // Add payment record
-      const { error: paymentError } = await supabase
-        .from('fee_payments')
+      const { error: paymentError } = await (supabase
+        .from('fee_payments') as any)
         .insert({
           student_fees_id: student.fee_id,
           payment_amount: remainingAmount,
           payment_method: 'adjustment',
+          verification_status: 'verified',
+          verified_at: new Date().toISOString(),
+          verified_by: verifierId,
           notes: 'Marked as fully paid by admin'
         });
 
@@ -222,8 +227,8 @@ const FeeDetailsModal = ({ student, isOpen, onClose, onUpdate }: FeeDetailsModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 sm:p-6 rounded-none sm:rounded-2xl border-none sm:border overflow-hidden bg-white dark:bg-[#0B1121] [&>button]:top-[calc(env(safe-area-inset-top)+1rem)] sm:[&>button]:top-4">
-        <DialogHeader className="px-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] sm:p-0">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-6xl max-h-[88svh] sm:max-h-[90vh] flex flex-col p-0 sm:p-6 rounded-2xl border border-white/10 overflow-hidden bg-white dark:bg-[#0B1121] [&>button]:top-4">
+        <DialogHeader className="px-6 pt-6 sm:p-0">
           <DialogTitle>Fee Management - {student.full_name}</DialogTitle>
           <DialogDescription className="sr-only">
             Manage fees and view payment history for {student.full_name}

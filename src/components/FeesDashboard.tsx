@@ -36,6 +36,7 @@ const FeesDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState({ upi_id: '', merchant_name: '', address: '', phone: '' });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [pendingVerifications, setPendingVerifications] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -124,6 +125,7 @@ const FeesDashboard = () => {
           payment_method,
           student_fees (applications (full_name))
         `)
+        .eq('verification_status', 'verified')
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -136,6 +138,13 @@ const FeesDashboard = () => {
         payment_date: p.payment_date,
         payment_method: p.payment_method
       })));
+
+      const { count } = await (supabase
+        .from('fee_payments') as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('verification_status', 'pending_verification');
+
+      setPendingVerifications(count || 0);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -163,16 +172,25 @@ const FeesDashboard = () => {
             Fees Ecosystem
           </h1>
           <p className="text-gray-500 text-sm">Real-time financial intelligence</p>
+          {pendingVerifications > 0 && (
+            <p className="text-amber-600 dark:text-amber-400 text-xs font-semibold mt-1">
+              {pendingVerifications} payment{pendingVerifications > 1 ? 's' : ''} awaiting office verification
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-end w-full sm:w-auto">
           <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2 border-emerald-200 hover:bg-emerald-50 text-emerald-700">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-emerald-200 bg-transparent text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-200"
+              >
                 <Settings className="h-4 w-4" /> Institutions Settings
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[88svh] overflow-y-auto rounded-2xl p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle>Institution Payment Settings</DialogTitle>
                 <DialogDescription>
@@ -204,7 +222,7 @@ const FeesDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {[
           { label: 'Total Revenue', value: metrics.totalFeesCollected, icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Outstanding', value: metrics.pendingAmount, icon: CreditCard, color: 'text-rose-600', bg: 'bg-rose-50' },
@@ -213,14 +231,14 @@ const FeesDashboard = () => {
         ].map((stat, i) => (
           <Card key={i} className="border-0 shadow-sm overflow-hidden group hover:shadow-md transition-all">
             <CardContent className="p-0">
-              <div className="flex items-center p-6 gap-4">
-                <div className={`${stat.bg} ${stat.color} p-3 rounded-xl group-hover:scale-110 transition-transform`}>
-                  <stat.icon className="h-6 w-6" />
+              <div className="flex items-center p-3 sm:p-6 gap-2 sm:gap-4">
+                <div className={`${stat.bg} ${stat.color} p-2 sm:p-3 rounded-lg sm:rounded-xl group-hover:scale-110 transition-transform`}>
+                  <stat.icon className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{stat.label}</p>
-                  <h3 className="text-2xl font-black text-gray-900 dark:text-white">
-                    {typeof stat.value === 'number' && stat.label.includes('Revenue') ? formatCurrency(stat.value) : stat.value}
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide sm:tracking-wider leading-tight">{stat.label}</p>
+                  <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white truncate">
+                    {typeof stat.value === 'number' && (stat.label.includes('Revenue') || stat.label === 'Outstanding') ? formatCurrency(stat.value) : stat.value}
                     {stat.suffix ?? ''}
                   </h3>
                 </div>

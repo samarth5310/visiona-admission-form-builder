@@ -597,7 +597,7 @@ const Landing = () => {
                 <DialogTrigger asChild>
                   <button className="hover:text-white transition-colors">Privacy Policy</button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md sm:max-w-2xl bg-[#0B1121] text-white border-gray-800">
+                <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[88svh] overflow-y-auto rounded-2xl p-4 sm:p-6 bg-[#0B1121] text-white border-gray-800">
                   <DialogHeader>
                     <DialogTitle className={`text-xl font-bold ${themeClasses.text}`}>Privacy Policy</DialogTitle>
                     <DialogDescription className="text-gray-400">
@@ -650,7 +650,7 @@ const Landing = () => {
                 <DialogTrigger asChild>
                   <button className="hover:text-white transition-colors">Terms of Service</button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md sm:max-w-2xl bg-[#0B1121] text-white border-gray-800">
+                <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[88svh] overflow-y-auto rounded-2xl p-4 sm:p-6 bg-[#0B1121] text-white border-gray-800">
                   <DialogHeader>
                     <DialogTitle className={`text-xl font-bold ${themeClasses.text}`}>Terms of Service</DialogTitle>
                     <DialogDescription className="text-gray-400">

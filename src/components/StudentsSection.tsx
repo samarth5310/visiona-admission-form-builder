@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Search, Users, Phone, Mail, MapPin, Calendar, GraduationCap, User, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,11 +14,14 @@ import WhatsAppMessaging from './WhatsAppMessaging';
 interface Student {
   id: string;
   admission_number: string;
+  admission_type?: string;
+  residency_type?: 'residential' | 'non_residential' | null;
   full_name: string;
   date_of_birth: string;
   gender: string;
   class: string;
   contact_number: string;
+  second_contact_number?: string;
   email: string;
   father_name: string;
   mother_name: string;
@@ -28,14 +33,51 @@ interface Student {
   student_photo?: string;
 }
 
+type DirectStudentForm = {
+  fullName: string;
+  dateOfBirth: string;
+  mobileNumber: string;
+  secondaryMobileNumber: string;
+  studentClass: string;
+  gender: string;
+  fatherName: string;
+  motherName: string;
+  email: string;
+  city: string;
+  state: string;
+  currentSchool: string;
+};
+
 const StudentsSection = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [standardFilter, setStandardFilter] = useState('all');
+  const [residentialFilter, setResidentialFilter] = useState('all');
+  const [sortFilter, setSortFilter] = useState<'recent' | 'az' | 'za' | 'adm_no'>('recent');
   const [loading, setLoading] = useState(true);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [residencyUpdatingId, setResidencyUpdatingId] = useState<string | null>(null);
+  const [phonePickerStudent, setPhonePickerStudent] = useState<Student | null>(null);
+  const [phonePickerAction, setPhonePickerAction] = useState<'whatsapp' | 'call' | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [addingStudent, setAddingStudent] = useState(false);
+  const [newStudent, setNewStudent] = useState<DirectStudentForm>({
+    fullName: '',
+    dateOfBirth: '',
+    mobileNumber: '',
+    secondaryMobileNumber: '',
+    studentClass: '',
+    gender: 'Male',
+    fatherName: '',
+    motherName: '',
+    email: '',
+    city: '',
+    state: '',
+    currentSchool: ''
+  });
   const [itemsPerPage] = useState(8); // Reduced for better mobile experience
   const { toast } = useToast();
 
@@ -45,14 +87,37 @@ const StudentsSection = () => {
 
   useEffect(() => {
     const query = searchTerm.toLowerCase();
-    const filtered = students.filter(student =>
-      (student.full_name || '').toLowerCase().includes(query) ||
-      (student.admission_number || '').toLowerCase().includes(query) ||
-      (student.class || '').toLowerCase().includes(query)
-    );
-    setFilteredStudents(filtered);
+
+    const filtered = students.filter(student => {
+      const matchesSearch =
+        (student.full_name || '').toLowerCase().includes(query) ||
+        (student.admission_number || '').toLowerCase().includes(query) ||
+        (student.class || '').toLowerCase().includes(query);
+
+      const matchesStandard = standardFilter === 'all' || (student.class || '').toLowerCase() === standardFilter.toLowerCase();
+
+      const isResidential = student.residency_type === 'residential';
+      const isNonResidential = student.residency_type === 'non_residential' || !student.residency_type;
+      const matchesResidential =
+        residentialFilter === 'all' ||
+        (residentialFilter === 'residential' && isResidential) ||
+        (residentialFilter === 'non_residential' && isNonResidential);
+
+      return matchesSearch && matchesStandard && matchesResidential;
+    });
+
+    const sorted = [...filtered].sort((a, b) => {
+      if (sortFilter === 'az') return (a.full_name || '').localeCompare(b.full_name || '');
+      if (sortFilter === 'za') return (b.full_name || '').localeCompare(a.full_name || '');
+      if (sortFilter === 'adm_no') {
+        return (a.admission_number || '').localeCompare(b.admission_number || '', undefined, { numeric: true, sensitivity: 'base' });
+      }
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
+
+    setFilteredStudents(sorted);
     setCurrentPage(1); // Reset to first page when filtering
-  }, [searchTerm, students]);
+  }, [searchTerm, standardFilter, residentialFilter, sortFilter, students]);
 
   const fetchStudents = async () => {
     try {
@@ -111,11 +176,14 @@ const StudentsSection = () => {
         return {
           id: app.id,
           admission_number: app.admission_number || '',
+          admission_type: app.admission_type || '',
+          residency_type: ((app as any).residency_type || 'non_residential') as 'residential' | 'non_residential',
           full_name: app.full_name || '',
           date_of_birth: app.date_of_birth || '',
           gender: app.gender || '',
           class: app.class || '',
           contact_number: app.contact_number || '',
+          second_contact_number: (app as any).second_contact_number || '',
           email: app.email || '',
           father_name: app.father_name || '',
           mother_name: app.mother_name || '',
@@ -194,24 +262,236 @@ const StudentsSection = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category.toLowerCase()) {
-      case 'general': return 'bg-blue-100 text-blue-800';
-      case 'obc': return 'bg-yellow-100 text-yellow-800';
-      case 'sc': return 'bg-green-100 text-green-800';
-      case 'st': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getStudentPhones = (student: Student) => {
+    const values = [student.contact_number, student.second_contact_number]
+      .flatMap((value) => String(value || '').split(/[;,/]/))
+      .map((value) => value.trim().replace(/\D/g, ''))
+      .filter((value) => /^[6-9]\d{9}$/.test(value));
+
+    return [...new Set(values)];
   };
 
-  const handleWhatsAppMessage = (student: Student) => {
-    setSelectedStudent(student);
-    setShowWhatsAppModal(true);
+  const openPhonePicker = (student: Student, action: 'whatsapp' | 'call') => {
+    const phones = getStudentPhones(student);
+
+    if (phones.length <= 1) {
+      if (action === 'whatsapp') {
+        setSelectedStudent({ ...student, contact_number: phones[0] || student.contact_number });
+        setShowWhatsAppModal(true);
+      } else {
+        const directPhone = phones[0] || student.contact_number;
+        const cleaned = directPhone.replace(/\D/g, '');
+        if (cleaned) {
+          window.location.href = `tel:${cleaned}`;
+        }
+      }
+      return;
+    }
+
+    setPhonePickerStudent(student);
+    setPhonePickerAction(action);
+  };
+
+  const handlePhoneChoice = (phoneNumber: string) => {
+    if (!phonePickerStudent || !phonePickerAction) return;
+
+    if (phonePickerAction === 'whatsapp') {
+      setSelectedStudent({ ...phonePickerStudent, contact_number: phoneNumber });
+      setShowWhatsAppModal(true);
+    } else {
+      window.location.href = `tel:${phoneNumber}`;
+    }
+
+    setPhonePickerStudent(null);
+    setPhonePickerAction(null);
+  };
+
+  const handleResidencyChange = async (studentId: string, residencyType: 'residential' | 'non_residential') => {
+    try {
+      setResidencyUpdatingId(studentId);
+
+      const { error } = await (supabase
+        .from('applications') as any)
+        .update({ residency_type: residencyType })
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      setStudents(prev => prev.map(student =>
+        student.id === studentId ? { ...student, residency_type: residencyType } : student
+      ));
+
+      toast({
+        title: 'Updated',
+        description: `Student marked as ${residencyType === 'residential' ? 'Residential' : 'Non-Residential'}.`,
+      });
+    } catch (error: any) {
+      console.error('Error updating residency type:', error);
+      toast({
+        title: 'Update failed',
+        description: error?.message || 'Could not update residency status.',
+        variant: 'destructive',
+      });
+    } finally {
+      setResidencyUpdatingId(null);
+    }
   };
 
   const handleCloseWhatsApp = () => {
     setShowWhatsAppModal(false);
     setSelectedStudent(null);
+  };
+
+  const resetNewStudentForm = () => {
+    setNewStudent({
+      fullName: '',
+      dateOfBirth: '',
+      mobileNumber: '',
+      secondaryMobileNumber: '',
+      studentClass: '',
+      gender: 'Male',
+      fatherName: '',
+      motherName: '',
+      email: '',
+      city: '',
+      state: '',
+      currentSchool: ''
+    });
+  };
+
+  const validateMobileNumber = (mobile: string) => /^[6-9]\d{9}$/.test(mobile);
+
+  const generateAdmissionNumber = () => {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const random = Math.floor(1000 + Math.random() * 9000);
+    return `ADM${year}${random}`;
+  };
+
+  const handleAddStudent = async () => {
+    if (!newStudent.fullName.trim() || !newStudent.dateOfBirth || !newStudent.mobileNumber.trim() || !newStudent.studentClass.trim()) {
+      toast({
+        title: 'Missing fields',
+        description: 'Please fill Name, DOB, Mobile Number and Class.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!validateMobileNumber(newStudent.mobileNumber)) {
+      toast({
+        title: 'Invalid mobile number',
+        description: 'Enter a valid 10-digit Indian mobile number.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (newStudent.secondaryMobileNumber.trim() && !validateMobileNumber(newStudent.secondaryMobileNumber)) {
+      toast({
+        title: 'Invalid second mobile number',
+        description: 'Enter a valid 10-digit Indian mobile number.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setAddingStudent(true);
+    try {
+      const admissionNumber = generateAdmissionNumber();
+      const isoDate = new Date().toISOString().split('T')[0];
+      const primaryMobile = newStudent.mobileNumber.trim();
+      const secondaryMobile = newStudent.secondaryMobileNumber.trim();
+
+      const searchClauses = [
+        `contact_number.eq.${primaryMobile}`,
+        `second_contact_number.eq.${primaryMobile}`,
+      ];
+
+      if (secondaryMobile) {
+        searchClauses.push(`contact_number.eq.${secondaryMobile}`);
+        searchClauses.push(`second_contact_number.eq.${secondaryMobile}`);
+      }
+
+      const { data: existingStudent, error: checkError } = await supabase
+        .from('applications')
+        .select('id')
+        .or(searchClauses.join(','))
+        .eq('date_of_birth', newStudent.dateOfBirth)
+        .maybeSingle();
+
+      if (checkError) {
+        throw checkError;
+      }
+
+      if (existingStudent) {
+        toast({
+          title: 'Student already exists',
+          description: 'A student with this Mobile Number and DOB already exists.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const payload = {
+        admission_number: admissionNumber,
+        admission_type: 'Direct Admin Entry',
+        full_name: newStudent.fullName.trim(),
+        date_of_birth: newStudent.dateOfBirth,
+        gender: newStudent.gender,
+        current_school: newStudent.currentSchool.trim() || 'N/A',
+        class: newStudent.studentClass.trim(),
+        aadhaar_number: 'N/A',
+        father_name: newStudent.fatherName.trim() || 'N/A',
+        mother_name: newStudent.motherName.trim() || 'N/A',
+        father_occupation: 'N/A',
+        mother_occupation: 'N/A',
+        contact_number: newStudent.mobileNumber.trim(),
+        email: newStudent.email.trim() || 'na@visiona.local',
+        sats_number: '',
+        street_address: 'N/A',
+        city: newStudent.city.trim() || 'N/A',
+        state: newStudent.state.trim() || 'N/A',
+        pin_code: '000000',
+        landmark: null,
+        last_year_percentage: 0,
+        category: 'General',
+        subjects_weak_in: null,
+        exams_preparing_for: ['sainik'],
+        payment_mode: 'Direct Entry',
+        transaction_id: `ADMIN-${Date.now()}`,
+        amount_paid: 0,
+        place: 'Admin Office',
+        declaration_date: isoDate,
+        second_contact_number: secondaryMobile || null,
+      };
+
+      const { error } = await (supabase
+        .from('applications')
+        .insert(payload) as any);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Student added',
+        description: `${newStudent.fullName} has been added successfully. Login: mobile number.`,
+      });
+
+      resetNewStudentForm();
+      setIsAddStudentOpen(false);
+      await fetchStudents();
+    } catch (error: any) {
+      console.error('Error adding student:', error);
+      toast({
+        title: 'Failed to add student',
+        description: error?.message || 'Could not add student. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setAddingStudent(false);
+    }
   };
 
   // Pagination logic
@@ -248,6 +528,214 @@ const StudentsSection = () => {
                 className="pl-10 text-sm dark:text-gray-200 h-9"
               />
             </div>
+            <select
+              value={standardFilter}
+              onChange={(e) => setStandardFilter(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-xs sm:text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+            >
+              <option value="all">Standard: All</option>
+              {[...new Set(students.map(s => (s.class || '').trim()).filter(Boolean))]
+                .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+                .map((cls) => (
+                  <option key={cls} value={cls}>{`Std ${cls}`}</option>
+                ))}
+            </select>
+
+            <select
+              value={residentialFilter}
+              onChange={(e) => setResidentialFilter(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-xs sm:text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+            >
+              <option value="all">Stay Type: All</option>
+              <option value="residential">Residential</option>
+              <option value="non_residential">Non-Residential</option>
+            </select>
+
+            <select
+              value={sortFilter}
+              onChange={(e) => setSortFilter(e.target.value as 'recent' | 'az' | 'za' | 'adm_no')}
+              className="h-9 rounded-md border border-input bg-background px-3 text-xs sm:text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+            >
+              <option value="recent">Sort: Recent</option>
+              <option value="az">Sort: A to Z</option>
+              <option value="za">Sort: Z to A</option>
+              <option value="adm_no">Sort: Admission No</option>
+            </select>
+
+            <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="sm:w-auto bg-blue-600 hover:bg-blue-700 text-white">
+                  Add Student
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[88svh] overflow-y-auto rounded-2xl p-4 sm:p-6 dark:bg-gray-900 dark:border-gray-800">
+                <DialogHeader>
+                  <DialogTitle className="dark:text-white">Add Admitted Student</DialogTitle>
+                  <DialogDescription className="dark:text-gray-400">
+                    Add a student directly without admission form. Student can login using mobile number.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 py-2">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="fullName" className="dark:text-gray-300">Student Name *</Label>
+                    <Input
+                      id="fullName"
+                      value={newStudent.fullName}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, fullName: e.target.value }))}
+                      placeholder="Enter student full name"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="dateOfBirth" className="dark:text-gray-300">Date of Birth *</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={newStudent.dateOfBirth}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mobileNumber" className="dark:text-gray-300">Mobile Number *</Label>
+                    <Input
+                      id="mobileNumber"
+                      type="tel"
+                      maxLength={10}
+                      value={newStudent.mobileNumber}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, mobileNumber: e.target.value.replace(/\D/g, '') }))}
+                      placeholder="10-digit mobile number"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="secondaryMobileNumber" className="dark:text-gray-300">Second Mobile Number</Label>
+                    <Input
+                      id="secondaryMobileNumber"
+                      type="tel"
+                      maxLength={10}
+                      value={newStudent.secondaryMobileNumber}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, secondaryMobileNumber: e.target.value.replace(/\D/g, '') }))}
+                      placeholder="Optional second mobile number"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="studentClass" className="dark:text-gray-300">Class *</Label>
+                    <Input
+                      id="studentClass"
+                      value={newStudent.studentClass}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, studentClass: e.target.value }))}
+                      placeholder="Example: 7"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="gender" className="dark:text-gray-300">Gender</Label>
+                    <select
+                      id="gender"
+                      value={newStudent.gender}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, gender: e.target.value }))}
+                      className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="fatherName" className="dark:text-gray-300">Father Name</Label>
+                    <Input
+                      id="fatherName"
+                      value={newStudent.fatherName}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, fatherName: e.target.value }))}
+                      placeholder="Enter father name"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="motherName" className="dark:text-gray-300">Mother Name</Label>
+                    <Input
+                      id="motherName"
+                      value={newStudent.motherName}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, motherName: e.target.value }))}
+                      placeholder="Enter mother name"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="dark:text-gray-300">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newStudent.email}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Optional"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="currentSchool" className="dark:text-gray-300">Current School</Label>
+                    <Input
+                      id="currentSchool"
+                      value={newStudent.currentSchool}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, currentSchool: e.target.value }))}
+                      placeholder="Optional"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="city" className="dark:text-gray-300">City</Label>
+                    <Input
+                      id="city"
+                      value={newStudent.city}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="Optional"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="state" className="dark:text-gray-300">State</Label>
+                    <Input
+                      id="state"
+                      value={newStudent.state}
+                      onChange={(e) => setNewStudent(prev => ({ ...prev, state: e.target.value }))}
+                      placeholder="Optional"
+                      className="dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      resetNewStudentForm();
+                      setIsAddStudentOpen(false);
+                    }}
+                    disabled={addingStudent}
+                    className="dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddStudent} disabled={addingStudent} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    {addingStudent ? 'Adding...' : 'Add Student'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             <Button onClick={fetchStudents} disabled={loading} size="sm" className="sm:w-auto dark:bg-emerald-600 dark:hover:bg-emerald-700">
               {loading ? 'Loading...' : 'Refresh'}
             </Button>
@@ -303,6 +791,17 @@ const StudentsSection = () => {
                       <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
                         {student.full_name}
                       </h3>
+                      <div className="mt-1">
+                        <select
+                          value={student.residency_type || 'non_residential'}
+                          onChange={(e) => handleResidencyChange(student.id, e.target.value as 'residential' | 'non_residential')}
+                          disabled={residencyUpdatingId === student.id}
+                          className="h-6 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-[10px] px-1.5 text-gray-700 dark:text-gray-200"
+                        >
+                          <option value="residential">Residential</option>
+                          <option value="non_residential">Non-Residential</option>
+                        </select>
+                      </div>
                       <div className="flex items-center gap-2 text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
                         <span className="font-mono">{student.admission_number}</span>
                         <span>•</span>
@@ -312,15 +811,30 @@ const StudentsSection = () => {
                         <Phone className="h-2.5 w-2.5" />
                         <span>{student.contact_number}</span>
                       </div>
+                      {student.second_contact_number && (
+                        <div className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                          <Phone className="h-2.5 w-2.5" />
+                          <span>{student.second_contact_number}</span>
+                        </div>
+                      )}
                     </div>
 
-                    <Button
-                      onClick={() => handleWhatsAppMessage(student)}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700 text-white h-8 w-8 p-0 flex-shrink-0"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
+                    <div className="flex flex-col gap-1.5 flex-shrink-0">
+                      <Button
+                        onClick={() => openPhonePicker(student, 'whatsapp')}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700 text-white h-8 w-8 p-0"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={() => openPhonePicker(student, 'call')}
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700 text-white h-8 w-8 p-0"
+                      >
+                        <Phone className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -355,11 +869,18 @@ const StudentsSection = () => {
                             {student.full_name}
                           </h3>
                           <div className="flex flex-wrap gap-1 mt-0.5">
-                            <Badge className={`${getCategoryColor(student.category)} text-[10px] px-1.5 py-0 h-4`}>
-                              {student.category}
-                            </Badge>
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                              Cl: {student.class}
+                              Class: {student.class}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] px-1.5 py-0 h-4 ${
+                                student.residency_type === 'residential'
+                                  ? 'border-blue-200 text-blue-600 dark:border-blue-700 dark:text-blue-300'
+                                  : 'border-gray-200 text-gray-600 dark:border-gray-600 dark:text-gray-300'
+                              }`}
+                            >
+                              {student.residency_type === 'residential' ? 'Residential' : 'Non-Residential'}
                             </Badge>
                           </div>
                         </div>
@@ -382,31 +903,46 @@ const StudentsSection = () => {
                           <span className="truncate">{student.contact_number}</span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 col-span-2">
-                          <MapPin className="h-3 w-3 flex-shrink-0 text-gray-400" />
-                          <span className="truncate" title={`${student.city}, ${student.state}`}>
-                            {student.city}, {student.state}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Parent Information - Compact */}
-                      <div className="pt-2 border-t border-gray-100 dark:border-gray-700 mb-3">
-                        <div className="text-[10px] text-gray-600 dark:text-gray-400 flex justify-between">
-                          <span className="truncate max-w-[48%]"><span className="font-medium">F:</span> {student.father_name}</span>
-                          <span className="truncate max-w-[48%]"><span className="font-medium">M:</span> {student.mother_name}</span>
-                        </div>
+                        {student.second_contact_number && (
+                          <div className="flex items-center gap-1.5 col-span-2">
+                            <Phone className="h-3 w-3 flex-shrink-0 text-gray-400" />
+                            <span className="truncate">{student.second_contact_number}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Actions */}
-                      <Button
-                        onClick={() => handleWhatsAppMessage(student)}
-                        size="sm"
-                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-1.5 text-[10px] h-7"
-                      >
-                        <MessageCircle className="h-3 w-3" />
-                        WhatsApp
-                      </Button>
+                      <div className="mb-2">
+                        <Label className="text-[10px] uppercase tracking-wider text-gray-500 dark:text-gray-400">Stay Type</Label>
+                        <select
+                          value={student.residency_type || 'non_residential'}
+                          onChange={(e) => handleResidencyChange(student.id, e.target.value as 'residential' | 'non_residential')}
+                          disabled={residencyUpdatingId === student.id}
+                          className="mt-1 w-full h-7 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-[10px] px-2 text-gray-700 dark:text-gray-200"
+                        >
+                          <option value="residential">Residential</option>
+                          <option value="non_residential">Non-Residential</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          onClick={() => openPhonePicker(student, 'whatsapp')}
+                          size="sm"
+                          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-1.5 text-[10px] h-7"
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                          WhatsApp
+                        </Button>
+                        <Button
+                          onClick={() => openPhonePicker(student, 'call')}
+                          size="sm"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1.5 text-[10px] h-7"
+                        >
+                          <Phone className="h-3 w-3" />
+                          Call
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -484,6 +1020,41 @@ const StudentsSection = () => {
           onClose={handleCloseWhatsApp}
         />
       )}
+
+      <Dialog
+        open={!!phonePickerStudent}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPhonePickerStudent(null);
+            setPhonePickerAction(null);
+          }
+        }}
+      >
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-md rounded-2xl p-4 sm:p-6 dark:bg-gray-900 dark:border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="dark:text-white">Choose Mobile Number</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
+              Select which number to use for {phonePickerAction === 'whatsapp' ? 'WhatsApp' : 'calling'}.
+            </DialogDescription>
+          </DialogHeader>
+
+          {phonePickerStudent && (
+            <div className="space-y-3">
+              {getStudentPhones(phonePickerStudent).map((phone) => (
+                <Button
+                  key={phone}
+                  type="button"
+                  onClick={() => handlePhoneChoice(phone)}
+                  className={`w-full justify-between ${phonePickerAction === 'whatsapp' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+                >
+                  <span>{phone}</span>
+                  <span>{phonePickerAction === 'whatsapp' ? 'WhatsApp' : 'Call'}</span>
+                </Button>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

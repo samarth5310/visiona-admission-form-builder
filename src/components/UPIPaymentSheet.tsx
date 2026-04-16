@@ -97,7 +97,7 @@ const UPIPaymentSheet = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white dark:bg-[#0B1121] border-white/5">
+            <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[88svh] overflow-y-auto rounded-2xl p-0 bg-white dark:bg-[#0B1121] border-white/5">
                 <div className={`p-6 text-white text-center transition-colors duration-500 ${paymentStatus === 'cancelled' ? 'bg-rose-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-bold text-white mb-1">
@@ -167,9 +167,12 @@ const UPIPaymentSheet = ({
                                 />
                             </div>
                             <Button className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20">
-                                Verify & Update Portal
+                                Submit UTR For Verification
                             </Button>
                         </form>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                            After submission, office will verify and confirm payment within approximately 6 hours.
+                        </p>
                     </div>
                 </div>
             </DialogContent>

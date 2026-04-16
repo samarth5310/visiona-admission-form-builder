@@ -35,7 +35,7 @@ export function AdminNotificationDialog() {
                     <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full"></span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-[500px] max-h-[88svh] overflow-y-auto rounded-2xl p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle>Notifications</DialogTitle>
                     <DialogDescription>Send notifications to students or view notification history.</DialogDescription>

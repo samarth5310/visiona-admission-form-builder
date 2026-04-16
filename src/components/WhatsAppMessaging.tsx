@@ -91,7 +91,7 @@ const WhatsAppMessaging = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[95vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[88svh] overflow-y-auto rounded-2xl border border-blue-100 p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-blue-700 text-lg sm:text-xl">
             <MessageCircle className="h-5 w-5 text-green-600" />
@@ -106,7 +106,7 @@ const WhatsAppMessaging = ({
           <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-600 font-medium">Sending to:</p>
             <p className="font-medium text-gray-900 text-sm sm:text-base">{studentName}</p>
-            <p className="text-sm text-gray-600">+91 {phoneNumber}</p>
+            <p className="text-xs sm:text-sm text-gray-600 break-all">+91 {phoneNumber}</p>
           </div>
 
           <div>

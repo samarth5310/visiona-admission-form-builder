@@ -528,23 +528,23 @@ const MarksManagement = () => {
 
       {/* Add/Edit Form Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="w-[95vw] max-w-2xl max-h-[95vh] overflow-y-auto dark:bg-gray-900 dark:border-gray-800">
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-2xl max-h-[88svh] overflow-y-auto rounded-2xl p-4 sm:p-6 dark:bg-gray-900 dark:border-gray-800">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl dark:text-white">
               {editingMark ? 'Edit Mark' : 'Add Marks'}
             </DialogTitle>
-            <DialogDescription className="sr-only">
+            <DialogDescription className="sr-only dark:text-gray-400">
               Form to add or edit student marks
             </DialogDescription>
           </DialogHeader>
 
           <Tabs value={selectedEntryType} onValueChange={(v) => setSelectedEntryType(v as 'individual' | 'bulk')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="individual" className="flex items-center gap-2 text-xs sm:text-sm">
+            <TabsList className="grid w-full grid-cols-2 mb-4 dark:bg-gray-800">
+              <TabsTrigger value="individual" className="flex items-center gap-2 text-xs sm:text-sm dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">
                 <User className="h-4 w-4" />
                 Individual
               </TabsTrigger>
-              <TabsTrigger value="bulk" className="flex items-center gap-2 text-xs sm:text-sm" disabled={!!editingMark}>
+              <TabsTrigger value="bulk" className="flex items-center gap-2 text-xs sm:text-sm dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white" disabled={!!editingMark}>
                 <Users className="h-4 w-4" />
                 Bulk Entry
               </TabsTrigger>
@@ -556,12 +556,12 @@ const MarksManagement = () => {
                   <div className="space-y-2">
                     <Label className="text-sm dark:text-gray-300">Student</Label>
                     <Select value={formData.student_id} onValueChange={(value) => setFormData({ ...formData, student_id: value })}>
-                      <SelectTrigger className="text-sm">
+                      <SelectTrigger className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100">
                         <SelectValue placeholder="Select student" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="dark:bg-gray-900 dark:border-gray-700">
                         {students.map(student => (
-                          <SelectItem key={student.id} value={student.id} className="text-sm">
+                          <SelectItem key={student.id} value={student.id} className="text-sm dark:text-gray-100 dark:focus:bg-gray-800">
                             {student.full_name} ({student.class})
                           </SelectItem>
                         ))}
@@ -576,7 +576,7 @@ const MarksManagement = () => {
                       onChange={(e) => setFormData({ ...formData, test_name: e.target.value })}
                       placeholder="Unit Test 1, Mid-term, etc."
                       required
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                     />
                   </div>
 
@@ -587,7 +587,7 @@ const MarksManagement = () => {
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       placeholder="Mathematics, Science, etc."
                       required
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                     />
                   </div>
 
@@ -598,7 +598,7 @@ const MarksManagement = () => {
                       value={formData.test_date}
                       onChange={(e) => setFormData({ ...formData, test_date: e.target.value })}
                       required
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 [color-scheme:dark]"
                     />
                   </div>
 
@@ -611,7 +611,7 @@ const MarksManagement = () => {
                       placeholder="85"
                       required
                       min="0"
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                     />
                   </div>
 
@@ -624,7 +624,7 @@ const MarksManagement = () => {
                       placeholder="100"
                       required
                       min="1"
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                     />
                   </div>
                 </div>
@@ -633,7 +633,7 @@ const MarksManagement = () => {
                   <Button type="submit" className="flex-1">
                     {editingMark ? 'Update Mark' : 'Add Mark'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} className="flex-1">
+                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} className="flex-1 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
                     Cancel
                   </Button>
                 </div>
@@ -650,7 +650,7 @@ const MarksManagement = () => {
                       onChange={(e) => setBulkData({ ...bulkData, test_name: e.target.value })}
                       placeholder="Unit Test 1, Mid-term, etc."
                       required
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                     />
                   </div>
 
@@ -661,7 +661,7 @@ const MarksManagement = () => {
                       onChange={(e) => setBulkData({ ...bulkData, subject: e.target.value })}
                       placeholder="Mathematics, Science, etc."
                       required
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                     />
                   </div>
 
@@ -674,7 +674,7 @@ const MarksManagement = () => {
                       placeholder="100"
                       required
                       min="1"
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                     />
                   </div>
 
@@ -685,20 +685,20 @@ const MarksManagement = () => {
                       value={bulkData.test_date}
                       onChange={(e) => setBulkData({ ...bulkData, test_date: e.target.value })}
                       required
-                      className="text-sm"
+                      className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 [color-scheme:dark]"
                     />
                   </div>
 
                   <div className="space-y-2 sm:col-span-2">
                     <Label className="text-sm dark:text-gray-300">Filter by Class (Optional)</Label>
                     <Select value={bulkData.class_filter} onValueChange={(value) => setBulkData({ ...bulkData, class_filter: value })}>
-                      <SelectTrigger className="text-sm">
+                      <SelectTrigger className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100">
                         <SelectValue placeholder="All classes" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All classes</SelectItem>
+                      <SelectContent className="dark:bg-gray-900 dark:border-gray-700">
+                        <SelectItem value="all" className="dark:text-gray-100 dark:focus:bg-gray-800">All classes</SelectItem>
                         {getUniqueValues('class').map(cls => (
-                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                          <SelectItem key={cls} value={cls} className="dark:text-gray-100 dark:focus:bg-gray-800">{cls}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -722,7 +722,7 @@ const MarksManagement = () => {
                             onChange={(e) => setBulkMarks({ ...bulkMarks, [student.id]: e.target.value })}
                             min="0"
                             max={bulkData.total_marks}
-                            className="text-sm"
+                            className="text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                           />
                         </div>
                       </div>
@@ -734,7 +734,7 @@ const MarksManagement = () => {
                   <Button type="submit" className="flex-1">
                     Add Marks for Selected Students
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} className="flex-1">
+                  <Button type="button" variant="outline" onClick={() => setShowAddForm(false)} className="flex-1 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
                     Cancel
                   </Button>
                 </div>

@@ -1,0 +1,133 @@
+{
+  "generated_at": "2026-04-16T09:39:04.695Z",
+  "invalid_count": 9,
+  "invalid_rows": [
+    {
+      "ok": false,
+      "index": 0,
+      "reason": "Missing/invalid fields: dob",
+      "source": {
+        "admission_number": "26",
+        "name": "Aditya Ambeger",
+        "dob": "",
+        "class": "3",
+        "medium": "Kannada",
+        "gender": "Male",
+        "mobile_number": "9901103856"
+      }
+    },
+    {
+      "ok": false,
+      "index": 1,
+      "reason": "Missing/invalid fields: dob",
+      "source": {
+        "admission_number": "27",
+        "name": "Vinuth Ambeger",
+        "dob": "",
+        "class": "5",
+        "medium": "English",
+        "gender": "Male",
+        "mobile_number": "9742145437"
+      }
+    },
+    {
+      "ok": false,
+      "index": 2,
+      "reason": "Missing/invalid fields: dob",
+      "source": {
+        "admission_number": "28",
+        "name": "Amogh Ambeger",
+        "dob": "",
+        "class": "5",
+        "medium": "Kannada",
+        "gender": "Male",
+        "mobile_number": "9901103856"
+      }
+    },
+    {
+      "ok": false,
+      "index": 11,
+      "reason": "Missing/invalid fields: dob, mobile_number, class",
+      "source": {
+        "admission_number": "37",
+        "name": "Aryan V Nayak",
+        "dob": "",
+        "class": "",
+        "medium": "",
+        "gender": "Male",
+        "mobile_number": ""
+      }
+    },
+    {
+      "ok": false,
+      "index": 12,
+      "reason": "Missing/invalid fields: dob, mobile_number, class",
+      "source": {
+        "admission_number": "38",
+        "name": "Aradhya Nayak",
+        "dob": "",
+        "class": "",
+        "medium": "",
+        "gender": "Female",
+        "mobile_number": ""
+      }
+    },
+    {
+      "ok": false,
+      "index": 15,
+      "reason": "Missing/invalid fields: dob",
+      "source": {
+        "admission_number": "41",
+        "name": "Varnika S Kovalli",
+        "dob": "",
+        "class": "3",
+        "medium": "English",
+        "gender": "Female",
+        "mobile_number": "9538170900"
+      }
+    },
+    {
+      "ok": false,
+      "index": 18,
+      "reason": "Missing/invalid fields: dob",
+      "source": {
+        "admission_number": "44",
+        "name": "Bhagirati S Chittaragi",
+        "dob": "",
+        "class": "10",
+        "medium": "Kannada",
+        "gender": "Female",
+        "mobile_number": "8317414301",
+        "second_contact_number": "9036223099"
+      }
+    },
+    {
+      "ok": false,
+      "index": 20,
+      "reason": "Missing/invalid fields: dob",
+      "source": {
+        "admission_number": "46",
+        "name": "Pratiksha Kelavadi",
+        "dob": "",
+        "class": "5",
+        "medium": "English",
+        "gender": "Female",
+        "mobile_number": "8296437339"
+      }
+    },
+    {
+      "ok": false,
+      "index": 23,
+      "reason": "Missing/invalid fields: dob",
+      "source": {
+        "admission_number": "49",
+        "name": "Shreeraksha Kelavadi",
+        "dob": "",
+        "class": "8",
+        "medium": "Kannada",
+        "gender": "Female",
+        "mobile_number": "9060101947"
+      }
+    }
+  ]
+}

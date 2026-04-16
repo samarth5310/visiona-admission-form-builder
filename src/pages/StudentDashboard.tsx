@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, CreditCard, GraduationCap, Search, Moon, Sun, Home, DollarSign, BarChart3, CheckCircle2, LogOut } from 'lucide-react';
+import { BookOpen, CreditCard, GraduationCap, Search, Moon, Sun, Home, DollarSign, BellRing, CheckCircle2, LogOut } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import StudentHomework from '@/components/StudentHomework';
 import StudentMarks from '@/components/StudentMarks';
@@ -25,7 +25,6 @@ const StudentDashboard = () => {
   const { notifications } = useNotifications();
 
   const [fees, setFees] = useState<{ total: number; paid: number }>({ total: 0, paid: 0 });
-  const [attendancePercentage, setAttendancePercentage] = useState<number>(0);
 
   useEffect(() => {
     const data = safeStorage.getItem('visiona_student_data');
@@ -60,18 +59,6 @@ const StudentDashboard = () => {
 
         if (feeData) {
           setFees({ total: feeData.total_fees || 0, paid: feeData.paid_amount || 0 });
-        }
-
-        // Fetch attendance
-        const { data: attendanceData } = await supabase
-          .from('attendance')
-          .select('status')
-          .eq('student_id', studentData.id);
-
-        if (attendanceData && attendanceData.length > 0) {
-          const totalDays = attendanceData.length;
-          const presentDays = attendanceData.filter((a: any) => a.status === 'Present').length;
-          setAttendancePercentage(Math.round((presentDays / totalDays) * 100));
         }
 
       } catch (error) {
@@ -135,12 +122,12 @@ const StudentDashboard = () => {
               <Card className={`border-0 shadow-lg ${isDarkMode ? 'bg-[#0B1121] text-white' : 'bg-white text-gray-900'}`}>
                 <CardContent className="p-6 flex items-center space-x-4">
                   <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-orange-500/10 text-orange-500' : 'bg-orange-100 text-orange-600'}`}>
-                    <BarChart3 className="h-7 w-7" />
+                    <BellRing className="h-7 w-7" />
                   </div>
                   <div>
-                    <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Attendance</p>
-                    <h3 className="text-3xl font-bold">{attendancePercentage}%</h3>
-                    <p className={`text-xs mt-0.5 font-medium ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>Current Session</p>
+                    <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>New Notices</p>
+                    <h3 className="text-3xl font-bold">{filteredNotifications.length}</h3>
+                    <p className={`text-xs mt-0.5 font-medium ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`}>From Admin</p>
                   </div>
                 </CardContent>
               </Card>
